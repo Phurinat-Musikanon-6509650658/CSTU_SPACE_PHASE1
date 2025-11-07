@@ -21,8 +21,7 @@ class StudentTableSeeder extends Seeder
                 'firstname_std' => 'หฤษฎ์',
                 'lastname_std' => 'อัชฌาวนิชย์',
                 'email_std' => 'haritch.utc@dome.tu.ac.th',
-                'password_std' => '1101700338550',
-                'password_std_hash' => Hash::make('1101700338550'),
+                'password_std' => Hash::make('1101700338550'),  // เก็บเป็น hash เท่านั้น
             ]
         );
 
@@ -32,8 +31,7 @@ class StudentTableSeeder extends Seeder
                 'firstname_std' => 'ณัชชา',
                 'lastname_std' => 'วัฒนบำเพ็ญ',
                 'email_std' => 'natcha.wattan@dome.tu.ac.th',
-                'password_std' => '1709700292985',
-                'password_std_hash' => Hash::make('1709700292985'),
+                'password_std' => Hash::make('1709700292985'),  // เก็บเป็น hash เท่านั้น
             ]
         );
 
@@ -43,7 +41,7 @@ class StudentTableSeeder extends Seeder
                 'firstname_std' => 'ภูริณัฐ',
                 'lastname_std' => 'มุสิกานนท์',
                 'email_std' => 'phurinat.mus@dome.tu.ac.th',
-                'password_std' => '1104000099105',
+                'password_std' => Hash::make('1104000099105'),  // เก็บเป็น hash เท่านั้น
             ]
         );        
     }

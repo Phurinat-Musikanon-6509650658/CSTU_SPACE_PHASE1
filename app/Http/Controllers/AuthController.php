@@ -46,7 +46,7 @@ class AuthController extends Controller
                 session()->forget(['wrong_attempts', 'lock_time']);
 
                 $found = $this->findLocalRecord($username);
-                if ($found && $this->passwordMatches($password, $found['record'])) {
+                    if ($found) {
                     $this->setUserSession($found['type'], $found['record']);
                     return redirect()->route('welcome');
                 }
@@ -84,22 +84,6 @@ class AuthController extends Controller
         return null;
     }
 
-    // ตรวจสอบรหัสผ่าน: รองรับ bcrypt (hash) และ plaintext legacy
-    private function passwordMatches($enteredPassword, $record)
-    {
-        // ตรวจสอบ field hash ใหม่ก่อน (password_user_hash / password_std_hash)
-        $storedHash = $record->password_user_hash ?? $record->password_std_hash ?? null;
-        if (!empty($storedHash) && password_get_info($storedHash)['algo']) {
-            return Hash::check($enteredPassword, $storedHash);
-        }
-
-        // ถ้าไม่มี hash ให้ fallback ไปตรวจ plaintext เดิม (password_user / password_std)
-        $storedPlain = $record->password_user ?? $record->password_std ?? null;
-        if (!$storedPlain) {
-            return false;
-        }
-        return $enteredPassword === $storedPlain;
-    }
 
     // เซ็ตค่า session สำหรับผู้ใช้งาน
     private function setUserSession($type, $record)
@@ -136,6 +120,11 @@ class AuthController extends Controller
             } else {
                 // legacy plain password
                 if (isset($user->password_user) && $user->password_user === $password) {
+                    // แปลง plain password เป็น hash และอัพเดตในฐานข้อมูล
+                    DB::table('user')
+                        ->where('user_id', $user->user_id)
+                        ->update(['password_user' => Hash::make($password)]);
+                    \Log::info('Password hashed for user: ' . $username);
                     Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
                     Session::put('department', $user->role ?? '');
                     Session::put('user_id', $user->user_id ?? null);
@@ -159,6 +148,11 @@ class AuthController extends Controller
                 }
             } else {
                 if (isset($student->password_std) && $student->password_std === $password) {
+                    // แปลง plain password เป็น hash และอัพเดตในฐานข้อมูล
+                    DB::table('student')
+                        ->where('student_id', $student->student_id)
+                        ->update(['password_std' => Hash::make($password)]);
+                    \Log::info('Password hashed for student: ' . $username);
                     Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
                     Session::put('department', 'student');
                     Session::put('student_id', $student->student_id ?? null);
@@ -184,5 +178,12 @@ class AuthController extends Controller
         $department = Session::get('department');
 
         return view('welcome', compact('displayname', 'department'));
+    }
+
+    // Logout: clear session and redirect to the login page
+    public function logout()
+    {
+        Session::flush();
+        return redirect()->route('login');
     }
 }
