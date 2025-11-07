@@ -13,6 +13,14 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Explicit table name and primary key to match existing migrations.
+     * The project's migrations create `user` (singular) with primary key `user_id`.
+     */
+    protected $table = 'user';
+    protected $primaryKey = 'user_id';
+    public $timestamps = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

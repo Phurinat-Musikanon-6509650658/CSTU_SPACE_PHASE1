@@ -11,7 +11,7 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Department:</strong> {{ $department }}</p>
-                    <a href="{{ url('/') }}" class="btn btn-secondary w-100">Logout</a>
+                    <a href="{{ route('logout') }}" class="btn btn-secondary w-100">Logout</a>
                 </div>
             </div>
         </div>

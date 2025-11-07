@@ -23,8 +23,7 @@ class UserTableSeeder extends Seeder
                 'user_code' => 'KTN',
                 'role' => 'admin',
                 'email_user' => 'kantinan.tan@dome.tu.ac.th',
-                'password_user' => '1100703568130',
-                'password_user_hash' => Hash::make('1100703568130'),
+                'password_user' => Hash::make('1100703568130'),  // เก็บเป็น hash เท่านั้น
             ]
         );
 
@@ -36,8 +35,7 @@ class UserTableSeeder extends Seeder
                 'user_code' => 'PHR',
                 'role' => 'coordinator',
                 'email_user' => 'phuree.ken@dome.tu.ac.th',
-                'password_user' => '1102200195289',
-                'password_user_hash' => Hash::make('1102200195289'),
+                'password_user' => Hash::make('1102200195289'),  // เก็บเป็น hash เท่านั้น
             ]
         );
     }
