@@ -99,6 +99,8 @@ class AuthController extends Controller
         }
 
         Session::put('displayname', $display);
+        Session::put('login_time', time()); // เก็บเวลา login
+        Session::put('last_activity', time()); // เก็บเวลา activity ล่าสุด
     }
 
     // ตรวจสอบ login โดยใช้ข้อมูลในฐานข้อมูลเท่านั้น (DB-only flow)
@@ -115,6 +117,8 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
                     Session::put('department', $user->role ?? '');
                     Session::put('user_id', $user->user_id ?? null);
+                    Session::put('login_time', time());
+                    Session::put('last_activity', time());
                     return redirect()->route('menu');
                 }
             } else {
@@ -128,6 +132,8 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
                     Session::put('department', $user->role ?? '');
                     Session::put('user_id', $user->user_id ?? null);
+                    Session::put('login_time', time());
+                    Session::put('last_activity', time());
                     return redirect()->route('menu');
                 }
             }
@@ -144,6 +150,8 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
                     Session::put('department', 'student');
                     Session::put('student_id', $student->student_id ?? null);
+                    Session::put('login_time', time());
+                    Session::put('last_activity', time());
                     return redirect()->route('menu');
                 }
             } else {
@@ -156,6 +164,8 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
                     Session::put('department', 'student');
                     Session::put('student_id', $student->student_id ?? null);
+                    Session::put('login_time', time());
+                    Session::put('last_activity', time());
                     return redirect()->route('menu');
                 }
             }
@@ -171,5 +181,17 @@ class AuthController extends Controller
     {
         Session::flush();
         return redirect()->route('login');
+    }
+
+    // Refresh session for auto-logout prevention
+    public function refreshSession()
+    {
+        if (Session::has('displayname')) {
+            // อัพเดท timestamp สำหรับ session
+            Session::put('last_activity', time());
+            return response()->json(['status' => 'success', 'message' => 'Session refreshed']);
+        }
+        
+        return response()->json(['status' => 'error', 'message' => 'No active session'], 401);
     }
 }
