@@ -1,0 +1,4 @@
+username,firstname,lastname,email,password,role,user_code
+teacher01,สมชาย,ใจดี,somchai@cstu.ac.th,pass1234,advisor,SCH
+teacher02,สมหญิง,รักเรียน,somying@cstu.ac.th,pass5678,coordinator,SMY
+teacher03,สมศักดิ์,มานะ,somsak@cstu.ac.th,pass9012,admin,SMS

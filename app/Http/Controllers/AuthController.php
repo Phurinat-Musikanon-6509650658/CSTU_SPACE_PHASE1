@@ -48,7 +48,7 @@ class AuthController extends Controller
                 $found = $this->findLocalRecord($username);
                     if ($found) {
                     $this->setUserSession($found['type'], $found['record']);
-                    return redirect()->route('welcome');
+                    return redirect()->route('menu');
                 }
                 // API ตอบว่าใช้ได้ แต่ใน DB ไม่มีบัญชีที่ตรงกัน
                 session()->flash('login_error_message', 'ไม่พบบัญชีนี้ในระบบภายใน');
@@ -115,7 +115,7 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
                     Session::put('department', $user->role ?? '');
                     Session::put('user_id', $user->user_id ?? null);
-                    return redirect()->route('welcome');
+                    return redirect()->route('menu');
                 }
             } else {
                 // legacy plain password
@@ -128,7 +128,7 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
                     Session::put('department', $user->role ?? '');
                     Session::put('user_id', $user->user_id ?? null);
-                    return redirect()->route('welcome');
+                    return redirect()->route('menu');
                 }
             }
         }
@@ -144,7 +144,7 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
                     Session::put('department', 'student');
                     Session::put('student_id', $student->student_id ?? null);
-                    return redirect()->route('welcome');
+                    return redirect()->route('menu');
                 }
             } else {
                 if (isset($student->password_std) && $student->password_std === $password) {
@@ -156,7 +156,7 @@ class AuthController extends Controller
                     Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
                     Session::put('department', 'student');
                     Session::put('student_id', $student->student_id ?? null);
-                    return redirect()->route('welcome');
+                    return redirect()->route('menu');
                 }
             }
         }
@@ -164,20 +164,6 @@ class AuthController extends Controller
         // ไม่ผ่านทั้งคู่ -> แจ้ง error
         session()->flash('login_error_message', 'Username or Password invalid');
         return back();
-    }
-
-
-    // แสดงหน้า Welcome (ต้องล็อกอินก่อน)
-    public function showWelcome()
-    {
-        if (!Session::has('displayname')) {
-            return redirect()->route('login');
-        }
-
-        $displayname = Session::get('displayname');
-        $department = Session::get('department');
-
-        return view('welcome', compact('displayname', 'department'));
     }
 
     // Logout: clear session and redirect to the login page
