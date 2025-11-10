@@ -10,7 +10,7 @@
                     <h4>Welcome, {{ $displayname }}</h4>
                 </div>
                 <div class="card-body">
-                    <p><strong>Department:</strong> {{ $department }}</p>
+                    <p><strong>role:</strong> {{ $department }}</p>
                     <a href="{{ route('logout') }}" class="btn btn-secondary w-100">Logout</a>
                 </div>
             </div>
