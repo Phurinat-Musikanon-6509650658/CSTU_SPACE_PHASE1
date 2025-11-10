@@ -52,6 +52,16 @@
                 <div class="col-md-3 mb-3">
                     <div class="card text-center h-100">
                         <div class="card-body">
+                            <i class="bi bi-shield-lock fs-1 text-warning"></i>
+                            <h5 class="card-title mt-3">Login Logs</h5>
+                            <p class="card-text">ติดตามการเข้าระบบ</p>
+                            <a href="{{ route('admin.logs.index') }}" class="btn btn-warning">ดู Logs</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
                             <i class="bi bi-graph-up fs-1 text-warning"></i>
                             <h5 class="card-title mt-3">สถิติ</h5>
                             <p class="card-text">ดูสถิติการใช้งาน</p>

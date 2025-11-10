@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\StudentManagementController;
+use App\Http\Controllers\AdminLogController;
 
 // Login page (named so controllers can redirect to the login route)
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -26,6 +27,11 @@ Route::middleware('session.timeout')->group(function () {
     Route::get('students-import', [StudentManagementController::class, 'importForm'])->name('students.importForm');
     Route::post('students-import', [StudentManagementController::class, 'import'])->name('students.import');
     Route::get('students-template', [StudentManagementController::class, 'downloadTemplate'])->name('students.downloadTemplate');
+    
+    // Admin Login Logs (Admin only)
+    Route::get('admin/logs', [AdminLogController::class, 'index'])->name('admin.logs.index');
+    Route::get('admin/logs/{id}', [AdminLogController::class, 'show'])->name('admin.logs.show');
+    Route::get('admin/logs-export', [AdminLogController::class, 'export'])->name('admin.logs.export');
 });
 
 // Refresh session for auto-logout prevention

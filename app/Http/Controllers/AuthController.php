@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use Session;
 use DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\LoginLog;
 
 class AuthController extends Controller
 {
@@ -90,17 +91,40 @@ class AuthController extends Controller
     {
         if ($type === 'user') {
             $display = trim(($record->firstname_user ?? '') . ' ' . ($record->lastname_user ?? '')) ?: ($record->username_user ?? '');
-            Session::put('department', $record->role ?? '');
-            Session::put('user_id', $record->user_id ?? null);
+            $role = $record->role ?? '';
+            $userId = $record->user_id ?? null;
+            $studentId = null;
+            $username = $record->username_user;
+            
+            Session::put('department', $role);
+            Session::put('user_id', $userId);
         } else {
             $display = trim(($record->firstname_std ?? '') . ' ' . ($record->lastname_std ?? '')) ?: ($record->username_std ?? '');
+            $role = 'student';
+            $userId = null;
+            $studentId = $record->student_id ?? null;
+            $username = $record->username_std;
+            
             Session::put('department', 'student');
-            Session::put('student_id', $record->student_id ?? null);
+            Session::put('student_id', $studentId);
         }
 
         Session::put('displayname', $display);
         Session::put('login_time', time()); // เก็บเวลา login
         Session::put('last_activity', time()); // เก็บเวลา activity ล่าสุด
+
+        // บันทึก login log
+        $loginLog = LoginLog::createLoginLog(
+            $username,
+            $type,
+            $userId,
+            $studentId,
+            $role,
+            'success'
+        );
+        
+        // เก็บ login log ID ไว้ใน session สำหรับอัพเดท logout time
+        Session::put('login_log_id', $loginLog->id);
     }
 
     // ตรวจสอบ login โดยใช้ข้อมูลในฐานข้อมูลเท่านั้น (DB-only flow)
@@ -114,11 +138,7 @@ class AuthController extends Controller
         if ($user) {
             if (!empty($user->password_user) && password_get_info($user->password_user)['algo']) {
                 if (Hash::check($password, $user->password_user)) {
-                    Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
-                    Session::put('department', $user->role ?? '');
-                    Session::put('user_id', $user->user_id ?? null);
-                    Session::put('login_time', time());
-                    Session::put('last_activity', time());
+                    $this->setUserSession('user', $user);
                     return redirect()->route('menu');
                 }
             } else {
@@ -129,11 +149,7 @@ class AuthController extends Controller
                         ->where('user_id', $user->user_id)
                         ->update(['password_user' => Hash::make($password)]);
                     \Log::info('Password hashed for user: ' . $username);
-                    Session::put('displayname', trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $username);
-                    Session::put('department', $user->role ?? '');
-                    Session::put('user_id', $user->user_id ?? null);
-                    Session::put('login_time', time());
-                    Session::put('last_activity', time());
+                    $this->setUserSession('user', $user);
                     return redirect()->route('menu');
                 }
             }
@@ -147,11 +163,7 @@ class AuthController extends Controller
         if ($student) {
             if (!empty($student->password_std) && password_get_info($student->password_std)['algo']) {
                 if (Hash::check($password, $student->password_std)) {
-                    Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
-                    Session::put('department', 'student');
-                    Session::put('student_id', $student->student_id ?? null);
-                    Session::put('login_time', time());
-                    Session::put('last_activity', time());
+                    $this->setUserSession('student', $student);
                     return redirect()->route('menu');
                 }
             } else {
@@ -161,17 +173,23 @@ class AuthController extends Controller
                         ->where('student_id', $student->student_id)
                         ->update(['password_std' => Hash::make($password)]);
                     \Log::info('Password hashed for student: ' . $username);
-                    Session::put('displayname', trim(($student->firstname_std ?? '') . ' ' . ($student->lastname_std ?? '')) ?: $username);
-                    Session::put('department', 'student');
-                    Session::put('student_id', $student->student_id ?? null);
-                    Session::put('login_time', time());
-                    Session::put('last_activity', time());
+                    $this->setUserSession('student', $student);
                     return redirect()->route('menu');
                 }
             }
         }
 
-        // ไม่ผ่านทั้งคู่ -> แจ้ง error
+        // ไม่ผ่านทั้งคู่ -> แจ้ง error และบันทึก failed login
+        LoginLog::createLoginLog(
+            $username,
+            'unknown', // ไม่ทราบประเภท user
+            null,
+            null,
+            'unknown',
+            'failed',
+            'Invalid username or password'
+        );
+        
         session()->flash('login_error_message', 'Username or Password invalid');
         return back();
     }
@@ -179,6 +197,15 @@ class AuthController extends Controller
     // Logout: clear session and redirect to the login page
     public function logout()
     {
+        // อัพเดท logout time ใน login log
+        if (Session::has('login_log_id')) {
+            $loginLogId = Session::get('login_log_id');
+            $loginLog = LoginLog::find($loginLogId);
+            if ($loginLog) {
+                $loginLog->updateLogoutTime();
+            }
+        }
+        
         Session::flush();
         return redirect()->route('login');
     }
