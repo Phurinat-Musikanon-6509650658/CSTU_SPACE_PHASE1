@@ -5,9 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('images/logo_cstuspace.png') }}" type="image/png">
-    <title>@yield('title', 'CSTU-SPACE-app-layout')</title>
+    <title>@yield('title', 'CSTU SPACE - Modern Project Management')</title>
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Global Styles -->
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-info: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --gradient-danger: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --shadow-light: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.15);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .modern-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            border: none;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .modern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .modern-btn {
+            border-radius: 50px;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            border: none;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .btn-primary-modern {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-success-modern {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn-warning-modern {
+            background: var(--gradient-warning);
+            color: white;
+        }
+
+        .btn-info-modern {
+            background: var(--gradient-info);
+            color: white;
+        }
+
+        .btn-danger-modern {
+            background: var(--gradient-danger);
+            color: white;
+        }
+
+        .alert-modern {
+            border-radius: 15px;
+            border: none;
+            box-shadow: var(--shadow-light);
+        }
+
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .table-modern {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+        }
+
+        .navbar-modern {
+            background: var(--gradient-primary);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--shadow-light);
+        }
+
+        .page-header {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+        }
+
+        .container {
+            margin-top: 2rem;
+        }
+    </style>
     
     <!-- Additional Page Styles -->
     @stack('styles')
@@ -125,6 +249,36 @@
         // Reset timer เมื่อมี activity
         ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
             document.addEventListener(event, resetIdleTimer, true);
+        });
+
+        // จัดการการปิดเบราว์เซอร์หรือปิดแท็บ
+        window.addEventListener('beforeunload', function(event) {
+            // ส่ง request เพื่ออัปเดต logout time
+            // ใช้ sendBeacon เพื่อให้แน่ใจว่า request จะถูกส่งแม้เบราว์เซอร์จะปิด
+            if (navigator.sendBeacon) {
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+                navigator.sendBeacon('/logout-beacon', formData);
+            }
+        });
+
+        // จัดการ visibility change (เมื่อเปลี่ยนแท็บหรือปิดเบราว์เซอร์)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // บันทึกเวลาที่ออกจากหน้า
+                sessionStorage.setItem('page_hidden_time', Date.now());
+            } else {
+                // เมื่อกลับมาใช้หน้า ตรวจสอบว่านานแค่ไหน
+                const hiddenTime = sessionStorage.getItem('page_hidden_time');
+                if (hiddenTime) {
+                    const timeDiff = Date.now() - parseInt(hiddenTime);
+                    // ถ้าหายไปนานกว่า 5 นาที ให้ logout
+                    if (timeDiff > 5 * 60 * 1000) {
+                        logout();
+                    }
+                    sessionStorage.removeItem('page_hidden_time');
+                }
+            }
         });
     </script>
     @endif

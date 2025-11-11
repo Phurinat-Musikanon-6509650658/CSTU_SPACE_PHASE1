@@ -37,5 +37,8 @@ Route::middleware('session.timeout')->group(function () {
 // Refresh session for auto-logout prevention
 Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name('refresh-session');
 
+// Logout beacon for browser close detection
+Route::post('logout-beacon', [AuthController::class, 'logoutBeacon'])->name('logout-beacon');
+
 // Simple logout route (clears session and redirects to login)
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
