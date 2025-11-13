@@ -7,6 +7,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\StudentManagementController;
 use App\Http\Controllers\AdminLogController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\SystemSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,16 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('/', [AdminLogController::class, 'index'])->name('index');
             Route::get('{log}', [AdminLogController::class, 'show'])->name('show');
             Route::get('export/csv', [AdminLogController::class, 'export'])->name('export');
+        });
+        
+        // System Settings Management (Admin Only)
+        Route::prefix('system')->name('system.')->group(function () {
+            Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
+            Route::post('clear-cache', [SystemSettingsController::class, 'clearCache'])->name('clear-cache');
+            Route::post('optimize', [SystemSettingsController::class, 'optimize'])->name('optimize');
+            Route::get('config', [SystemSettingsController::class, 'showConfig'])->name('config');
+            Route::post('migrate', [SystemSettingsController::class, 'runMigrations'])->name('migrate');
+            Route::get('logs', [SystemSettingsController::class, 'showLogs'])->name('logs');
         });
         
     });

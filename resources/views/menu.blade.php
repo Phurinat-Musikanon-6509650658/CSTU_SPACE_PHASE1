@@ -45,7 +45,7 @@
                                 <div class="card-content">
                                     <h6 class="card-title">System Settings</h6>
                                     <p class="card-description">Manage users and system configuration</p>
-                                    <a href="#" class="menu-btn admin-btn">
+                                    <a href="{{ route('admin.system.index') }}" class="menu-btn admin-btn">
                                         <span>Access System</span>
                                         <i class="bi bi-arrow-right"></i>
                                     </a>
