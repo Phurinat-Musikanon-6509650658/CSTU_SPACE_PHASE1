@@ -6,39 +6,102 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\StudentManagementController;
 use App\Http\Controllers\AdminLogController;
+use App\Http\Controllers\StatisticsController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+// ======================================
+// Authentication Routes
+// ======================================
 
 // Login page (named so controllers can redirect to the login route)
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('login', [AuthController::class, 'login']);
+Route::get('login', [AuthController::class, 'showLoginForm'])->name('login.page');
+Route::post('login', [AuthController::class, 'login'])->name('login.submit');
+
+// Logout routes
+Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('logout-beacon', [AuthController::class, 'logoutBeacon'])->name('logout-beacon');
+
+// Session management
+Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name('refresh-session');
+
+// ======================================
+// Protected Routes
+// ======================================
 
 // Protected routes with session timeout middleware
 Route::middleware('session.timeout')->group(function () {
-    // Menu page with role-based content
+    
+    // ======================================
+    // Main Menu
+    // ======================================
     Route::get('menu', [MenuController::class, 'index'])->name('menu');
 
-    // User Management (Admin only)
-    Route::resource('users', UserManagementController::class);
-    Route::get('users-import', [UserManagementController::class, 'importForm'])->name('users.importForm');
-    Route::post('users-import', [UserManagementController::class, 'import'])->name('users.import');
-    Route::get('users-template', [UserManagementController::class, 'downloadTemplate'])->name('users.downloadTemplate');
+    // ======================================
+    // User Management (Admin Only)
+    // ======================================
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('create', [UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::get('{user}', [UserManagementController::class, 'show'])->name('show');
+        Route::get('{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
+        Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+        
+        // Import/Export functionality
+        Route::get('import/form', [UserManagementController::class, 'importForm'])->name('importForm');
+        Route::post('import', [UserManagementController::class, 'import'])->name('import');
+        Route::get('template/download', [UserManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
+    });
 
-    // Student Management (Admin only)
-    Route::resource('students', StudentManagementController::class)->except(['index']);
-    Route::get('students-import', [StudentManagementController::class, 'importForm'])->name('students.importForm');
-    Route::post('students-import', [StudentManagementController::class, 'import'])->name('students.import');
-    Route::get('students-template', [StudentManagementController::class, 'downloadTemplate'])->name('students.downloadTemplate');
+    // ======================================
+    // Student Management (Admin/Coordinator)
+    // ======================================
+    Route::prefix('students')->name('students.')->group(function () {
+        Route::get('create', [StudentManagementController::class, 'create'])->name('create');
+        Route::post('/', [StudentManagementController::class, 'store'])->name('store');
+        Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
+        Route::get('{student}/edit', [StudentManagementController::class, 'edit'])->name('edit');
+        Route::put('{student}', [StudentManagementController::class, 'update'])->name('update');
+        Route::delete('{student}', [StudentManagementController::class, 'destroy'])->name('destroy');
+        
+        // Import/Export functionality
+        Route::get('import/form', [StudentManagementController::class, 'importForm'])->name('importForm');
+        Route::post('import', [StudentManagementController::class, 'import'])->name('import');
+        Route::get('template/download', [StudentManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
+    });
+
+    // ======================================
+    // Admin Management
+    // ======================================
+    Route::prefix('admin')->name('admin.')->group(function () {
+        
+        // Login Logs Management
+        Route::prefix('logs')->name('logs.')->group(function () {
+            Route::get('/', [AdminLogController::class, 'index'])->name('index');
+            Route::get('{log}', [AdminLogController::class, 'show'])->name('show');
+            Route::get('export/csv', [AdminLogController::class, 'export'])->name('export');
+        });
+        
+    });
     
-    // Admin Login Logs (Admin only)
-    Route::get('admin/logs', [AdminLogController::class, 'index'])->name('admin.logs.index');
-    Route::get('admin/logs/{id}', [AdminLogController::class, 'show'])->name('admin.logs.show');
-    Route::get('admin/logs-export', [AdminLogController::class, 'export'])->name('admin.logs.export');
+    // ======================================
+    // Statistics Dashboard (Admin Only)
+    // ======================================
+    Route::prefix('statistics')->name('statistics.')->group(function () {
+        Route::get('/', [StatisticsController::class, 'index'])->name('index');
+        Route::get('export', [StatisticsController::class, 'export'])->name('export');
+    });
+
 });
-
-// Refresh session for auto-logout prevention
-Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name('refresh-session');
-
-// Logout beacon for browser close detection
-Route::post('logout-beacon', [AuthController::class, 'logoutBeacon'])->name('logout-beacon');
-
-// Simple logout route (clears session and redirects to login)
-Route::get('logout', [AuthController::class, 'logout'])->name('logout');

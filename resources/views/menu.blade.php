@@ -109,7 +109,7 @@
                                 <div class="card-content">
                                     <h6 class="card-title">Statistics</h6>
                                     <p class="card-description">View usage statistics</p>
-                                    <a href="#" class="menu-btn info-btn">
+                                    <a href="{{ route('statistics.index') }}" class="menu-btn info-btn">
                                         <span>View Stats</span>
                                         <i class="bi bi-arrow-right"></i>
                                     </a>
