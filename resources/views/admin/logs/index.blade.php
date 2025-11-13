@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin - Login Logs')
+@section('title', 'Login Logs | CSTU SPACE')
 
 @section('content')
 <div class="container-fluid">

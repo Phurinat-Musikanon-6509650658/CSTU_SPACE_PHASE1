@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Import ผู้ใช้จาก CSV')
+@section('title', 'Import Users | CSTU SPACE')
 
 @section('content')
 <div class="container">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'User Management - Admin')
+@section('title', 'User Management | CSTU SPACE')
 
 @section('content')
 <div class="container">

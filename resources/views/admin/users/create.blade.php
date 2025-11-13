@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'เพิ่มผู้ใช้ใหม่')
+@section('title', 'Create User | CSTU SPACE')
 
 @section('content')
 <div class="container">

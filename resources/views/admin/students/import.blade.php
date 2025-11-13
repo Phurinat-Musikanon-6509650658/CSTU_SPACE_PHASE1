@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Import นักศึกษาจาก CSV')
+@section('title', 'Import Students | CSTU SPACE')
 
 @section('content')
 <div class="container">

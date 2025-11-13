@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Menu - CSTU SPACE')
+@section('title', 'Dashboard | CSTU SPACE')
 
 @section('content')
 <div class="menu-container">

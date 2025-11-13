@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'เพิ่มนักศึกษาใหม่')
+@section('title', 'Create Student | CSTU SPACE')
 
 @section('content')
 <div class="container">
