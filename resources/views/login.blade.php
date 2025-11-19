@@ -16,7 +16,7 @@
             <!-- Brand Header -->
             <div class="brand-header mb-4">
                 <h1 class="brand-title">CSTU SPACE</h1>
-                <p class="brand-subtitle">Special Project1 Management System</p>
+                <p class="brand-subtitle">Special Project Management System</p>
             </div>
             
             <!-- Error Messages -->

@@ -37,22 +37,7 @@
                 <div class="menu-section">
                     <h5 class="section-title">System Management</h5>
                     <div class="row g-4">
-                        <div class="col-lg-3 col-md-6">
-                            <div class="menu-card admin-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-gear-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">System Settings</h6>
-                                    <p class="card-description">Manage users and system configuration</p>
-                                    <a href="{{ route('admin.system.index') }}" class="menu-btn admin-btn">
-                                        <span>Access System</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
+
                         <div class="col-lg-3 col-md-6">
                             <div class="menu-card primary-card">
                                 <div class="card-icon">
@@ -69,22 +54,7 @@
                                 <div class="card-overlay"></div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6">
-                            <div class="menu-card success-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-file-earmark-text-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">All Reports</h6>
-                                    <p class="card-description">View system-wide reports</p>
-                                    <a href="#" class="menu-btn success-btn">
-                                        <span>View Reports</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
+
                         <div class="col-lg-3 col-md-6">
                             <div class="menu-card warning-card">
                                 <div class="card-icon">

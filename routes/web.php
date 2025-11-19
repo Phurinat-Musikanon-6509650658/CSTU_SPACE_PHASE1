@@ -8,6 +8,7 @@ use App\Http\Controllers\StudentManagementController;
 use App\Http\Controllers\AdminLogController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\PermissionTestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,5 +115,10 @@ Route::middleware('session.timeout')->group(function () {
         Route::get('/', [StatisticsController::class, 'index'])->name('index');
         Route::get('export', [StatisticsController::class, 'export'])->name('export');
     });
+
+    // ======================================
+    // Permission Testing Route
+    // ======================================
+    Route::get('test-permission', [PermissionTestController::class, 'testPermission'])->name('test.permission');
 
 });
