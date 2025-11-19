@@ -30,215 +30,55 @@
                 </div>
             </div>
 
-        <!-- Menu Content based on Role -->
-        <div class="menu-grid">
-            {{-- Admin Menu - ทำได้ทุกอย่าง --}}
-            @if($role === 'admin')
-                <div class="menu-section">
-                    <h5 class="section-title">System Management</h5>
-                    <div class="row g-4">
-
-                        <div class="col-lg-3 col-md-6">
-                            <div class="menu-card primary-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-people-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">User Management</h6>
-                                    <p class="card-description">Add/Edit/Delete users</p>
-                                    <a href="{{ route('users.index') }}" class="menu-btn primary-btn">
-                                        <span>Manage</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
+            <!-- Menu Content from Controller -->
+            <div class="menu-grid">
+                @if(!empty($menuGroups))
+                    @foreach($menuGroups as $menuGroup)
+                        <div class="menu-section">
+                            <h5 class="section-title">{{ $menuGroup['title'] }}</h5>
+                            <div class="row g-4">
+                                @foreach($menuGroup['items'] as $item)
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="menu-card {{ $item['class'] }}">
+                                            <div class="card-icon">
+                                                <i class="{{ $item['icon'] }}"></i>
+                                            </div>
+                                            <div class="card-content">
+                                                <h6 class="card-title">{{ $item['title'] }}</h6>
+                                                <p class="card-description">{{ $item['description'] }}</p>
+                                                <a href="{{ $item['url'] }}" class="menu-btn {{ $item['btn_class'] }}">
+                                                    <span>Access</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            </div>
+                                            <div class="card-overlay"></div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
-
-                        <div class="col-lg-3 col-md-6">
-                            <div class="menu-card warning-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-shield-lock"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Login Logs</h6>
-                                    <p class="card-description">Track system access logs</p>
-                                    <a href="{{ route('admin.logs.index') }}" class="menu-btn warning-btn">
-                                        <span>View Logs</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <div class="menu-card info-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-graph-up"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Statistics</h6>
-                                    <p class="card-description">View usage statistics</p>
-                                    <a href="{{ route('statistics.index') }}" class="menu-btn info-btn">
-                                        <span>View Stats</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
+                    @endforeach
+                @else
+                    <div class="menu-section">
+                        <h5 class="section-title">No Menu Available</h5>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No menu items are available for your current role.
                         </div>
                     </div>
-                </div>
-            @endif
-
-            {{-- Coordinator Menu - ดูและติดตามสถานะโครงงานทั้งหมด --}}
-            @if($role === 'coordinator' || $role === 'admin')
-                <div class="menu-section">
-                    <h5 class="section-title">Project Management</h5>
-                    <div class="row g-4">
-                        <div class="col-lg-4 col-md-6">
-                            <div class="menu-card primary-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-clipboard-check"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Track All Projects</h6>
-                                    <p class="card-description">View and track status of all projects</p>
-                                    <a href="#" class="menu-btn primary-btn">
-                                        <span>View Projects</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="menu-card info-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-person-badge"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Manage Advisors</h6>
-                                    <p class="card-description">View advisor list and their projects</p>
-                                    <a href="#" class="menu-btn info-btn">
-                                        <span>Manage</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="menu-card success-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-mortarboard-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Manage Students</h6>
-                                    <p class="card-description">View all student records</p>
-                                    <a href="#" class="menu-btn success-btn">
-                                        <span>Manage</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Advisor Menu - ดูโครงงานของตัวเองและนักศึกษา --}}
-            @if($role === 'advisor' || $role === 'coordinator' || $role === 'admin')
-                <div class="menu-section">
-                    <h5 class="section-title">Advisory Work</h5>
-                    <div class="row g-4">
-                        <div class="col-lg-6 col-md-6">
-                            <div class="menu-card primary-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-folder-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">My Projects</h6>
-                                    <p class="card-description">View projects I'm advising</p>
-                                    <a href="#" class="menu-btn primary-btn">
-                                        <span>View Projects</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6">
-                            <div class="menu-card info-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-people"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">My Students</h6>
-                                    <p class="card-description">View students in my projects</p>
-                                    <a href="#" class="menu-btn info-btn">
-                                        <span>View Students</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Student Menu - ดูกลุ่มของตัวเอง --}}
-            @if($role === 'student' || $role === 'advisor' || $role === 'coordinator' || $role === 'admin')
-                <div class="menu-section">
-                    <h5 class="section-title">My Work</h5>
-                    <div class="row g-4">
-                        <div class="col-lg-6 col-md-6">
-                            <div class="menu-card success-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-journal-text"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Group Project</h6>
-                                    <p class="card-description">View and manage my group project</p>
-                                    <a href="#" class="menu-btn success-btn">
-                                        <span>View Project</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6">
-                            <div class="menu-card warning-card">
-                                <div class="card-icon">
-                                    <i class="bi bi-person-lines-fill"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h6 class="card-title">Group Members</h6>
-                                    <p class="card-description">View members in my group</p>
-                                    <a href="#" class="menu-btn warning-btn">
-                                        <span>View Members</span>
-                                        <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                                <div class="card-overlay"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        <!-- Logout Section -->
-        <div class="logout-section">
-            <div class="logout-container">
-                <a href="{{ route('logout') }}" class="logout-btn">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </a>
+                @endif
             </div>
+
+            <!-- Logout Section -->
+            <div class="logout-section">
+                <div class="logout-container">
+                    <a href="{{ route('logout') }}" class="logout-btn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
