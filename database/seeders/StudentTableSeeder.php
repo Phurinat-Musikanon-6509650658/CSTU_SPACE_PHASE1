@@ -23,6 +23,7 @@ class StudentTableSeeder extends Seeder
                 'lastname_std' => 'ทดสอบ',
                 'email_std' => 'student@cstu.ac.th',
                 'password_std' => Hash::make('student123'),
+                'role' => 'student',
             ]
         );
 
@@ -34,6 +35,7 @@ class StudentTableSeeder extends Seeder
                 'lastname_std' => 'อัชฌาวนิชย์',
                 'email_std' => 'haritch.utc@dome.tu.ac.th',
                 'password_std' => Hash::make('1101700338550'),
+                'role' => 'student',
             ]
         );
 
@@ -44,6 +46,7 @@ class StudentTableSeeder extends Seeder
                 'lastname_std' => 'วัฒนบำเพ็ญ',
                 'email_std' => 'natcha.wattan@dome.tu.ac.th',
                 'password_std' => Hash::make('1709700292985'),
+                'role' => 'student',
             ]
         );
 
@@ -54,6 +57,7 @@ class StudentTableSeeder extends Seeder
                 'lastname_std' => 'มุสิกานนท์',
                 'email_std' => 'phurinat.mus@dome.tu.ac.th',
                 'password_std' => Hash::make('1104000099105'),
+                'role' => 'student',
             ]
         );        
     }
