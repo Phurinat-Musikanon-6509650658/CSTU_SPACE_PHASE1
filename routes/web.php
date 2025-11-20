@@ -9,6 +9,9 @@ use App\Http\Controllers\AdminLogController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\PermissionTestController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GroupInvitationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +39,32 @@ Route::post('logout-beacon', [AuthController::class, 'logoutBeacon'])->name('log
 
 // Session management
 Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name('refresh-session');
+
+// ======================================
+// Student Routes (Protected by student auth)
+// ======================================
+Route::middleware(['auth:student'])->group(function () {
+    
+    // Student Menu/Dashboard
+    Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
+    Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    
+    // Group Management Routes
+    Route::prefix('groups')->name('groups.')->group(function () {
+        Route::get('create', [GroupController::class, 'create'])->name('create');
+        Route::post('store', [GroupController::class, 'store'])->name('store');
+        Route::get('{group}', [GroupController::class, 'show'])->name('show');
+        Route::get('search/students', [GroupController::class, 'searchStudents'])->name('search-students');
+    });
+    
+    // Group Invitation Management Routes
+    Route::prefix('invitations')->name('invitations.')->group(function () {
+        Route::get('/', [GroupInvitationController::class, 'index'])->name('index');
+        Route::post('{invitation}/accept', [GroupInvitationController::class, 'accept'])->name('accept');
+        Route::post('{invitation}/decline', [GroupInvitationController::class, 'decline'])->name('decline');
+    });
+    
+});
 
 // ======================================
 // Protected Routes

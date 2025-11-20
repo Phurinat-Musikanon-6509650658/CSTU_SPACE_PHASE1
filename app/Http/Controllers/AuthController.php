@@ -8,6 +8,9 @@ use Session;
 use DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\LoginLog;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Student;
 
 class AuthController extends Controller
 {
@@ -49,7 +52,13 @@ class AuthController extends Controller
                 $found = $this->findLocalRecord($username);
                     if ($found) {
                     $this->setUserSession($found['type'], $found['record']);
-                    return redirect()->route('menu');
+                    
+                    // Redirect based on user type
+                    if ($found['type'] === 'student') {
+                        return redirect()->route('student.menu');
+                    } else {
+                        return redirect()->route('menu');
+                    }
                 }
                 // API ตอบว่าใช้ได้ แต่ใน DB ไม่มีบัญชีที่ตรงกัน
                 session()->flash('login_error_message', 'ไม่พบบัญชีนี้ในระบบภายใน');
@@ -96,6 +105,12 @@ class AuthController extends Controller
             $studentId = null;
             $username = $record->username_user;
             
+            // Login with web guard
+            $user = User::find($userId);
+            if ($user) {
+                Auth::guard('web')->login($user);
+            }
+            
             Session::put('department', $role);
             Session::put('user_id', $userId);
         } else {
@@ -104,6 +119,12 @@ class AuthController extends Controller
             $userId = null;
             $studentId = $record->student_id ?? null;
             $username = $record->username_std;
+            
+            // Login with student guard
+            $student = Student::find($studentId);
+            if ($student) {
+                Auth::guard('student')->login($student);
+            }
             
             Session::put('department', 'student');
             Session::put('student_id', $studentId);
@@ -164,7 +185,7 @@ class AuthController extends Controller
             if (!empty($student->password_std) && password_get_info($student->password_std)['algo']) {
                 if (Hash::check($password, $student->password_std)) {
                     $this->setUserSession('student', $student);
-                    return redirect()->route('menu');
+                    return redirect()->route('student.menu');
                 }
             } else {
                 if (isset($student->password_std) && $student->password_std === $password) {
@@ -174,7 +195,7 @@ class AuthController extends Controller
                         ->update(['password_std' => Hash::make($password)]);
                     \Log::info('Password hashed for student: ' . $username);
                     $this->setUserSession('student', $student);
-                    return redirect()->route('menu');
+                    return redirect()->route('student.menu');
                 }
             }
         }
