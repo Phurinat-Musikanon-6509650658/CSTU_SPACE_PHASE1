@@ -55,6 +55,7 @@ Route::middleware(['auth:student'])->group(function () {
         Route::post('store', [GroupController::class, 'store'])->name('store');
         Route::get('{group}', [GroupController::class, 'show'])->name('show');
         Route::get('search/students', [GroupController::class, 'searchStudents'])->name('search-students');
+        Route::post('leave', [GroupController::class, 'leaveGroup'])->name('leave');
     });
     
     // Group Invitation Management Routes

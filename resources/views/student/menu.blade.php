@@ -153,9 +153,14 @@
                             </ul>
                         </div>
                         <div class="col-md-4 text-end">
-                            <a href="{{ route('groups.show', $myGroup) }}" class="btn btn-light">
-                                <i class="fas fa-eye me-1"></i>ดูรายละเอียด
-                            </a>
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{{ route('groups.show', $myGroup) }}" class="btn btn-light">
+                                    <i class="fas fa-eye me-1"></i>ดูรายละเอียด
+                                </a>
+                                <button type="button" class="btn btn-danger" onclick="confirmLeaveGroup()">
+                                    <i class="fas fa-sign-out-alt me-1"></i>ออกจากกลุ่ม
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -212,7 +217,49 @@
         </div>
     </div>
 
+    <!-- Leave Group Confirmation Modal -->
+    <div class="modal fade" id="leaveGroupModal" tabindex="-1" aria-labelledby="leaveGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="leaveGroupModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        ยืนยันการออกจากกลุ่ม
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-users text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <h6 class="mb-3">คุณมั่นใจแล้วใช่ไหมว่าจะออกจากกลุ่ม?</h6>
+                    <p class="text-muted">
+                        การดำเนินการนี้ไม่สามารถยกเลิกได้ หากกลุ่มไม่มีสมาชิกเหลือ กลุ่มจะถูกลบอัตโนมัติ
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>ยกเลิก
+                    </button>
+                    <form action="{{ route('groups.leave') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>ออกจากกลุ่ม
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    function confirmLeaveGroup() {
+        const modal = new bootstrap.Modal(document.getElementById('leaveGroupModal'));
+        modal.show();
+    }
+    </script>
 </body>
 </html>

@@ -116,4 +116,50 @@ class GroupController extends Controller
 
         return response()->json($students);
     }
+
+    public function leaveGroup(Request $request)
+    {
+        $student = Auth::guard('student')->user();
+        
+        // ตรวจสอบว่า student มีกลุ่มหรือไม่
+        if (!$student->hasGroup()) {
+            return redirect()->route('student.menu')->with('error', 'คุณไม่ได้อยู่ในกลุ่มใดๆ');
+        }
+
+        DB::beginTransaction();
+        try {
+            // ค้นหา group member ของ student
+            $groupMember = GroupMember::where('username_std', $student->username_std)->first();
+            
+            if (!$groupMember) {
+                DB::rollback();
+                return redirect()->route('student.menu')->with('error', 'ไม่พบข้อมูลสมาชิกในกลุ่ม');
+            }
+            
+            $group = $groupMember->group;
+            
+            // ลบ student ออกจากกลุ่ม
+            $groupMember->delete();
+            
+            // ตรวจสอบว่าในกลุ่มยังมีสมาชิกเหลืออยู่หรือไม่
+            $remainingMembers = GroupMember::where('group_id', $group->group_id)->count();
+            
+            if ($remainingMembers === 0) {
+                // ถ้าไม่มีสมาชิกเหลือ ให้ลบกลุ่มและคำเชิญทั้งหมด
+                GroupInvitation::where('group_id', $group->group_id)->delete();
+                $group->delete();
+                $message = 'คุณได้ออกจากกลุ่มเรียบร้อยแล้ว และกลุ่มได้ถูกลบเนื่องจากไม่มีสมาชิกเหลือ';
+            } else {
+                $message = 'คุณได้ออกจากกลุ่มเรียบร้อยแล้ว';
+            }
+            
+            DB::commit();
+            return redirect()->route('student.menu')->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Error leaving group: ' . $e->getMessage());
+            return redirect()->route('student.menu')->with('error', 'เกิดข้อผิดพลาดในการออกจากกลุ่ม: ' . $e->getMessage());
+        }
+    }
 }
