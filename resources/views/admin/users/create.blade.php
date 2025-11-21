@@ -67,9 +67,11 @@
                                 <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
                                 <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
                                     <option value="">-- เลือก Role --</option>
-                                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                                    <option value="coordinator" {{ old('role') == 'coordinator' ? 'selected' : '' }}>Coordinator</option>
-                                    <option value="advisor" {{ old('role') == 'advisor' ? 'selected' : '' }}>Advisor</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->role }}" {{ old('role') == $role->role ? 'selected' : '' }}>
+                                            {{ ucfirst($role->role) }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 @error('role')
                                     <div class="invalid-feedback">{{ $message }}</div>

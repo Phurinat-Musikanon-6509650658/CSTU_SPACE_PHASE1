@@ -83,4 +83,12 @@ class Student extends Authenticatable
     {
         return !$this->hasGroup();
     }
+
+    /**
+     * Get the role that the student belongs to
+     */
+    public function roleData()
+    {
+        return $this->belongsTo(Role::class, 'role', 'role');
+    }
 }

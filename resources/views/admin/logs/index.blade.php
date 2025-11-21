@@ -89,10 +89,11 @@
                                 <label for="role" class="form-label">Role</label>
                                 <select name="role" id="role" class="form-select">
                                     <option value="all" {{ request('role') == 'all' ? 'selected' : '' }}>ทั้งหมด</option>
-                                    <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                                    <option value="coordinator" {{ request('role') == 'coordinator' ? 'selected' : '' }}>Coordinator</option>
-                                    <option value="advisor" {{ request('role') == 'advisor' ? 'selected' : '' }}>Advisor</option>
-                                    <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>Student</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->role }}" {{ request('role') == $role->role ? 'selected' : '' }}>
+                                            {{ ucfirst($role->role) }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -165,22 +166,18 @@
                                         <br><small class="text-muted">{{ ucfirst($log->user_type) }}</small>
                                     </td>
                                     <td>
-                                        @switch($log->role)
-                                            @case('admin')
-                                                <span class="badge bg-danger">Admin</span>
-                                                @break
-                                            @case('coordinator')
-                                                <span class="badge bg-warning">Coordinator</span>
-                                                @break
-                                            @case('advisor')
-                                                <span class="badge bg-info">Advisor</span>
-                                                @break
-                                            @case('student')
-                                                <span class="badge bg-primary">Student</span>
-                                                @break
-                                            @default
-                                                <span class="badge bg-secondary">{{ ucfirst($log->role) }}</span>
-                                        @endswitch
+                                        @php
+                                            $roleBadgeClass = match($log->role) {
+                                                'admin' => 'bg-danger',
+                                                'coordinator' => 'bg-warning',
+                                                'advisor' => 'bg-info', 
+                                                'student' => 'bg-primary',
+                                                'staff' => 'bg-success',
+                                                'committee' => 'bg-dark',
+                                                default => 'bg-secondary'
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $roleBadgeClass }}">{{ ucfirst($log->role) }}</span>
                                     </td>
                                     <td><code>{{ $log->ip_address }}</code></td>
                                     <td>

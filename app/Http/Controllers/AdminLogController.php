@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LoginLog;
+use App\Models\Role;
 use Session;
 use Carbon\Carbon;
 
@@ -57,8 +58,13 @@ class AdminLogController extends Controller
 
         // Statistics
         $stats = $this->getStatistics($request);
+        
+        // Get roles for filter dropdown
+        $roles = \App\Models\Role::whereNotIn('role', ['coordinator-advisor', 'coordinator-staff', 'committee', 'guest'])
+                    ->orderBy('role_code', 'desc')
+                    ->get();
 
-        return view('admin.logs.index', compact('logs', 'stats'));
+        return view('admin.logs.index', compact('logs', 'stats', 'roles'));
     }
 
     private function getStatistics($request)

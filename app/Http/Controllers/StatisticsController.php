@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LoginLog;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
@@ -96,7 +97,9 @@ class StatisticsController extends Controller
 
     private function getRoleStatistics()
     {
-        $roles = ['admin', 'coordinator', 'advisor', 'student'];
+        $roles = \App\Models\Role::whereNotIn('role', ['coordinator-advisor', 'coordinator-staff', 'committee', 'guest'])
+                    ->orderBy('role_code', 'desc')
+                    ->pluck('role')->toArray();
         $today = Carbon::today();
         $thisWeek = Carbon::now()->startOfWeek();
         

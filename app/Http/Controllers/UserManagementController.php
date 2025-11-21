@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -35,7 +36,11 @@ class UserManagementController extends Controller
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
-        return view('admin.users.create');
+        $roles = \App\Models\Role::whereIn('role', ['admin', 'coordinator', 'advisor'])
+                    ->orderBy('role_code', 'desc')
+                    ->get();
+
+        return view('admin.users.create', compact('roles'));
     }
 
     /**
@@ -84,7 +89,11 @@ class UserManagementController extends Controller
             return redirect()->route('users.index')->with('error', 'ไม่พบผู้ใช้นี้');
         }
 
-        return view('admin.users.edit', compact('user'));
+        $roles = \App\Models\Role::whereIn('role', ['admin', 'coordinator', 'advisor'])
+                    ->orderBy('role_code', 'desc')
+                    ->get();
+
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     /**

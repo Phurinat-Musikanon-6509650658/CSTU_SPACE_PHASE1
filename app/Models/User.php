@@ -103,4 +103,12 @@ class User extends Authenticatable
     {
         return in_array($this->role, $roles);
     }
+
+    /**
+     * Get the role that the user belongs to
+     */
+    public function roleData()
+    {
+        return $this->belongsTo(Role::class, 'role', 'role');
+    }
 }
