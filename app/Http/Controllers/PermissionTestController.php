@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use App\Models\Role;
+use App\Models\UserRole;
 use App\Helpers\PermissionHelper;
 
 class PermissionTestController extends Controller
@@ -14,9 +14,9 @@ class PermissionTestController extends Controller
      */
     public function testPermission()
     {
-        // ดึง role ของ user ปัจจุบัน
-        $userRole = Session::get('department', 'student');
-        $role = Role::where('role', 'LIKE', "%{$userRole}%")->first();
+        // ดึง role_code ของ user ปัจจุบัน
+        $roleCode = Session::get('role_code', 2048);
+        $role = UserRole::where('role_code', $roleCode)->first();
 
         if (!$role) {
             return response()->json(['error' => 'Role not found'], 404);
@@ -48,7 +48,7 @@ class PermissionTestController extends Controller
         ];
 
         return response()->json([
-            'user_role' => $role->role,
+            'user_role' => $role->role_name,
             'displayed_number' => $displayedNumber,
             'binary_representation' => PermissionHelper::toBinaryString($displayedNumber),
             'binary_integrity' => $integrityCheck,

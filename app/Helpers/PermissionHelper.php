@@ -68,4 +68,44 @@ class PermissionHelper
     {
         return str_pad(decbin($decimal), 16, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Check if current session user is admin
+     * @return bool
+     */
+    public static function isAdmin(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::ADMIN_PERMISSION);
+    }
+
+    /**
+     * Check if current session user is coordinator
+     * @return bool
+     */
+    public static function isCoordinator(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::COORDINATOR_PERMISSION);
+    }
+
+    /**
+     * Check if current session user is lecturer
+     * @return bool
+     */
+    public static function isLecturer(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::LECTURER_PERMISSION);
+    }
+
+    /**
+     * Check if current session user is student
+     * @return bool
+     */
+    public static function isStudent(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::STUDENT_PERMISSION);
+    }
 }

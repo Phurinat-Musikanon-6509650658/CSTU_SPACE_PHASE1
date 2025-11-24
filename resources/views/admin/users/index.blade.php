@@ -108,20 +108,21 @@
                                     <td>{{ $user->firstname_user }} {{ $user->lastname_user }}</td>
                                     <td>{{ $user->email_user }}</td>
                                     <td>
-                                        @if($user->role === 'admin')
-                                            <span class="role-badge role-admin">
-                                                <i class="bi bi-shield-fill"></i> Admin
-                                            </span>
-                                        @elseif($user->role === 'coordinator')
-                                            <span class="role-badge role-coordinator">
-                                                <i class="bi bi-person-gear"></i> Coordinator
-                                            </span>
-                                        @elseif($user->role === 'advisor')
-                                            <span class="role-badge role-advisor">
-                                                <i class="bi bi-person-check"></i> Advisor
-                                            </span>
+                                        @php
+                                            $roles = [];
+                                            if (($user->role & 32768) !== 0) $roles[] = '<span class="role-badge role-admin"><i class="bi bi-shield-fill"></i> Admin</span>';
+                                            if (($user->role & 16384) !== 0) $roles[] = '<span class="role-badge role-coordinator"><i class="bi bi-person-gear"></i> Coordinator</span>';
+                                            if (($user->role & 8192) !== 0) $roles[] = '<span class="role-badge role-advisor"><i class="bi bi-person-check"></i> Lecturer</span>';
+                                            if (($user->role & 4096) !== 0) $roles[] = '<span class="role-badge role-staff"><i class="bi bi-briefcase"></i> Staff</span>';
+                                            if (($user->role & 2048) !== 0) $roles[] = '<span class="role-badge role-student"><i class="bi bi-mortarboard"></i> Student</span>';
+                                        @endphp
+                                        
+                                        @if(count($roles) > 0)
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {!! implode(' ', $roles) !!}
+                                            </div>
                                         @else
-                                            <span class="role-badge role-other">{{ $user->role }}</span>
+                                            <span class="role-badge role-other">Unknown ({{ $user->role }})</span>
                                         @endif
                                     </td>
                                     <td>
@@ -242,7 +243,7 @@
 
     .section-header {
         display: flex;
-        justify-content: between;
+        justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
         padding: 1.5rem;
@@ -305,10 +306,12 @@
         padding: 1rem 0.75rem;
     }
 
+    .table-hover tbody tr {
+        transition: var(--transition);
+    }
+    
     .table-hover tbody tr:hover {
         background-color: rgba(102, 126, 234, 0.05);
-        transform: translateX(5px);
-        transition: var(--transition);
     }
 
     .role-badge {
@@ -330,9 +333,19 @@
         background: linear-gradient(45deg, #4834d4, #686de0);
         color: white;
     }
-
+    
     .role-advisor {
         background: linear-gradient(45deg, #0abde3, #006ba6);
+        color: white;
+    }
+
+    .role-staff {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+    }
+    
+    .role-student {
+        background: linear-gradient(45deg, #55a3ff, #003d82);
         color: white;
     }
 
