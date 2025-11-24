@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use App\Helpers\PermissionHelper;
 
 class StudentManagementController extends Controller
 {
@@ -14,7 +15,7 @@ class StudentManagementController extends Controller
      */
     public function create()
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -26,7 +27,7 @@ class StudentManagementController extends Controller
      */
     public function store(Request $request)
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -54,7 +55,7 @@ class StudentManagementController extends Controller
      */
     public function edit($id)
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -72,7 +73,7 @@ class StudentManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -105,7 +106,7 @@ class StudentManagementController extends Controller
      */
     public function destroy($id)
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -119,7 +120,7 @@ class StudentManagementController extends Controller
      */
     public function importForm()
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -131,7 +132,7 @@ class StudentManagementController extends Controller
      */
     public function import(Request $request)
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -213,7 +214,7 @@ class StudentManagementController extends Controller
      */
     public function downloadTemplate()
     {
-        if (Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -239,3 +240,4 @@ class StudentManagementController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 }
+

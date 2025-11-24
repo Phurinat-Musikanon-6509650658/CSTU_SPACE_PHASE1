@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use App\Helpers\PermissionHelper;
 
 class SystemSettingsController extends Controller
 {
@@ -16,7 +17,7 @@ class SystemSettingsController extends Controller
     public function index()
     {
         // ตรวจสอบ permission (admin only)
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -97,7 +98,7 @@ class SystemSettingsController extends Controller
      */
     public function clearCache(Request $request)
     {
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -143,7 +144,7 @@ class SystemSettingsController extends Controller
      */
     public function optimize()
     {
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -170,7 +171,7 @@ class SystemSettingsController extends Controller
      */
     public function showConfig()
     {
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -216,7 +217,7 @@ class SystemSettingsController extends Controller
      */
     public function runMigrations()
     {
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -235,7 +236,7 @@ class SystemSettingsController extends Controller
      */
     public function showLogs()
     {
-        if (session('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 

@@ -61,7 +61,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return ($this->role & 32768) === 32768; // Admin role_code
     }
 
     /**
@@ -69,15 +69,15 @@ class User extends Authenticatable
      */
     public function isCoordinator(): bool
     {
-        return $this->role === 'coordinator';
+        return ($this->role & 16384) === 16384; // Coordinator role_code
     }
 
     /**
-     * Check if user is advisor
+     * Check if user is advisor (lecturer)
      */
     public function isAdvisor(): bool
     {
-        return $this->role === 'advisor';
+        return ($this->role & 8192) === 8192; // Lecturer role_code
     }
 
     /**
@@ -85,22 +85,44 @@ class User extends Authenticatable
      */
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return ($this->role & 2048) === 2048; // Student role_code
     }
 
     /**
-     * Check if user has specific role
+     * Check if user has specific role (by role_code)
      */
-    public function hasRole(string $role): bool
+    public function hasRole(int $roleCode): bool
     {
-        return $this->role === $role;
+        return ($this->role & $roleCode) === $roleCode;
     }
 
     /**
-     * Check if user has any of the given roles
+     * Check if user has any of the given roles (by role_codes)
      */
-    public function hasAnyRole(array $roles): bool
+    public function hasAnyRole(array $roleCodes): bool
     {
-        return in_array($this->role, $roles);
+        foreach ($roleCodes as $roleCode) {
+            if (($this->role & $roleCode) === $roleCode) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get user role information from user_role table
+     */
+    public function userRole()
+    {
+        return $this->belongsTo(UserRole::class, 'role', 'role_code');
+    }
+
+    /**
+     * Get role name
+     */
+    public function getRoleName(): string
+    {
+        $userRole = $this->userRole;
+        return $userRole ? $userRole->role_name : 'Unknown';
     }
 }

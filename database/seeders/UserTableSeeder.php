@@ -15,40 +15,40 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        // Admin
+        // Admin (role_code = 32768)
         DB::table('user')->updateOrInsert(
             ['username_user' => 'admin'],
             [
                 'firstname_user' => 'Admin',
                 'lastname_user' => 'System',
                 'user_code' => 'ADM',
-                'role' => 'admin',
+                'role' => 32768,  // Admin role_code
                 'email_user' => 'admin@cstu.ac.th',
                 'password_user' => Hash::make('admin123'),
             ]
         );
 
-        // Coordinator
+        // Coordinator (role_code = 16384)
         DB::table('user')->updateOrInsert(
             ['username_user' => 'coordinator'],
             [
                 'firstname_user' => 'ผู้ประสานงาน',
                 'lastname_user' => 'ทดสอบ',
                 'user_code' => 'CRD',
-                'role' => 'coordinator',
+                'role' => 16384,  // Coordinator role_code
                 'email_user' => 'coordinator@cstu.ac.th',
                 'password_user' => Hash::make('coordinator123'),
             ]
         );
 
-        // Advisor
+        // Lecturer/Advisor (role_code = 8192)
         DB::table('user')->updateOrInsert(
             ['username_user' => 'advisor'],
             [
                 'firstname_user' => 'อาจารย์ที่ปรึกษา',
                 'lastname_user' => 'ทดสอบ',
                 'user_code' => 'ADV',
-                'role' => 'advisor',
+                'role' => 8192,  // Lecturer role_code
                 'email_user' => 'advisor@cstu.ac.th',
                 'password_user' => Hash::make('advisor123'),
             ]
@@ -61,7 +61,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'กันตินันท์',
                 'lastname_user' => 'ตันติยาภินันท์',
                 'user_code' => 'KTN',
-                'role' => 'admin',
+                'role' => 32768,  // Admin role_code
                 'email_user' => 'kantinan.tan@dome.tu.ac.th',
                 'password_user' => Hash::make('1100703568130'),
             ]
@@ -73,7 +73,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ภูรี',
                 'lastname_user' => 'เข่งเจริญ',
                 'user_code' => 'PHR',
-                'role' => 'coordinator',
+                'role' => 16384,  // Coordinator role_code
                 'email_user' => 'phuree.ken@dome.tu.ac.th',
                 'password_user' => Hash::make('1102200195289'),
             ]

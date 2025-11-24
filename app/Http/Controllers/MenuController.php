@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use App\Models\UserRole;
 
 class MenuController extends Controller
 {
@@ -14,16 +15,391 @@ class MenuController extends Controller
     {
         // ตรวจสอบว่า user login หรือยัง
         if (!Session::has('displayname')) {
+            \Log::info('MenuController: No displayname in session, redirecting to login');
             return redirect()->route('login');
         }
 
         $displayname = Session::get('displayname');
-        $role = Session::get('department', 'student'); // ใช้ department เป็น role
+        $roleCode = Session::get('role_code', 2048);  // รับ role_code จาก session
+        
+        \Log::info('MenuController: displayname=' . $displayname . ', role_code=' . $roleCode);
+        
+        // ดึง role_code_bin จาก database
+        $roleCodeBin = $this->getRoleCodeBinFromDatabase($roleCode);
+        
+        // ดึง role_name จาก database
+        $userRole = UserRole::where('role_code', $roleCode)->first();
+        $roleName = $userRole ? $userRole->role_name : 'Student';
+        
+        \Log::info('MenuController: role_name=' . $roleName . ', role_code_bin=' . $roleCodeBin);
+        
+        // สร้างเมนูตาม binary permission
+        $menuGroups = $this->getMenuByPermission($roleCodeBin);
+        
+        \Log::info('MenuController: menu_groups_count=' . count($menuGroups));
 
         // ส่งข้อมูลไปยัง view
         return view('menu', [
             'displayname' => $displayname,
-            'role' => $role,
+            'role' => strtolower($roleName),  // ส่งเป็น lowercase เพื่อให้ view ใช้งานได้
+            'menuGroups' => $menuGroups
         ]);
+    }
+
+    /**
+     * ดึง role_code_bin จาก table user_role ในฐานข้อมูล
+     */
+    private function getRoleCodeBinFromDatabase($roleCode)
+    {
+        $role = UserRole::where('role_code', $roleCode)->first();
+        
+        if ($role) {
+            return $role->role_code_bin;
+        }
+        
+        // ถ้าไม่เจอใน database ให้ default เป็น student
+        $defaultRole = UserRole::where('role_code', 2048)->first();
+        return $defaultRole ? $defaultRole->role_code_bin : 2048;
+    }
+
+    /**
+     * Debug method สำหรับแสดง binary permission (สำหรับ development)
+     */
+    public function debugPermission($roleCode = null)
+    {
+        if (!$roleCode) {
+            $roleCode = Session::get('role_code', 2048);
+        }
+        
+        $roleCodeBin = $this->getRoleCodeBinFromDatabase($roleCode);
+        
+        // ดึง permission constants จาก database
+        $roles = UserRole::all();
+        $permissions = [];
+        
+        foreach ($roles as $role) {
+            if (($roleCodeBin & $role->role_code_bin) !== 0) {
+                $permissions[] = $role->role_name;
+            }
+        }
+        
+        // Check for guest (special case)
+        if ($roleCodeBin === 1) {
+            $permissions[] = 'Guest';
+        }
+        
+        return [
+            'role_code' => $roleCode,
+            'role_code_bin' => $roleCodeBin,
+            'binary_string' => str_pad(decbin($roleCodeBin), 15, '0', STR_PAD_LEFT),
+            'permissions' => $permissions,
+            'menu_count' => count($this->getMenuByPermission($roleCodeBin)),
+            'all_roles' => $roles->pluck('role_name', 'role_code_bin')->toArray()
+        ];
+    }
+    
+    /**
+     * สร้างกลุ่มเมนูตาม binary permission จาก database
+     */
+    private function getMenuByPermission($roleCodeBin)
+    {
+        $menuGroups = [];
+
+        // ดึง permission constants จาก database
+        $adminRole = UserRole::where('role_name', 'Admin')->first();
+        $coordinatorRole = UserRole::where('role_name', 'Coordinator')->first();
+        $lecturerRole = UserRole::where('role_name', 'Lecturer')->first();
+        $staffRole = UserRole::where('role_name', 'Staff')->first();
+        $studentRole = UserRole::where('role_name', 'Student')->first();
+
+        $ADMIN_PERMISSION = $adminRole ? $adminRole->role_code_bin : 32768;
+        $COORDINATOR_PERMISSION = $coordinatorRole ? $coordinatorRole->role_code_bin : 16384;
+        $LECTURER_PERMISSION = $lecturerRole ? $lecturerRole->role_code_bin : 8192;
+        $STAFF_PERMISSION = $staffRole ? $staffRole->role_code_bin : 4096;
+        $STUDENT_PERMISSION = $studentRole ? $studentRole->role_code_bin : 2048;
+
+        // Check permissions using bitwise operations
+        $hasAdmin = ($roleCodeBin & $ADMIN_PERMISSION) !== 0;
+        $hasCoordinator = ($roleCodeBin & $COORDINATOR_PERMISSION) !== 0;
+        $hasLecturer = ($roleCodeBin & $LECTURER_PERMISSION) !== 0;
+        $hasStaff = ($roleCodeBin & $STAFF_PERMISSION) !== 0;
+        $hasStudent = ($roleCodeBin & $STUDENT_PERMISSION) !== 0;
+
+        // Admin System Management
+        if ($hasAdmin) {
+            $menuGroups[] = $this->getAdminSystemMenu();
+        }
+
+        // Coordinator Project Management
+        if ($hasCoordinator || $hasAdmin) {
+            $menuGroups[] = $this->getProjectManagementMenu();
+        }
+
+        // Lecturer/Advisor Advisory Work
+        if ($hasLecturer || $hasCoordinator || $hasAdmin) {
+            $menuGroups[] = $this->getAdvisoryWorkMenu();
+        }
+
+        // Staff Management Tools
+        if ($hasStaff || $hasAdmin) {
+            $menuGroups[] = $this->getStaffManagementMenu();
+        }
+
+        // Student Work (for students or when viewing as student perspective)
+        if ($hasStudent || $roleCodeBin === 1) { // Guest can see basic student view
+            $menuGroups[] = $this->getStudentWorkMenu();
+        }
+
+        // If no specific permissions, show basic menu
+        if (empty($menuGroups)) {
+            $menuGroups[] = $this->getGuestMenu();
+        }
+
+        return $menuGroups;
+    }
+
+    /**
+     * เมนู System Management สำหรับ Admin
+     */
+    private function getAdminSystemMenu()
+    {
+        return [
+            'title' => 'System Management',
+            'items' => [
+                [
+                    'title' => 'User Management',
+                    'description' => 'Add/Edit/Delete users',
+                    'icon' => 'bi-people-fill',
+                    'url' => route('users.index'),
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'Login Logs',
+                    'description' => 'Track system access logs',
+                    'icon' => 'bi-shield-lock',
+                    'url' => route('admin.logs.index'),
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
+                ],
+                [
+                    'title' => 'Statistics',
+                    'description' => 'View usage statistics',
+                    'icon' => 'bi-graph-up',
+                    'url' => route('statistics.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนู Project Management สำหรับ Coordinator
+     */
+    private function getProjectManagementMenu()
+    {
+        return [
+            'title' => 'Project Management',
+            'items' => [
+                [
+                    'title' => 'Track All Projects',
+                    'description' => 'View and track status of all projects',
+                    'icon' => 'bi-clipboard-check',
+                    'url' => '#',
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'Manage Advisors',
+                    'description' => 'View advisor list and their projects',
+                    'icon' => 'bi-person-badge',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'Manage Students',
+                    'description' => 'View all student records',
+                    'icon' => 'bi-mortarboard-fill',
+                    'url' => '#',
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนู Advisory Work สำหรับ Advisor
+     */
+    private function getAdvisoryWorkMenu()
+    {
+        return [
+            'title' => 'Advisory Work',
+            'items' => [
+                [
+                    'title' => 'My Projects',
+                    'description' => 'View projects I\'m advising',
+                    'icon' => 'bi-folder-fill',
+                    'url' => '#',
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'My Students',
+                    'description' => 'View students under my guidance',
+                    'icon' => 'bi-people',
+                    'url' => '#',
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'Project Reports',
+                    'description' => 'Generate reports for my projects',
+                    'icon' => 'bi-file-earmark-text',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนู Staff Management สำหรับ Staff และ Admin
+     */
+    private function getStaffManagementMenu()
+    {
+        return [
+            'title' => 'Staff Management',
+            'items' => [
+                [
+                    'title' => 'Document Management',
+                    'description' => 'Manage official documents',
+                    'icon' => 'bi-files',
+                    'url' => '#',
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'Schedule Management',
+                    'description' => 'Manage academic schedules',
+                    'icon' => 'bi-calendar-event',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'Resource Booking',
+                    'description' => 'Book rooms and resources',
+                    'icon' => 'bi-geo-alt-fill',
+                    'url' => '#',
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนูสำหรับ Guest
+     */
+    private function getGuestMenu()
+    {
+        return [
+            'title' => 'Guest Access',
+            'items' => [
+                [
+                    'title' => 'View Information',
+                    'description' => 'View public information',
+                    'icon' => 'bi-info-circle',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'Contact Support',
+                    'description' => 'Get help and support',
+                    'icon' => 'bi-headset',
+                    'url' => '#',
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนู Student สำหรับ admin, coordinator, lecturer (ดูข้อมูล student ทั่วไป)
+     */
+    private function getStudentMenu()
+    {
+        return [
+            'title' => 'Student Management',
+            'items' => [
+                [
+                    'title' => 'Student List',
+                    'description' => 'View all student records',
+                    'icon' => 'bi-people-fill',
+                    'url' => '#',
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'Project Groups',
+                    'description' => 'View student project groups',
+                    'icon' => 'bi-diagram-3-fill',
+                    'url' => '#',
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'Student Reports',
+                    'description' => 'Generate student progress reports',
+                    'icon' => 'bi-bar-chart-line-fill',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * เมนูสำหรับ Student โดยเฉพาะ (งานของตัวเอง)
+     */
+    private function getStudentWorkMenu()
+    {
+        return [
+            'title' => 'My Work',
+            'items' => [
+                [
+                    'title' => 'Group Project',
+                    'description' => 'View and manage my group project',
+                    'icon' => 'bi-journal-text',
+
+                    'url' => '#',
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'Group Members',
+                    'description' => 'View members in my group',
+                    'icon' => 'bi-person-lines-fill',
+                    'url' => '#',
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
+                ],
+                [
+                    'title' => 'Submit Documents',
+                    'description' => 'Submit project documents and reports',
+                    'icon' => 'bi-cloud-upload-fill',
+                    'url' => '#',
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ]
+            ]
+        ];
     }
 }

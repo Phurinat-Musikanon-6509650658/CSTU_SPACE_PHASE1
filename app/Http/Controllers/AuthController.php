@@ -91,21 +91,37 @@ class AuthController extends Controller
     {
         if ($type === 'user') {
             $display = trim(($record->firstname_user ?? '') . ' ' . ($record->lastname_user ?? '')) ?: ($record->username_user ?? '');
-            $role = $record->role ?? '';
+            $roleCode = $record->role ?? 2048;  // role_code (integer)
             $userId = $record->user_id ?? null;
             $studentId = null;
             $username = $record->username_user;
             
-            Session::put('department', $role);
+            \Log::info('AuthController setUserSession: user', [
+                'username' => $username,
+                'display' => $display,
+                'role_code' => $roleCode,
+                'user_id' => $userId
+            ]);
+            
+            Session::put('role_code', $roleCode);  // เก็บ role_code (integer)
+            Session::put('department', $roleCode); // เก็บ role_code ใน department เหมือนเดิมเพื่อ backward compatibility
             Session::put('user_id', $userId);
         } else {
             $display = trim(($record->firstname_std ?? '') . ' ' . ($record->lastname_std ?? '')) ?: ($record->username_std ?? '');
-            $role = 'student';
+            $roleCode = 2048;  // Student role_code
             $userId = null;
             $studentId = $record->student_id ?? null;
             $username = $record->username_std;
             
-            Session::put('department', 'student');
+            \Log::info('AuthController setUserSession: student', [
+                'username' => $username,
+                'display' => $display,
+                'role_code' => $roleCode,
+                'student_id' => $studentId
+            ]);
+            
+            Session::put('role_code', $roleCode);
+            Session::put('department', $roleCode);
             Session::put('student_id', $studentId);
         }
 
@@ -119,12 +135,18 @@ class AuthController extends Controller
             $type,
             $userId,
             $studentId,
-            $role,
+            $roleCode,
             'success'
         );
         
         // เก็บ login log ID ไว้ใน session สำหรับอัพเดท logout time
         Session::put('login_log_id', $loginLog->id);
+        
+        \Log::info('AuthController: Session set complete', [
+            'displayname' => Session::get('displayname'),
+            'role_code' => Session::get('role_code'),
+            'login_log_id' => $loginLog->id
+        ]);
     }
 
     // ตรวจสอบ login โดยใช้ข้อมูลในฐานข้อมูลเท่านั้น (DB-only flow)
