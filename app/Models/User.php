@@ -61,7 +61,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return ($this->role & 32768) === 32768; // Admin role_code
+        return ($this->role & 32768) !== 0; // Admin role_code
     }
 
     /**
@@ -69,7 +69,7 @@ class User extends Authenticatable
      */
     public function isCoordinator(): bool
     {
-        return ($this->role & 16384) === 16384; // Coordinator role_code
+        return ($this->role & 16384) !== 0; // Coordinator role_code
     }
 
     /**
@@ -77,7 +77,7 @@ class User extends Authenticatable
      */
     public function isAdvisor(): bool
     {
-        return ($this->role & 8192) === 8192; // Lecturer role_code
+        return ($this->role & 8192) !== 0; // Lecturer role_code
     }
 
     /**
@@ -85,7 +85,7 @@ class User extends Authenticatable
      */
     public function isStudent(): bool
     {
-        return ($this->role & 2048) === 2048; // Student role_code
+        return ($this->role & 2048) !== 0; // Student role_code
     }
 
     /**
@@ -93,7 +93,7 @@ class User extends Authenticatable
      */
     public function hasRole(int $roleCode): bool
     {
-        return ($this->role & $roleCode) === $roleCode;
+        return ($this->role & $roleCode) !== 0;
     }
 
     /**
@@ -102,7 +102,7 @@ class User extends Authenticatable
     public function hasAnyRole(array $roleCodes): bool
     {
         foreach ($roleCodes as $roleCode) {
-            if (($this->role & $roleCode) === $roleCode) {
+            if (($this->role & $roleCode) !== 0) {
                 return true;
             }
         }
@@ -124,13 +124,5 @@ class User extends Authenticatable
     {
         $userRole = $this->userRole;
         return $userRole ? $userRole->role_name : 'Unknown';
-    }
-
-    /**
-     * Get the role that the user belongs to
-     */
-    public function roleData()
-    {
-        return $this->belongsTo(Role::class, 'role', 'role');
     }
 }

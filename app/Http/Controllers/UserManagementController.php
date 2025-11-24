@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Role;
+use App\Models\UserRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -16,16 +16,22 @@ class UserManagementController extends Controller
      */
     public function index()
     {
-        // ตรวจสอบว่าเป็น admin หรือไม่
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        // Admin เห็นทุกคน
+        if (PermissionHelper::canViewAllData()) {
+            $users = DB::table('user')->get();
+            $students = DB::table('student')->get();
+            return view('admin.users.index', compact('users', 'students'));
+        }
+        
+        // Coordinator/Lecturer/Staff เห็นเฉพาะตัวเอง
+        if (PermissionHelper::isCoordinator() || PermissionHelper::isLecturer() || PermissionHelper::isStaff()) {
+            $userId = PermissionHelper::getCurrentUserId();
+            $users = DB::table('user')->where('user_id', $userId)->get();
+            $students = collect(); // ไม่แสดง students
+            return view('admin.users.index', compact('users', 'students'));
         }
 
-        // ดึงข้อมูลผู้ใช้และนักศึกษาทั้งหมด
-        $users = DB::table('user')->get();
-        $students = DB::table('student')->get();
-
-        return view('admin.users.index', compact('users', 'students'));
+        return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
     }
 
     /**
@@ -33,15 +39,11 @@ class UserManagementController extends Controller
      */
     public function create()
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เพิ่มผู้ใช้ใหม่');
         }
 
-        $roles = \App\Models\Role::whereIn('role', ['admin', 'coordinator', 'advisor'])
-                    ->orderBy('role_code', 'desc')
-                    ->get();
-
-        return view('admin.users.create', compact('roles'));
+        return view('admin.users.create');
     }
 
     /**
@@ -49,8 +51,8 @@ class UserManagementController extends Controller
      */
     public function store(Request $request)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เพิ่มผู้ใช้ใหม่');
         }
 
         $request->validate([
@@ -59,7 +61,7 @@ class UserManagementController extends Controller
             'lastname_user' => 'required',
             'email_user' => 'required|email',
             'password_user' => 'required|min:6',
-            'role' => 'required|in:admin,coordinator,advisor',
+            'role' => 'required|integer|min:1',
         ]);
 
         DB::table('user')->insert([
@@ -68,7 +70,7 @@ class UserManagementController extends Controller
             'lastname_user' => $request->lastname_user,
             'email_user' => $request->email_user,
             'password_user' => Hash::make($request->password_user),
-            'role' => $request->role,
+            'role' => (int)$request->role,
             'user_code' => $request->user_code,
         ]);
 
@@ -80,21 +82,27 @@ class UserManagementController extends Controller
      */
     public function edit($id)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        // Admin สามารถแก้ไขได้ทุกคน
+        if (PermissionHelper::canManageUsers()) {
+            $user = DB::table('user')->where('user_id', $id)->first();
         }
-
-        $user = DB::table('user')->where('user_id', $id)->first();
+        // Coordinator/Lecturer/Staff แก้ไขได้เฉพาะตัวเอง
+        else if (PermissionHelper::canManageRoles()) {
+            $currentUserId = PermissionHelper::getCurrentUserId();
+            if ($id != $currentUserId) {
+                return redirect()->route('users.index')->with('error', 'คุณสามารถแก้ไขได้เฉพาะข้อมูลของคุณเอง');
+            }
+            $user = DB::table('user')->where('user_id', $id)->first();
+        }
+        else {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้ใช้');
+        }
 
         if (!$user) {
             return redirect()->route('users.index')->with('error', 'ไม่พบผู้ใช้นี้');
         }
 
-        $roles = \App\Models\Role::whereIn('role', ['admin', 'coordinator', 'advisor'])
-                    ->orderBy('role_code', 'desc')
-                    ->get();
-
-        return view('admin.users.edit', compact('user', 'roles'));
+        return view('admin.users.edit', compact('user'));
     }
 
     /**
@@ -102,22 +110,33 @@ class UserManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        // Admin อัพเดตได้ทุกคน
+        if (PermissionHelper::canManageUsers()) {
+            // Admin can update anyone
+        }
+        // Coordinator/Lecturer/Staff อัพเดตได้เฉพาะตัวเอง
+        else if (PermissionHelper::canManageRoles()) {
+            $currentUserId = PermissionHelper::getCurrentUserId();
+            if ($id != $currentUserId) {
+                return redirect()->route('users.index')->with('error', 'คุณสามารถแก้ไขได้เฉพาะข้อมูลของคุณเอง');
+            }
+        }
+        else {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้ใช้');
         }
 
         $request->validate([
             'firstname_user' => 'required',
             'lastname_user' => 'required',
             'email_user' => 'required|email',
-            'role' => 'required|in:admin,coordinator,advisor',
+            'role' => 'required|integer|min:1',
         ]);
 
         $updateData = [
             'firstname_user' => $request->firstname_user,
             'lastname_user' => $request->lastname_user,
             'email_user' => $request->email_user,
-            'role' => $request->role,
+            'role' => (int)$request->role,
             'user_code' => $request->user_code,
         ];
 

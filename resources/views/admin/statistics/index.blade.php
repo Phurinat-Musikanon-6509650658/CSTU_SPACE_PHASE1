@@ -211,7 +211,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        @foreach(['admin' => 'danger', 'coordinator' => 'primary', 'advisor' => 'info', 'student' => 'success'] as $role => $color)
+                        @foreach(['admin' => 'danger', 'coordinator' => 'primary', 'lecturer' => 'info', 'staff' => 'warning', 'student' => 'success'] as $role => $color)
                         <div class="col-lg-3 col-md-6">
                             <div class="card border-{{ $color }}">
                                 <div class="card-header bg-{{ $color }} text-white">
@@ -503,7 +503,7 @@
                         <div class="col-12">
                             <h6 class="text-center mb-3">ระยะเวลาเฉลี่ยแยกตาม Role</h6>
                             <div class="row">
-                                @foreach(['admin' => 'danger', 'coordinator' => 'primary', 'advisor' => 'info', 'student' => 'success'] as $role => $color)
+                                @foreach(['admin' => 'danger', 'coordinator' => 'primary', 'lecturer' => 'info', 'staff' => 'warning', 'student' => 'success'] as $role => $color)
                                 <div class="col-lg-3 col-md-6">
                                     <div class="text-center p-2 border border-{{ $color }} rounded">
                                         @php

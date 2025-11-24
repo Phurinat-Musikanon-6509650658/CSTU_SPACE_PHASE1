@@ -108,4 +108,62 @@ class PermissionHelper
         $roleCode = session('role_code', 0);
         return self::hasPermission($roleCode, self::STUDENT_PERMISSION);
     }
+
+    /**
+     * Check if current session user is staff
+     * @return bool
+     */
+    public static function isStaff(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::STAFF_PERMISSION);
+    }
+
+    /**
+     * Check if user can manage other users (Admin only)
+     * @return bool
+     */
+    public static function canManageUsers(): bool
+    {
+        return self::isAdmin();
+    }
+
+    /**
+     * Check if user can view all data (Admin only)
+     * Coordinator/Lecturer/Staff/Student can only view their own data
+     * @return bool
+     */
+    public static function canViewAllData(): bool
+    {
+        return self::isAdmin();
+    }
+
+    /**
+     * Check if user can manage roles (Admin or Coordinator)
+     * @return bool
+     */
+    public static function canManageRoles(): bool
+    {
+        $roleCode = session('role_code', 0);
+        return self::hasPermission($roleCode, self::ADMIN_PERMISSION) || 
+               self::hasPermission($roleCode, self::COORDINATOR_PERMISSION);
+    }
+
+    /**
+     * Get current user ID from session
+     * @return int|null
+     */
+    public static function getCurrentUserId(): ?int
+    {
+        return session('user_id');
+    }
+
+    /**
+     * Get current username from session
+     * @return string|null
+     */
+    public static function getCurrentUsername(): ?string
+    {
+        return session('username');
+    }
 }

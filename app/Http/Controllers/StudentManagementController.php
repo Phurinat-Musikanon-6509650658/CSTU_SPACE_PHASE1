@@ -15,8 +15,8 @@ class StudentManagementController extends Controller
      */
     public function create()
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์จัดการนักศึกษา');
         }
 
         return view('admin.students.create');
@@ -27,8 +27,8 @@ class StudentManagementController extends Controller
      */
     public function store(Request $request)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์จัดการนักศึกษา');
         }
 
         $request->validate([
@@ -45,6 +45,7 @@ class StudentManagementController extends Controller
             'lastname_std' => $request->lastname_std,
             'email_std' => $request->email_std,
             'password_std' => Hash::make($request->password_std),
+            'role' => 2048, // Student role_code
         ]);
 
         return redirect()->route('users.index')->with('success', 'เพิ่มนักศึกษาสำเร็จ');
@@ -55,8 +56,8 @@ class StudentManagementController extends Controller
      */
     public function edit($id)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์จัดการนักศึกษา');
         }
 
         $student = DB::table('student')->where('student_id', $id)->first();
@@ -73,8 +74,8 @@ class StudentManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        if (!PermissionHelper::canManageUsers()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์จัดการนักศึกษา');
         }
 
         $request->validate([
@@ -189,6 +190,7 @@ class StudentManagementController extends Controller
                     'lastname_std' => $lastname,
                     'email_std' => $email,
                     'password_std' => Hash::make($password),
+                    'role' => 2048, // Student role_code
                 ]);
                 $imported++;
             } catch (\Exception $e) {

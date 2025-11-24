@@ -22,8 +22,8 @@ return new class extends Migration
             $table->text('user_agent'); // Browser/Device information
             $table->enum('login_status', ['success', 'failed']); // สถานะการ login
             $table->string('failure_reason')->nullable(); // เหตุผลที่ login ไม่สำเร็จ
-            $table->timestamp('login_time'); // เวลาที่ login
-            $table->timestamp('logout_time')->nullable(); // เวลาที่ logout (null หากยังไม่ logout)
+            $table->datetime('login_time'); // เวลาที่ login (ใช้ datetime แทน timestamp)
+            $table->datetime('logout_time')->nullable(); // เวลาที่ logout (null หากยังไม่ logout)
             $table->integer('session_duration')->nullable(); // ระยะเวลาใช้งาน (วินาที)
             $table->timestamps();
             

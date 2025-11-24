@@ -100,7 +100,7 @@ class AuthController extends Controller
     {
         if ($type === 'user') {
             $display = trim(($record->firstname_user ?? '') . ' ' . ($record->lastname_user ?? '')) ?: ($record->username_user ?? '');
-            $role = $record->role ?? '';
+            $role = $record->role ?? 0; // role_code (integer)
             $userId = $record->user_id ?? null;
             $studentId = null;
             $username = $record->username_user;
@@ -111,11 +111,12 @@ class AuthController extends Controller
                 Auth::guard('web')->login($user);
             }
             
-            Session::put('department', $role);
+            Session::put('role_code', $role); // เก็บ role_code
+            Session::put('department', $this->getRoleNameFromCode($role)); // เก็บชื่อ role สำหรับ compatibility
             Session::put('user_id', $userId);
         } else {
             $display = trim(($record->firstname_std ?? '') . ' ' . ($record->lastname_std ?? '')) ?: ($record->username_std ?? '');
-            $role = 'student';
+            $role = 2048; // Student role_code
             $userId = null;
             $studentId = $record->student_id ?? null;
             $username = $record->username_std;
@@ -126,7 +127,8 @@ class AuthController extends Controller
                 Auth::guard('student')->login($student);
             }
             
-            Session::put('department', 'student');
+            Session::put('role_code', $role); // เก็บ role_code
+            Session::put('department', 'student'); // เก็บชื่อ role
             Session::put('student_id', $studentId);
         }
 
@@ -219,16 +221,36 @@ class AuthController extends Controller
     public function logout()
     {
         // อัพเดท logout time ใน login log
-        if (Session::has('login_log_id')) {
-            $loginLogId = Session::get('login_log_id');
-            $loginLog = LoginLog::find($loginLogId);
-            if ($loginLog) {
-                $loginLog->updateLogoutTime();
-            }
-        }
+        $this->updateLogoutTime();
+        
+        // Logout from guards
+        Auth::guard('web')->logout();
+        Auth::guard('student')->logout();
         
         Session::flush();
         return redirect()->route('login');
+    }
+
+    // Logout beacon for sending logout time when user closes tab/window
+    public function logoutBeacon(Request $request)
+    {
+        // อัพเดท logout time ใน login log
+        $this->updateLogoutTime();
+        
+        return response()->json(['status' => 'success']);
+    }
+
+    // Helper method to update logout time
+    private function updateLogoutTime()
+    {
+        if (Session::has('login_log_id')) {
+            $loginLogId = Session::get('login_log_id');
+            $loginLog = LoginLog::find($loginLogId);
+            
+            if ($loginLog && !$loginLog->logout_time) {
+                $loginLog->updateLogoutTime();
+            }
+        }
     }
 
     // Refresh session for auto-logout prevention
@@ -241,5 +263,18 @@ class AuthController extends Controller
         }
         
         return response()->json(['status' => 'error', 'message' => 'No active session'], 401);
+    }
+
+    /**
+     * Get role name from role_code using bitwise check
+     */
+    private function getRoleNameFromCode($roleCode)
+    {
+        if (($roleCode & 32768) !== 0) return 'admin';
+        if (($roleCode & 16384) !== 0) return 'coordinator';
+        if (($roleCode & 8192) !== 0) return 'lecturer';
+        if (($roleCode & 4096) !== 0) return 'staff';
+        if (($roleCode & 2048) !== 0) return 'student';
+        return 'guest';
     }
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('firstname_std', 255);
             $table->string('lastname_std', 255);
             $table->string('email_std', 255);
-            $table->string('role', 50)->default('student');
+            $table->integer('role')->default(2048); // Student role_code
             $table->string('username_std', 50);
             $table->string('password_std', 255);
         });

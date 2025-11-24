@@ -79,14 +79,14 @@ class UserTableSeeder extends Seeder
             ]
         );
 
-        // อาจารย์ที่ปรึกษาโครงงาน (19 ท่าน)
+        // อาจารย์ที่ปรึกษาโครงงาน (19 ท่าน) - role_code = 8192 (Lecturer)
         $advisors = [
             [
                 'username_user' => 'denduang.p',
                 'firstname_user' => 'เด่นดวง',
                 'lastname_user' => 'ปราบศัตรู',
                 'user_code' => 'ddp',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'denduang@tu.ac.th',
                 'password_user' => Hash::make('ddp2025')
             ],
@@ -95,7 +95,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'เสาวลักษณ์',
                 'lastname_user' => 'วรรธนาภา',
                 'user_code' => 'scw',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'wsaowalu@tu.ac.th',
                 'password_user' => Hash::make('scw2025')
             ],
@@ -104,7 +104,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ทรงศักดิ์',
                 'lastname_user' => 'รองวิริยะพานิช',
                 'user_code' => 'ssr',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'rongviri@tu.ac.th',
                 'password_user' => Hash::make('ssr2025')
             ],
@@ -113,7 +113,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ธนาธร',
                 'lastname_user' => 'ทะนานทอง',
                 'user_code' => 'tnt',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'tanatorn@tu.ac.th',
                 'password_user' => Hash::make('tnt2025')
             ],
@@ -122,7 +122,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ปกรณ์',
                 'lastname_user' => 'ลีสุทธิพรชัย',
                 'user_code' => 'pkl',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'pakornl@tu.ac.th',
                 'password_user' => Hash::make('pkl2025')
             ],
@@ -131,7 +131,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ประภาพร',
                 'lastname_user' => 'รัศนธารานิ',
                 'user_code' => 'ppr',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'rattanat@tu.ac.th',
                 'password_user' => Hash::make('ppr2025')
             ],
@@ -140,7 +140,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'วิรัตน์',
                 'lastname_user' => 'จารึงศุภโฆษ',
                 'user_code' => 'wjr',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'wirat@tu.ac.th',
                 'password_user' => Hash::make('wjr2025')
             ],
@@ -149,7 +149,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'วีลาวรรณ',
                 'lastname_user' => 'รักษ์การงานดี',
                 'user_code' => 'wlr',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'rwilawan@tu.ac.th',
                 'password_user' => Hash::make('wlr2025')
             ],
@@ -158,7 +158,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'อรจิรา',
                 'lastname_user' => 'สิทธิ์ศักดิ์',
                 'user_code' => 'ojs',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'onjira@tu.ac.th',
                 'password_user' => Hash::make('ojs2025')
             ],
@@ -167,7 +167,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ภักพร',
                 'lastname_user' => 'เสาร์ฝั่น',
                 'user_code' => 'pkp',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'pakkp@tu.ac.th',
                 'password_user' => Hash::make('pkp2025')
             ],
@@ -176,7 +176,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'กษิดิ์',
                 'lastname_user' => 'ชาญเชี่ยว',
                 'user_code' => 'kdc',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'ckasidit@tu.ac.th',
                 'password_user' => Hash::make('kdc2025')
             ],
@@ -185,7 +185,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ธาปนีย์',
                 'lastname_user' => 'บุบผา',
                 'user_code' => 'tpb',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'thapanab@tu.ac.th',
                 'password_user' => Hash::make('tpb2025')
             ],
@@ -194,7 +194,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ปกป้อง',
                 'lastname_user' => 'สองเมือง',
                 'user_code' => 'pps',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'pokpongs@tu.ac.th',
                 'password_user' => Hash::make('pps2025')
             ],
@@ -203,7 +203,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ลัมพาพรรณ',
                 'lastname_user' => 'พันธุ์รุจิกร',
                 'user_code' => 'lpp',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'lumpapun@tu.ac.th',
                 'password_user' => Hash::make('lpp2025')
             ],
@@ -212,7 +212,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'วนิดา',
                 'lastname_user' => 'พฤฒาธิวัฒนา',
                 'user_code' => 'wdp',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'pwanida@tu.ac.th',
                 'password_user' => Hash::make('wdp2025')
             ],
@@ -221,7 +221,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'นุชจากร',
                 'lastname_user' => 'งามเสาวรส',
                 'user_code' => 'nng',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'nnuchako@tu.ac.th',
                 'password_user' => Hash::make('nng2025')
             ],
@@ -230,7 +230,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'สิริกัญญา',
                 'lastname_user' => 'นิลพานิช',
                 'user_code' => 'skn',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'nsirikun@tu.ac.th',
                 'password_user' => Hash::make('skn2025')
             ],
@@ -239,7 +239,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'ศานนท์',
                 'lastname_user' => 'กิจศิราบุศดอร์',
                 'user_code' => 'snk',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'satanat@tu.ac.th',
                 'password_user' => Hash::make('snk2025')
             ],
@@ -248,7 +248,7 @@ class UserTableSeeder extends Seeder
                 'firstname_user' => 'นวเรศ',
                 'lastname_user' => 'ชลาเรศ',
                 'user_code' => 'nrc',
-                'role' => 'advisor',
+                'role' => 8192,
                 'email_user' => 'nawarerk@tu.ac.th',
                 'password_user' => Hash::make('nrc2025')
             ]

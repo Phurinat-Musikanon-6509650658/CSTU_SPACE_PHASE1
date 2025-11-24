@@ -57,13 +57,9 @@
                             <p class="text-muted mb-0">ยินดีต้อนรับ {{ $student->full_name }}</p>
                         </div>
                         <div>
-                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
-                               class="btn btn-outline-danger">
+                            <a href="javascript:void(0);" onclick="logout()" class="btn btn-outline-danger">
                                 <i class="fas fa-sign-out-alt me-1"></i>ออกจากระบบ
                             </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -260,6 +256,21 @@
         const modal = new bootstrap.Modal(document.getElementById('leaveGroupModal'));
         modal.show();
     }
+
+    // Logout function
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+    // Send logout beacon when user closes window/tab
+    window.addEventListener('beforeunload', function() {
+        // ส่ง request เพื่ออัปเดต logout time
+        if (navigator.sendBeacon) {
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            navigator.sendBeacon('/logout-beacon', formData);
+        }
+    });
     </script>
 </body>
 </html>

@@ -89,11 +89,11 @@
                                 <label for="role" class="form-label">Role</label>
                                 <select name="role" id="role" class="form-select">
                                     <option value="all" {{ request('role') == 'all' ? 'selected' : '' }}>ทั้งหมด</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->role }}" {{ request('role') == $role->role ? 'selected' : '' }}>
-                                            {{ ucfirst($role->role) }}
-                                        </option>
-                                    @endforeach
+                                    <option value="32768" {{ request('role') == '32768' ? 'selected' : '' }}>Admin</option>
+                                    <option value="16384" {{ request('role') == '16384' ? 'selected' : '' }}>Coordinator</option>
+                                    <option value="8192" {{ request('role') == '8192' ? 'selected' : '' }}>Lecturer</option>
+                                    <option value="4096" {{ request('role') == '4096' ? 'selected' : '' }}>Staff</option>
+                                    <option value="2048" {{ request('role') == '2048' ? 'selected' : '' }}>Student</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -188,8 +188,14 @@
                                         @endif
                                     </td>
                                     <td>{{ $log->login_time_format }}</td>
-                                    <td>{{ $log->logout_time_format }}</td>
-                                    <td>{{ $log->session_duration_format }}</td>
+                                    <td>{!! $log->logout_time_format !!}</td>
+                                    <td>
+                                        @if($log->session_duration)
+                                            <span class="badge bg-info">{{ $log->session_duration_format }}</span>
+                                        @else
+                                            <span class="badge bg-warning">กำลังใช้งาน</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <a href="{{ route('admin.logs.show', $log->id) }}" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-eye"></i> ดู

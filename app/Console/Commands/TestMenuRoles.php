@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Role;
+use App\Models\UserRole;
 use App\Http\Controllers\MenuController;
 use ReflectionClass;
 
@@ -33,10 +33,10 @@ class TestMenuRoles extends Command
 
         // ตรวจสอบ roles ใน database
         $this->info('🔍 Checking roles in database:');
-        $roles = Role::orderBy('role_code_bin', 'desc')->get();
+        $roles = UserRole::orderBy('role_code_bin', 'desc')->get();
 
         if ($roles->isEmpty()) {
-            $this->error('❌ No roles found! Run: php artisan db:seed --class=RoleTableSeeder');
+            $this->error('❌ No roles found! Run: php artisan db:seed --class=UserRoleSeeder');
             return 1;
         }
 
@@ -44,7 +44,7 @@ class TestMenuRoles extends Command
             ['Role', 'Code', 'Binary'],
             $roles->map(function ($role) {
                 return [
-                    'role' => ucfirst($role->role),
+                    'role' => ucfirst($role->role_name),
                     'code' => $role->role_code_bin,
                     'binary' => str_pad(decbin($role->role_code_bin), 15, '0', STR_PAD_LEFT)
                 ];
@@ -118,11 +118,11 @@ class TestMenuRoles extends Command
     {
         $permissions = [];
         
-        $adminRole = Role::where('role', 'admin')->first();
-        $coordinatorRole = Role::where('role', 'coordinator')->first();
-        $lecturerRole = Role::where('role', 'lecturer')->first();
-        $staffRole = Role::where('role', 'staff')->first();
-        $studentRole = Role::where('role', 'student')->first();
+        $adminRole = UserRole::where('role_name', 'admin')->first();
+        $coordinatorRole = UserRole::where('role_name', 'coordinator')->first();
+        $lecturerRole = UserRole::where('role_name', 'lecturer')->first();
+        $staffRole = UserRole::where('role_name', 'staff')->first();
+        $studentRole = UserRole::where('role_name', 'student')->first();
 
         if ($adminRole && ($roleCodeBin & $adminRole->role_code_bin) !== 0) $permissions[] = 'Admin';
         if ($coordinatorRole && ($roleCodeBin & $coordinatorRole->role_code_bin) !== 0) $permissions[] = 'Coordinator';

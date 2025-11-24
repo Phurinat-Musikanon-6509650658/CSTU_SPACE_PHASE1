@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LoginLog;
 use App\Models\User;
-use App\Models\Role;
+use App\Models\UserRole;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
@@ -14,41 +15,48 @@ class StatisticsController extends Controller
 {
     public function index()
     {
-        // ตรวจสอบสิทธิ์ Admin
-        if (!Session::has('department') || Session::get('department') !== 'admin') {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        // Admin เห็นสถิติทั้งหมด
+        if (PermissionHelper::canViewAllData()) {
+            // สถิติรวม
+            $generalStats = $this->getGeneralStatistics();
+            
+            // สถิติแยกตาม Role
+            $roleStats = $this->getRoleStatistics();
+            
+            // สถิติรายวัน (7 วันล่าสุด)
+            $dailyStats = $this->getDailyStatistics();
+            
+            // สถิติรายชั่วโมง (24 ชั่วโมงล่าสุด)
+            $hourlyStats = $this->getHourlyStatistics();
+            
+            // Top Users
+            $topUsers = $this->getTopUsers();
+            
+            // Security Stats
+            $securityStats = $this->getSecurityStatistics();
+            
+            // Session Duration Stats
+            $sessionStats = $this->getSessionStatistics();
+
+            return view('admin.statistics.index', compact(
+                'generalStats',
+                'roleStats', 
+                'dailyStats',
+                'hourlyStats',
+                'topUsers',
+                'securityStats',
+                'sessionStats'
+            ));
+        }
+        
+        // Coordinator/Lecturer/Staff เห็นเฉพาะสถิติตัวเอง
+        if (PermissionHelper::canManageRoles()) {
+            $username = PermissionHelper::getCurrentUsername();
+            $personalStats = $this->getPersonalStatistics($username);
+            return view('admin.statistics.personal', compact('personalStats'));
         }
 
-        // สถิติรวม
-        $generalStats = $this->getGeneralStatistics();
-        
-        // สถิติแยกตาม Role
-        $roleStats = $this->getRoleStatistics();
-        
-        // สถิติรายวัน (7 วันล่าสุด)
-        $dailyStats = $this->getDailyStatistics();
-        
-        // สถิติรายชั่วโมง (24 ชั่วโมงล่าสุด)
-        $hourlyStats = $this->getHourlyStatistics();
-        
-        // Top Users
-        $topUsers = $this->getTopUsers();
-        
-        // Security Stats
-        $securityStats = $this->getSecurityStatistics();
-        
-        // Session Duration Stats
-        $sessionStats = $this->getSessionStatistics();
-
-        return view('admin.statistics.index', compact(
-            'generalStats',
-            'roleStats', 
-            'dailyStats',
-            'hourlyStats',
-            'topUsers',
-            'securityStats',
-            'sessionStats'
-        ));
+        return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
     }
 
     private function getGeneralStatistics()
@@ -97,27 +105,36 @@ class StatisticsController extends Controller
 
     private function getRoleStatistics()
     {
-        $roles = \App\Models\Role::whereNotIn('role', ['coordinator-advisor', 'coordinator-staff', 'committee', 'guest'])
-                    ->orderBy('role_code', 'desc')
-                    ->pluck('role')->toArray();
         $today = Carbon::today();
         $thisWeek = Carbon::now()->startOfWeek();
         
         $roleStats = [];
         
-        foreach ($roles as $role) {
-            $roleStats[$role] = [
-                'total_users' => User::where('role', $role)->count(),
-                'today_logins' => LoginLog::byRole($role)->activeToday()->count(),
-                'today_success' => LoginLog::byRole($role)->activeToday()->successfulLogins()->count(),
-                'today_failed' => LoginLog::byRole($role)->activeToday()->failedLogins()->count(),
-                'week_logins' => LoginLog::byRole($role)->where('login_time', '>=', $thisWeek)->count(),
-                'active_today' => LoginLog::byRole($role)->activeToday()->distinct('username')->count(),
+        // Define roles with their codes (hardcoded to match view expectations)
+        $roles = [
+            'admin' => 32768,
+            'coordinator' => 16384,
+            'lecturer' => 8192,
+            'staff' => 4096,
+            'student' => 2048,
+        ];
+        
+        foreach ($roles as $roleName => $roleCode) {
+            // Count users with this role using bitwise AND
+            $usersWithRole = User::whereRaw("(role & ?) != 0", [$roleCode])->count();
+            
+            $roleStats[$roleName] = [
+                'total_users' => $usersWithRole,
+                'today_logins' => LoginLog::byRole($roleCode)->activeToday()->count(),
+                'today_success' => LoginLog::byRole($roleCode)->activeToday()->successfulLogins()->count(),
+                'today_failed' => LoginLog::byRole($roleCode)->activeToday()->failedLogins()->count(),
+                'week_logins' => LoginLog::byRole($roleCode)->where('login_time', '>=', $thisWeek)->count(),
+                'active_today' => LoginLog::byRole($roleCode)->activeToday()->distinct('username')->count(),
                 'success_rate' => $this->calculateSuccessRate(
-                    LoginLog::byRole($role)->activeToday()->successfulLogins()->count(),
-                    LoginLog::byRole($role)->activeToday()->count()
+                    LoginLog::byRole($roleCode)->activeToday()->successfulLogins()->count(),
+                    LoginLog::byRole($roleCode)->activeToday()->count()
                 ),
-                'avg_session_duration' => $this->getAverageSessionDuration($role)
+                'avg_session_duration' => $this->getAverageSessionDuration($roleCode)
             ];
         }
         
@@ -255,7 +272,7 @@ class StatisticsController extends Controller
 
     private function getAverageSessionByRole()
     {
-        $roles = ['admin', 'coordinator', 'advisor', 'student'];
+        $roles = ['admin', 'coordinator', 'lecturer', 'staff', 'student'];
         $today = Carbon::today();
         $result = [];
         
@@ -289,10 +306,32 @@ class StatisticsController extends Controller
         return round(($successful / $total) * 100, 1);
     }
 
+    private function getPersonalStatistics($username)
+    {
+        $today = Carbon::today();
+        $thisWeek = Carbon::now()->startOfWeek();
+        $thisMonth = Carbon::now()->startOfMonth();
+
+        return [
+            'username' => $username,
+            'total_logins' => LoginLog::where('username', $username)->count(),
+            'successful_logins' => LoginLog::where('username', $username)->successfulLogins()->count(),
+            'failed_logins' => LoginLog::where('username', $username)->failedLogins()->count(),
+            'today_logins' => LoginLog::where('username', $username)->activeToday()->count(),
+            'week_logins' => LoginLog::where('username', $username)->where('login_time', '>=', $thisWeek)->count(),
+            'month_logins' => LoginLog::where('username', $username)->where('login_time', '>=', $thisMonth)->count(),
+            'last_login' => LoginLog::where('username', $username)->latest('login_time')->first(),
+            'success_rate' => $this->calculateSuccessRate(
+                LoginLog::where('username', $username)->successfulLogins()->count(),
+                LoginLog::where('username', $username)->count()
+            ),
+        ];
+    }
+
     public function export()
     {
         // ตรวจสอบสิทธิ์
-        if (!Session::has('department') || Session::get('department') !== 'admin') {
+        if (!PermissionHelper::canViewAllData()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 

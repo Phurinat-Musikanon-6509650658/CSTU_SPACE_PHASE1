@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LoginLog;
-use App\Models\Role;
+use App\Models\UserRole;
+use App\Helpers\PermissionHelper;
 use Session;
 use Carbon\Carbon;
 
@@ -12,13 +13,18 @@ class AdminLogController extends Controller
 {
     public function index(Request $request)
     {
-        // ตรวจสอบว่าเป็น admin หรือไม่
-        if (!Session::has('department') || Session::get('department') !== 'admin') {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-        }
-
         // เริ่มต้น query
         $query = LoginLog::query();
+
+        // Admin เห็นทุก log, Coordinator/Lecturer/Staff เห็นเฉพาะของตัวเอง
+        if (!PermissionHelper::canViewAllData()) {
+            if (PermissionHelper::canManageRoles()) {
+                $username = PermissionHelper::getCurrentUsername();
+                $query->where('username', $username);
+            } else {
+                return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+            }
+        }
 
         // Filter by role
         if ($request->filled('role') && $request->role !== 'all') {
@@ -58,13 +64,8 @@ class AdminLogController extends Controller
 
         // Statistics
         $stats = $this->getStatistics($request);
-        
-        // Get roles for filter dropdown
-        $roles = \App\Models\Role::whereNotIn('role', ['coordinator-advisor', 'coordinator-staff', 'committee', 'guest'])
-                    ->orderBy('role_code', 'desc')
-                    ->get();
 
-        return view('admin.logs.index', compact('logs', 'stats', 'roles'));
+        return view('admin.logs.index', compact('logs', 'stats'));
     }
 
     private function getStatistics($request)
@@ -102,7 +103,7 @@ class AdminLogController extends Controller
     public function show($id)
     {
         // ตรวจสอบว่าเป็น admin หรือไม่
-        if (!Session::has('department') || Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
@@ -113,7 +114,7 @@ class AdminLogController extends Controller
     public function export(Request $request)
     {
         // ตรวจสอบว่าเป็น admin หรือไม่
-        if (!Session::has('department') || Session::get('department') !== 'admin') {
+        if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 

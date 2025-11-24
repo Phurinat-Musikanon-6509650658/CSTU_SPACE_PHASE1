@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use App\Models\Role;
+use App\Models\UserRole;
 
 class MenuController extends Controller
 {
@@ -19,13 +19,11 @@ class MenuController extends Controller
         }
 
         $displayname = Session::get('displayname');
-        $department = Session::get('department', 'student');
+        $roleCode = Session::get('role_code', 2048); // ดึง role_code จาก session
+        $department = Session::get('department', 'student'); // เก็บไว้สำหรับแสดงผล
         
-        // ดึง role_code_bin จาก database
-        $roleCodeBin = $this->getRoleCodeBinFromDatabase($department);
-        
-        // สร้างเมนูตาม binary permission
-        $menuGroups = $this->getMenuByPermission($roleCodeBin);
+        // สร้างเมนูตาม binary permission โดยใช้ role_code โดยตรง
+        $menuGroups = $this->getMenuByPermission($roleCode);
 
         // ส่งข้อมูลไปยัง view
         return view('menu', [
@@ -36,18 +34,18 @@ class MenuController extends Controller
     }
 
     /**
-     * ดึง role_code_bin จาก table roles ในฐานข้อมูล
+     * ดึง role_code_bin จาก table user_role ในฐานข้อมูล
      */
     private function getRoleCodeBinFromDatabase($department)
     {
-        $role = Role::where('role', $department)->first();
+        $role = UserRole::where('role_name', $department)->first();
         
         if ($role) {
             return $role->role_code_bin;
         }
         
         // ถ้าไม่เจอใน database ให้ default เป็น student
-        $defaultRole = Role::where('role', 'student')->first();
+        $defaultRole = UserRole::where('role_name', 'student')->first();
         return $defaultRole ? $defaultRole->role_code_bin : 2048;
     }
 
@@ -63,12 +61,12 @@ class MenuController extends Controller
         $roleCodeBin = $this->getRoleCodeBinFromDatabase($department);
         
         // ดึง permission constants จาก database
-        $roles = Role::all();
+        $roles = UserRole::all();
         $permissions = [];
         
         foreach ($roles as $role) {
             if (($roleCodeBin & $role->role_code_bin) !== 0) {
-                $permissions[] = $role->role;
+                $permissions[] = $role->role_name;
             }
         }
         
@@ -95,11 +93,11 @@ class MenuController extends Controller
         $menuGroups = [];
 
         // ดึง permission constants จาก database
-        $adminRole = Role::where('role', 'admin')->first();
-        $coordinatorRole = Role::where('role', 'coordinator')->first();
-        $lecturerRole = Role::where('role', 'lecturer')->first();
-        $staffRole = Role::where('role', 'staff')->first();
-        $studentRole = Role::where('role', 'student')->first();
+        $adminRole = UserRole::where('role_name', 'admin')->first();
+        $coordinatorRole = UserRole::where('role_name', 'coordinator')->first();
+        $lecturerRole = UserRole::where('role_name', 'lecturer')->first();
+        $staffRole = UserRole::where('role_name', 'staff')->first();
+        $studentRole = UserRole::where('role_name', 'student')->first();
 
         $ADMIN_PERMISSION = $adminRole ? $adminRole->role_code_bin : 32768;
         $COORDINATOR_PERMISSION = $coordinatorRole ? $coordinatorRole->role_code_bin : 16384;

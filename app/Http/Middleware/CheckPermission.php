@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Session;
-use App\Models\Role;
+use App\Models\UserRole;
 
 class CheckPermission
 {
@@ -23,28 +23,15 @@ class CheckPermission
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
-        // ดึง role จาก session (ใช้ department เป็น role)
-        $userRole = Session::get('department', 'student');
+        // ดึง role_code จาก session
+        $roleCode = Session::get('role_code', 0);
         
-        // ดึงข้อมูล role จากฐานข้อมูล
-        $role = Role::where('role', 'LIKE', "%{$userRole}%")->first();
-        
-        if (!$role) {
+        if (!$roleCode) {
             return redirect()->route('menu')->with('error', 'ไม่พบข้อมูลสิทธิ์การเข้าถึง');
         }
 
-        // เช็ค permission โดยใช้ binary operation
-        // ถ้าตัวเลขที่แสดง (role_code) ไม่ตรงกับ binary ที่คำนวณจาก role_code_bin จะไม่มีสิทธิ์
-        $calculatedFromBinary = $role->role_code_bin;
-        $displayedNumber = $role->role_code;
-        
-        // เช็คว่าตัวเลขที่แสดงตรงกับที่คำนวณจาก binary หรือไม่
-        if ($displayedNumber !== $calculatedFromBinary) {
-            return redirect()->route('menu')->with('error', 'การยืนยันสิทธิ์ไม่ถูกต้อง (Binary mismatch)');
-        }
-        
         // เช็คว่ามีสิทธิ์เข้าถึงหน้านี้หรือไม่โดยใช้ bitwise AND
-        if (($displayedNumber & $requiredPermission) === 0) {
+        if (($roleCode & $requiredPermission) === 0) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 

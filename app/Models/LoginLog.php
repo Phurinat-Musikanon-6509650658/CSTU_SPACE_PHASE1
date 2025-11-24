@@ -4,11 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class LoginLog extends Model
 {
     use HasFactory;
+
+    // ปิด auto timestamps เพราะเราจัดการ login_time/logout_time เอง
+    public $timestamps = true;
+    
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
         'username',
@@ -26,8 +33,7 @@ class LoginLog extends Model
     ];
 
     protected $casts = [
-        'login_time' => 'datetime',
-        'logout_time' => 'datetime',
+        // ไม่ cast datetime เพราะจัดการเอง เพื่อป้องกัน mutation
     ];
 
     // Scope สำหรับ filter ข้อมูล
@@ -63,10 +69,10 @@ class LoginLog extends Model
             return 'กำลังใช้งาน';
         }
         
-        $totalMinutes = floor($this->session_duration / 60);
-        $hours = floor($totalMinutes / 60);
-        $minutes = $totalMinutes % 60;
-        $seconds = $this->session_duration % 60;
+        $totalSeconds = $this->session_duration;
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $seconds = $totalSeconds % 60;
         
         $result = [];
         
@@ -78,7 +84,7 @@ class LoginLog extends Model
             $result[] = $minutes . ' นาที';
         }
         
-        if ($seconds > 0 && $hours == 0) { // แสดง วินาที เฉพาะเมื่อไม่เกิน 1 ชั่วโมง
+        if ($seconds > 0) {
             $result[] = $seconds . ' วินาที';
         }
         
@@ -91,19 +97,33 @@ class LoginLog extends Model
 
     public function getLoginTimeFormatAttribute()
     {
-        return $this->login_time->setTimezone(config('app.timezone'))->format('d/m/Y H:i:s');
+        if (!$this->login_time) {
+            return '-';
+        }
+        // ดึงจาก database attributes โดยตรง ไม่ผ่าน carbon cast
+        $loginTime = $this->getOriginal('login_time');
+        if (!$loginTime) {
+            return '-';
+        }
+        return Carbon::parse($loginTime)->timezone('Asia/Bangkok')->format('d/m/Y H:i:s');
     }
 
     public function getLogoutTimeFormatAttribute()
     {
-        return $this->logout_time ? 
-               $this->logout_time->setTimezone(config('app.timezone'))->format('d/m/Y H:i:s') : 
-               'ยังไม่ logout';
+        // ดึงจาก database attributes โดยตรง
+        $logoutTime = $this->getOriginal('logout_time');
+        if (!$logoutTime) {
+            return '<span class="text-muted">ยังไม่ logout</span>';
+        }
+        return Carbon::parse($logoutTime)->timezone('Asia/Bangkok')->format('d/m/Y H:i:s');
     }
 
     // Static methods สำหรับสร้าง log
     public static function createLoginLog($username, $userType, $userId, $studentId, $role, $status, $failureReason = null)
     {
+        // ใช้ timezone Asia/Bangkok
+        $loginTime = Carbon::now('Asia/Bangkok')->format('Y-m-d H:i:s');
+        
         return self::create([
             'username' => $username,
             'user_type' => $userType,
@@ -114,19 +134,34 @@ class LoginLog extends Model
             'user_agent' => request()->userAgent(),
             'login_status' => $status,
             'failure_reason' => $failureReason,
-            'login_time' => now(),
+            'login_time' => $loginTime,
+            'created_at' => $loginTime,
+            'updated_at' => $loginTime,
         ]);
     }
 
     public function updateLogoutTime()
     {
-        $loginTime = $this->login_time;
-        $logoutTime = now();
-        $duration = $logoutTime->diffInSeconds($loginTime);
+        // ดึง login_time จาก database ตรงๆ
+        $originalLoginTime = DB::table('login_logs')
+            ->where('id', $this->id)
+            ->value('login_time');
+            
+        // ใช้ timezone เดียวกันทั้งหมด
+        $loginTime = Carbon::parse($originalLoginTime, 'Asia/Bangkok');
+        $logoutTime = Carbon::now('Asia/Bangkok');
+        
+        // คำนวณระยะเวลา (บังคับให้เป็นค่าบวก)
+        $duration = abs($logoutTime->diffInSeconds($loginTime, false));
 
-        $this->update([
-            'logout_time' => $logoutTime,
-            'session_duration' => $duration,
-        ]);
+        // อัพเดทเฉพาะ logout_time และ session_duration เท่านั้น
+        // ไม่แตะ login_time เลย
+        DB::table('login_logs')
+            ->where('id', $this->id)
+            ->update([
+                'logout_time' => $logoutTime->format('Y-m-d H:i:s'),
+                'session_duration' => $duration,
+                'updated_at' => $logoutTime->format('Y-m-d H:i:s'),
+            ]);
     }
 }

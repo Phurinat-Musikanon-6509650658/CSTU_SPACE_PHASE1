@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Role;
+use App\Models\UserRole;
 use App\Helpers\PermissionHelper;
 
 class TestPermissionCommand extends Command
@@ -31,10 +31,10 @@ class TestPermissionCommand extends Command
         $this->newLine();
 
         // ดึงข้อมูล roles ทั้งหมด
-        $roles = Role::all();
+        $roles = UserRole::all();
 
         foreach ($roles as $role) {
-            $this->info("Role: {$role->role}");
+            $this->info("Role: {$role->role_name}");
             $this->line("Displayed Number (role_code): {$role->role_code}");
             $this->line("Binary Code (role_code_bin): {$role->role_code_bin}");
             $this->line("Binary Representation: " . PermissionHelper::toBinaryString($role->role_code));
@@ -75,7 +75,7 @@ class TestPermissionCommand extends Command
         $this->newLine();
 
         // Test Admin permission
-        $admin = Role::where('role', 'Admin')->first();
+        $admin = UserRole::where('role_name', 'admin')->first();
         if ($admin) {
             $this->info("Testing Admin (32768):");
             $hasAdmin = ($admin->role_code & PermissionHelper::ADMIN_PERMISSION) !== 0;
@@ -86,7 +86,7 @@ class TestPermissionCommand extends Command
         }
 
         // Test Student permission (should NOT have admin access)
-        $student = Role::where('role', 'Student')->first();
+        $student = UserRole::where('role_name', 'student')->first();
         if ($student) {
             $this->info("Testing Student (2048):");
             $hasAdmin = ($student->role_code & PermissionHelper::ADMIN_PERMISSION) !== 0;
@@ -97,7 +97,7 @@ class TestPermissionCommand extends Command
         }
 
         // Test Combined Roles
-        $coordLect = Role::where('role', 'Coordinator - Lecturer')->first();
+        $coordLect = UserRole::where('role_name', 'coordinator-lecturer')->first();
         if ($coordLect) {
             $this->info("Testing Coordinator-Lecturer (24576):");
             $hasCoord = ($coordLect->role_code & PermissionHelper::COORDINATOR_PERMISSION) !== 0;
