@@ -19,7 +19,7 @@ return new class extends Migration
             $table->increments('user_id');
             $table->string('firstname_user', 255);
             $table->string('lastname_user', 255);
-            $table->string('user_code', 50);
+            $table->string('user_code', 50)->unique();
             $table->integer('role');  // Changed from string to integer for role_code
             $table->string('email_user', 255);
             $table->string('username_user', 50);

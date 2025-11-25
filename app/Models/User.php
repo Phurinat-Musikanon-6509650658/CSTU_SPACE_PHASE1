@@ -125,4 +125,12 @@ class User extends Authenticatable
         $userRole = $this->userRole;
         return $userRole ? $userRole->role_name : 'Unknown';
     }
+
+    /**
+     * Get full name accessor
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(($this->firstname_user ?? '') . ' ' . ($this->lastname_user ?? ''));
+    }
 }

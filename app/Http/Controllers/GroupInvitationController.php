@@ -44,6 +44,9 @@ class GroupInvitationController extends Controller
                 'group_id' => $invitation->group_id,
                 'username_std' => $student->username_std
             ]);
+            
+            // อัพเดตสถานะกลุ่มเป็น member_added (ถ้ามีการเพิ่มสมาชิกใหม่)
+            $invitation->group->update(['status_group' => 'member_added']);
 
             DB::commit();
             return redirect()->route('student.menu')->with('success', 'เข้าร่วมกลุ่มสำเร็จ');
@@ -84,5 +87,26 @@ class GroupInvitationController extends Controller
             ->paginate(10);
 
         return view('student.invitations.index', compact('invitations'));
+    }
+
+    // ยกเลิกคำเชิญ (สำหรับผู้ส่งคำเชิญ)
+    public function cancel(GroupInvitation $invitation)
+    {
+        $student = Auth::guard('student')->user();
+
+        // ตรวจสอบว่าเป็นผู้ส่งคำเชิญ
+        if ($invitation->inviter_username !== $student->username_std) {
+            return redirect()->route('student.menu')->with('error', 'คุณไม่มีสิทธิ์ดำเนินการนี้');
+        }
+
+        // ตรวจสอบสถานะคำเชิญ
+        if (!$invitation->isPending()) {
+            return redirect()->route('student.menu')->with('error', 'คำเชิญนี้ได้ดำเนินการแล้ว');
+        }
+
+        // ลบคำเชิญ
+        $invitation->delete();
+
+        return redirect()->back()->with('success', 'ยกเลิกคำเชิญแล้ว');
     }
 }

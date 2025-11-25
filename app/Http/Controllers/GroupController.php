@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\GroupInvitation;
 use App\Models\Student;
+use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -27,7 +28,10 @@ class GroupController extends Controller
             ->whereDoesntHave('groups') // student ที่ยังไม่มีกลุ่ม
             ->get();
 
-        return view('student.group.create', compact('students'));
+        // หาหมายเลขกลุ่มถัดไป (group_id ล่าสุด + 1)
+        $nextGroupNumber = Group::max('group_id') + 1;
+
+        return view('student.group.create', compact('students', 'nextGroupNumber'));
     }
 
     public function store(Request $request)
@@ -40,12 +44,9 @@ class GroupController extends Controller
         }
 
         $request->validate([
-            'project_name' => 'required|string|max:255',
-            'project_code' => 'required|string|max:50|unique:groups,project_code',
-            'subject_code' => 'required|string|max:50',
-            'year' => 'required|integer|min:2020|max:2030',
+            'subject_code' => 'required|string|in:CS303,CS403',
+            'year' => 'required|integer',
             'semester' => 'required|integer|in:1,2',
-            'description' => 'nullable|string|max:1000',
             'invite_username' => 'nullable|string|exists:student,username_std',
         ]);
 
@@ -53,19 +54,32 @@ class GroupController extends Controller
         try {
             // สร้างกลุ่ม
             $group = Group::create([
-                'project_name' => $request->project_name,
-                'project_code' => $request->project_code,
                 'subject_code' => $request->subject_code,
                 'year' => $request->year,
                 'semester' => $request->semester,
-                'description' => $request->description,
-                'status_group' => 'active'
+                'status_group' => 'created'
             ]);
 
             // เพิ่มผู้สร้างเป็นสมาชิกกลุ่ม
             GroupMember::create([
                 'group_id' => $group->group_id,
                 'username_std' => $student->username_std
+            ]);
+
+            // สร้าง Project record (ยังไม่มีข้อมูลเต็ม)
+            // project_code format: 68-1-01 (year-semester-group_id)
+            $projectCode = sprintf(
+                '%02d-%d-%02d',
+                $request->year % 100,
+                $request->semester,
+                $group->group_id
+            );
+            
+            Project::create([
+                'group_id' => $group->group_id,
+                'project_code' => $projectCode,
+                'status_project' => 'not_proposed', // ยังไม่ได้เสนอหัวข้อ
+                'student_type' => 'r' // default ปกติ
             ]);
 
             // ส่งคำเชิญหากมีการระบุสมาชิกคนที่ 2
@@ -77,7 +91,7 @@ class GroupController extends Controller
                         'group_id' => $group->group_id,
                         'inviter_username' => $student->username_std,
                         'invitee_username' => $request->invite_username,
-                        'message' => 'เชิญเข้าร่วมกลุ่มโครงงาน: ' . $request->project_name,
+                        'message' => 'เชิญเข้าร่วมกลุ่มโครงงาน วิชา ' . $request->subject_code,
                         'status' => 'pending'
                     ]);
                 }
@@ -94,7 +108,7 @@ class GroupController extends Controller
 
     public function show(Group $group)
     {
-        $group->load(['members.student', 'invitations.invitee', 'invitations.inviter']);
+        $group->load(['members.student', 'invitations.invitee', 'invitations.inviter', 'latestProposal.lecturer']);
         return view('student.group.show', compact('group'));
     }
 
@@ -145,11 +159,30 @@ class GroupController extends Controller
             $remainingMembers = GroupMember::where('group_id', $group->group_id)->count();
             
             if ($remainingMembers === 0) {
-                // ถ้าไม่มีสมาชิกเหลือ ให้ลบกลุ่มและคำเชิญทั้งหมด
+                // ถ้าไม่มีสมาชิกเหลือ ให้ยุบกลุ่มและลบข้อมูลที่เกี่ยวข้อง
+                
+                // อัพเดตสถานะกลุ่มเป็น disbanded
+                $group->update(['status_group' => 'disbanded']);
+                
+                // ลบคำเชิญทั้งหมด
                 GroupInvitation::where('group_id', $group->group_id)->delete();
+                
+                // ลบโครงงาน (ถ้ายังไม่ได้รับการอนุมัติ)
+                if ($group->project && $group->project->status_project !== 'approved') {
+                    $group->project->delete();
+                }
+                
+                // ลบ proposals ทั้งหมด
+                $group->proposals()->delete();
+                
+                // ลบกลุ่ม
                 $group->delete();
-                $message = 'คุณได้ออกจากกลุ่มเรียบร้อยแล้ว และกลุ่มได้ถูกลบเนื่องจากไม่มีสมาชิกเหลือ';
+                
+                $message = 'คุณได้ออกจากกลุ่มเรียบร้อยแล้ว และกลุ่มได้ถูกยุบเนื่องจากไม่มีสมาชิกเหลือ';
             } else {
+                // อัพเดตสถานะกลุ่มเป็น member_left
+                $group->update(['status_group' => 'member_left']);
+                
                 $message = 'คุณได้ออกจากกลุ่มเรียบร้อยแล้ว';
             }
             

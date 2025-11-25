@@ -12,6 +12,8 @@ use App\Http\Controllers\PermissionTestController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupInvitationController;
+use App\Http\Controllers\CoordinatorController;
+use App\Http\Controllers\ProposalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +50,17 @@ Route::middleware(['auth:student'])->group(function () {
     // Student Menu/Dashboard
     Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
     Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    Route::get('/student/debug', function() {
+        $student = Auth::guard('student')->user();
+        $myGroup = $student->groups()->with(['members.student', 'latestProposal.lecturer'])->first();
+        $pendingInvitations = $student->pendingInvitations()->with(['group', 'inviter'])->orderBy('created_at', 'desc')->get();
+        $isGroupLeader = false;
+        if ($myGroup) {
+            $firstMember = $myGroup->members()->orderBy('groupmem_id', 'asc')->first();
+            $isGroupLeader = $firstMember && $firstMember->username_std === $student->username_std;
+        }
+        return view('student.debug', compact('student', 'myGroup', 'pendingInvitations', 'isGroupLeader'));
+    })->name('student.debug');
     
     // Group Management Routes
     Route::prefix('groups')->name('groups.')->group(function () {
@@ -61,8 +74,16 @@ Route::middleware(['auth:student'])->group(function () {
     // Group Invitation Management Routes
     Route::prefix('invitations')->name('invitations.')->group(function () {
         Route::get('/', [GroupInvitationController::class, 'index'])->name('index');
+        Route::post('/', [GroupInvitationController::class, 'store'])->name('store');
         Route::post('{invitation}/accept', [GroupInvitationController::class, 'accept'])->name('accept');
         Route::post('{invitation}/decline', [GroupInvitationController::class, 'decline'])->name('decline');
+        Route::delete('{invitation}/cancel', [GroupInvitationController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Project Proposal Routes (Group Leaders only)
+    Route::prefix('proposals')->name('proposals.')->group(function () {
+        Route::get('groups/{group}/create', [ProposalController::class, 'create'])->name('create');
+        Route::post('groups/{group}', [ProposalController::class, 'store'])->name('store');
     });
     
 });
@@ -73,6 +94,41 @@ Route::middleware(['auth:student'])->group(function () {
 
 // Protected routes with session timeout middleware
 Route::middleware('session.timeout')->group(function () {
+    
+    // ======================================
+    // Coordinator Routes
+    // ======================================
+    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin')->group(function () {
+        Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
+        
+        Route::prefix('groups')->name('groups.')->group(function () {
+            Route::get('/', [CoordinatorController::class, 'groups'])->name('index');
+            Route::get('{id}', [CoordinatorController::class, 'groupShow'])->name('show');
+            Route::post('{id}/approve', [CoordinatorController::class, 'approveGroup'])->name('approve');
+        });
+        
+        Route::prefix('projects')->name('projects.')->group(function () {
+            Route::put('{id}', [CoordinatorController::class, 'updateProject'])->name('update');
+        });
+        
+        Route::prefix('proposals')->name('proposals.')->group(function () {
+            Route::get('/', [ProposalController::class, 'coordinatorIndex'])->name('index');
+        });
+        
+        Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
+    });
+    
+    // ======================================
+    // Lecturer Routes
+    // ======================================
+    Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin')->group(function () {
+        Route::prefix('proposals')->name('proposals.')->group(function () {
+            Route::get('/', [ProposalController::class, 'lecturerIndex'])->name('index');
+            Route::get('{proposal}', [ProposalController::class, 'show'])->name('show');
+            Route::post('{proposal}/approve', [ProposalController::class, 'approve'])->name('approve');
+            Route::post('{proposal}/reject', [ProposalController::class, 'reject'])->name('reject');
+        });
+    });
     
     // ======================================
     // Main Menu

@@ -3,56 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use App\Models\UserRole;
-use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\Auth;
 
 class PermissionTestController extends Controller
 {
-    /**
-     * Test permission system
-     */
     public function testPermission()
     {
-        // ดึง role_code ของ user ปัจจุบัน
-        $roleCode = Session::get('role_code', 2048);
-        $role = UserRole::where('role_code', $roleCode)->first();
-
-        if (!$role) {
-            return response()->json(['error' => 'Role not found'], 404);
-        }
-
-        $displayedNumber = $role->role_code;      // ตัวเลขที่แสดง (เช่น 32768)
-        $binaryCode = $role->role_code_bin;       // รหัส binary จาก database
-
-        // เช็ค binary integrity
-        $integrityCheck = PermissionHelper::verifyBinaryIntegrity($displayedNumber, $binaryCode);
+        $user = Auth::guard('web')->user();
         
-        if (!$integrityCheck) {
+        if (!$user) {
             return response()->json([
-                'error' => 'Binary integrity check failed!',
-                'displayed' => $displayedNumber,
-                'binary_code' => $binaryCode,
-                'displayed_binary' => PermissionHelper::toBinaryString($displayedNumber),
-                'stored_binary' => PermissionHelper::toBinaryString($binaryCode)
-            ], 403);
+                'error' => 'Not authenticated',
+                'message' => 'Please login first'
+            ], 401);
         }
 
-        // ตัวอย่างการเช็ค permission
-        $permissions = [
-            'admin' => PermissionHelper::hasPermission($displayedNumber, PermissionHelper::ADMIN_PERMISSION),
-            'coordinator' => PermissionHelper::hasPermission($displayedNumber, PermissionHelper::COORDINATOR_PERMISSION),
-            'lecturer' => PermissionHelper::hasPermission($displayedNumber, PermissionHelper::LECTURER_PERMISSION),
-            'staff' => PermissionHelper::hasPermission($displayedNumber, PermissionHelper::STAFF_PERMISSION),
-            'student' => PermissionHelper::hasPermission($displayedNumber, PermissionHelper::STUDENT_PERMISSION)
+        $roleNames = [
+            32768 => 'Admin',
+            16384 => 'Coordinator',
+            8192 => 'Lecturer',
+            4096 => 'Staff',
         ];
 
         return response()->json([
-            'user_role' => $role->role_name,
-            'displayed_number' => $displayedNumber,
-            'binary_representation' => PermissionHelper::toBinaryString($displayedNumber),
-            'binary_integrity' => $integrityCheck,
-            'permissions' => $permissions
+            'user' => [
+                'username' => $user->username_user,
+                'name' => $user->firstname_user . ' ' . $user->lastname_user,
+                'role_code' => $user->role,
+                'role_name' => $roleNames[$user->role] ?? 'Unknown',
+            ],
+            'permissions' => [
+                'can_access_admin' => $user->role === 32768,
+                'can_access_coordinator' => in_array($user->role, [32768, 16384]),
+                'can_access_lecturer' => in_array($user->role, [32768, 8192]),
+            ],
+            'timestamp' => now()->toDateTimeString(),
         ]);
     }
 }

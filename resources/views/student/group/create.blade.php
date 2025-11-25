@@ -1,288 +1,578 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สร้างกลุ่มโครงงาน - CSTU SPACE</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Kanit', sans-serif;
+@extends('layouts.student')
+
+@section('title', 'สร้างกลุ่มโครงงาน')
+
+@push('styles')
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    :root {
+        --color-primary: #0066cc;
+        --color-secondary: #dc143c;
+        --color-success: #28a745;
+        --gradient-primary: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+        --gradient-card: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(220, 20, 60, 0.05));
+        --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.1);
+        --border-radius: 16px;
+    }
+
+    .page-header {
+        background: var(--gradient-card);
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 2rem;
+        border-left: 5px solid var(--color-primary);
+    }
+
+    .page-header h1 {
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .group-number-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        border: 2px solid var(--color-primary);
+        box-shadow: 0 4px 15px rgba(0, 102, 204, 0.2);
+        margin-top: 1rem;
+    }
+
+    .group-number-badge i {
+        font-size: 1.5rem;
+        color: var(--color-primary);
+    }
+
+    .group-number-badge strong {
+        color: var(--color-primary);
+        font-size: 1.1rem;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-card);
+        border: none;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #f0f0f0;
+    }
+
+    .section-header i {
+        font-size: 1.5rem;
+    }
+
+    .section-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .section-header.blue {
+        color: var(--color-primary);
+    }
+
+    .section-header.red {
+        color: var(--color-secondary);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-label .required {
+        color: var(--color-secondary);
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
+    }
+
+    .form-control:disabled, .form-control[readonly] {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        color: #6c757d;
+    }
+
+    .info-card {
+        background: var(--gradient-card);
+        border: 2px solid rgba(0, 102, 204, 0.2);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card i {
+        color: var(--color-primary);
+        font-size: 1.2rem;
+    }
+
+    .info-card ul {
+        margin-bottom: 0;
+        padding-left: 1.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .info-card li {
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+
+    .member-card {
+        background: linear-gradient(135deg, rgba(0, 102, 204, 0.08), rgba(220, 20, 60, 0.08));
+        border: 2px solid rgba(0, 102, 204, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .member-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.15);
+    }
+
+    .member-card .card-title {
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .member-card .card-title i {
+        font-size: 1.3rem;
+    }
+
+    .selected-member-card {
+        background: white;
+        border: 2px solid var(--color-success);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1);
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
         }
-        
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .selected-member-card h6 {
+        color: var(--color-success);
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-action-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 2rem;
+        margin-top: 2rem;
+        border-top: 3px solid #f0f0f0;
+    }
+
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-submit {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 0.875rem 2.5rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 102, 204, 0.4);
+    }
+
+    .btn-submit i {
+        font-size: 1.3rem;
+    }
+
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container .select2-selection--single {
+        height: 48px !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 10px !important;
+        transition: all 0.3s ease;
+    }
+    
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 44px !important;
+        padding-left: 1rem !important;
+        color: #495057;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 44px !important;
+        right: 10px;
+    }
+    
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
+    }
+    
+    .select2-dropdown {
+        border: 2px solid var(--color-primary) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+        margin-top: 4px;
+    }
+    
+    .select2-results__option {
+        padding: 0.75rem 1rem;
+    }
+
+    .select2-results__option--highlighted {
+        background-color: var(--color-primary) !important;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 102, 204, 0.05));
+        border-left: 4px solid var(--color-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
         .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 1.5rem;
         }
-        
-        .select2-container .select2-selection--single {
-            height: 38px !important;
-            border: 1px solid #ced4da !important;
-            border-radius: 6px !important;
+
+        .btn-action-group {
+            flex-direction: column;
+            gap: 1rem;
         }
-        
-        .select2-container .select2-selection--single .select2-selection__rendered {
-            line-height: 36px !important;
-            padding-left: 10px !important;
+
+        .btn-cancel, .btn-submit {
+            width: 100%;
+            justify-content: center;
         }
-        
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px !important;
-        }
-    </style>
-</head>
-<body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Header -->
-                <div class="form-card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="fw-bold text-primary mb-1">
-                                <i class="fas fa-plus-circle me-2"></i>สร้างกลุ่มโครงงาน
-                            </h2>
-                            <p class="text-muted mb-0">ข้อมูลโครงงานและการเชิญสมาชิก</p>
+    }
+</style>
+@endpush
+
+@section('content')
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>
+                    <i class="bi bi-plus-circle-fill me-2"></i>สร้างกลุ่มโครงงาน
+                </h1>
+                <p>กรอกข้อมูลโครงงานและเชิญสมาชิก</p>
+                
+                <!-- แสดงหมายเลขกลุ่มที่จะได้รับ -->
+                <div class="group-number-badge">
+                    <i class="bi bi-hash"></i>
+                    <strong>หมายเลขกลุ่มของคุณจะเป็น: กลุ่มที่ {{ $nextGroupNumber }}</strong>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <strong>เกิดข้อผิดพลาด!</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            <!-- Create Group Form -->
+            <div class="form-card">
+                <form action="{{ route('groups.store') }}" method="POST" id="createGroupForm">
+                    @csrf
+                    
+                    <div class="row">
+                        <!-- Group Information -->
+                        <div class="col-md-6 mb-4">
+                            <div class="section-header blue">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <h5>ข้อมูลกลุ่ม</h5>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="subject_code" class="form-label">
+                                    รหัสวิชา <span class="required">*</span>
+                                </label>
+                                <select class="form-select" id="subject_code" name="subject_code" required>
+                                    <option value="">เลือกรหัสวิชา</option>
+                                    <option value="CS303" {{ old('subject_code') == 'CS303' ? 'selected' : '' }}>CS303 - โครงงานคอมพิวเตอร์ 1</option>
+                                    <option value="CS403" {{ old('subject_code') == 'CS403' ? 'selected' : '' }}>CS403 - โครงงานคอมพิวเตอร์ 2</option>
+                                </select>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>เลือกรหัสวิชาที่ทำโครงงาน
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-4">
+                                        <label for="year" class="form-label">
+                                            ปีการศึกษา <span class="required">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="year" name="year" value="2568" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-4">
+                                        <label for="semester" class="form-label">
+                                            ภาคการศึกษา <span class="required">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="semester" name="semester" value="1" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <i class="bi bi-lightbulb-fill me-2"></i>
+                                <strong>หมายเหตุ:</strong>
+                                <p class="mb-0 mt-2">ชื่อโครงงานและรายละเอียดจะกรอกในขั้นตอนการเสนอหัวข้อโครงงาน หลังจากสร้างกลุ่มเรียบร้อยแล้ว</p>
+                            </div>
                         </div>
-                        <a href="{{ route('student.menu') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>กลับ
+
+                        <!-- Member Invitation -->
+                        <div class="col-md-6 mb-4">
+                            <div class="section-header red">
+                                <i class="bi bi-person-plus-fill"></i>
+                                <h5>เชิญสมาชิก</h5>
+                            </div>
+                            
+                            <div class="info-card">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                <strong>ข้อมูลสำคัญ:</strong>
+                                <ul>
+                                    <li>กลุ่มสามารถมีสมาชิกได้สูงสุด <strong>2 คน</strong></li>
+                                    <li>คุณจะเป็นสมาชิกคนแรก (หัวหน้ากลุ่ม) โดยอัตโนมัติ</li>
+                                    <li>การเชิญสมาชิก<strong>ไม่บังคับ</strong> (ทำงานคนเดียวได้)</li>
+                                    <li>สมาชิกที่ถูกเชิญต้อง<strong>ตอบรับ</strong>เพื่อเข้าร่วมกลุ่ม</li>
+                                </ul>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="invite_username" class="form-label">
+                                    <i class="bi bi-search me-1"></i>ค้นหาและเชิญสมาชิกคนที่ 2
+                                </label>
+                                <select class="form-select" id="invite_username" name="invite_username">
+                                    <option value="">พิมพ์ชื่อหรือรหัสนักศึกษา (ไม่บังคับ)</option>
+                                </select>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>ระบบจะแสดงเฉพาะนักศึกษาที่ยังไม่มีกลุ่ม
+                                </div>
+                            </div>
+
+                            <div class="mb-4" id="selected-member" style="display: none;">
+                                <div class="selected-member-card">
+                                    <h6>
+                                        <i class="bi bi-check-circle-fill me-2"></i>สมาชิกที่เลือก
+                                    </h6>
+                                    <p class="card-text mb-2" id="member-info"></p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-envelope me-1"></i>
+                                        คำเชิญจะถูกส่งหลังจากสร้างกลุ่มสำเร็จ
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Current User Info -->
+                            <div class="member-card">
+                                <div class="card-title">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span>สมาชิกคนที่ 1 (หัวหน้ากลุ่ม)</span>
+                                </div>
+                                <p class="card-text mb-1">
+                                    <strong style="font-size: 1.1rem;">{{ Auth::guard('student')->user()->full_name }}</strong>
+                                </p>
+                                <p class="mb-0">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person-badge me-1"></i>{{ Auth::guard('student')->user()->username_std }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="btn-action-group">
+                        <a href="{{ route('student.menu') }}" class="btn-cancel">
+                            <i class="bi bi-x-circle"></i>
+                            <span>ยกเลิก</span>
                         </a>
+                        <button type="submit" class="btn-submit">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>สร้างกลุ่มโครงงาน</span>
+                        </button>
                     </div>
-                </div>
-
-                <!-- Alerts -->
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <strong>เกิดข้อผิดพลาด!</strong>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                <!-- Create Group Form -->
-                <div class="form-card p-4">
-                    <form action="{{ route('groups.store') }}" method="POST" id="createGroupForm">
-                        @csrf
-                        
-                        <div class="row">
-                            <!-- Project Information -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>ข้อมูลโครงงาน
-                                </h5>
-                                
-                                <div class="mb-3">
-                                    <label for="project_name" class="form-label fw-semibold">ชื่อโครงงาน *</label>
-                                    <input type="text" class="form-control" id="project_name" name="project_name" 
-                                           value="{{ old('project_name') }}" required>
-                                    <div class="form-text">ชื่อเต็มของโครงงาน</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="project_code" class="form-label fw-semibold">รหัสโครงงาน *</label>
-                                    <input type="text" class="form-control" id="project_code" name="project_code" 
-                                           value="{{ old('project_code') }}" required>
-                                    <div class="form-text">รหัสเฉพาะของโครงงาน (ไม่ซ้ำกัน)</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="subject_code" class="form-label fw-semibold">รหัสวิชา *</label>
-                                    <input type="text" class="form-control" id="subject_code" name="subject_code" 
-                                           value="{{ old('subject_code') }}" required>
-                                    <div class="form-text">รหัสวิชาที่ทำโครงงาน</div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="mb-3">
-                                            <label for="year" class="form-label fw-semibold">ปีการศึกษา *</label>
-                                            <select class="form-select" id="year" name="year" required>
-                                                <option value="">เลือกปีการศึกษา</option>
-                                                @for($y = 2020; $y <= 2030; $y++)
-                                                    <option value="{{ $y }}" {{ old('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                                @endfor
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="mb-3">
-                                            <label for="semester" class="form-label fw-semibold">ภาคการศึกษา *</label>
-                                            <select class="form-select" id="semester" name="semester" required>
-                                                <option value="">เลือกภาคการศึกษา</option>
-                                                <option value="1" {{ old('semester') == '1' ? 'selected' : '' }}>ภาคต้น</option>
-                                                <option value="2" {{ old('semester') == '2' ? 'selected' : '' }}>ภาคปลาย</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="description" class="form-label fw-semibold">คำอธิบายโครงงาน</label>
-                                    <textarea class="form-control" id="description" name="description" rows="4">{{ old('description') }}</textarea>
-                                    <div class="form-text">อธิบายรายละเอียดของโครงงาน (ไม่บังคับ)</div>
-                                </div>
-                            </div>
-
-                            <!-- Member Invitation -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-user-plus me-2"></i>เชิญสมาชิก
-                                </h5>
-                                
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>หมายเหตุ:</strong> 
-                                    <ul class="mb-0 mt-2">
-                                        <li>กลุ่มสามารถมีสมาชิกได้สูงสุด 2 คน</li>
-                                        <li>คุณจะเป็นสมาชิกคนแรกโดยอัตโนมัติ</li>
-                                        <li>การเชิญสมาชิกไม่ได้บังคับ (สามารถทำงานคนเดียวได้)</li>
-                                        <li>สมาชิกที่ถูกเชิญจะได้รับแจ้งเตือนเพื่อตอบรับ</li>
-                                    </ul>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="invite_username" class="form-label fw-semibold">เชิญสมาชิกคนที่ 2</label>
-                                    <select class="form-select" id="invite_username" name="invite_username">
-                                        <option value="">เลือกนักศึกษาที่จะเชิญ (ไม่บังคับ)</option>
-                                    </select>
-                                    <div class="form-text">เลือกนักศึกษาที่ยังไม่มีกลุ่ม</div>
-                                </div>
-
-                                <div class="mb-3" id="selected-member" style="display: none;">
-                                    <div class="card border-primary">
-                                        <div class="card-body">
-                                            <h6 class="card-title">สมาชิกที่เลือก</h6>
-                                            <p class="card-text" id="member-info"></p>
-                                            <small class="text-muted">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                นักศึกษาที่ถูกเชิญจะต้องตอบรับเพื่อเข้าร่วมกลุ่ม
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Current User Info -->
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary">
-                                            <i class="fas fa-user me-1"></i>สมาชิกคนที่ 1 (คุณ)
-                                        </h6>
-                                        <p class="card-text mb-0">
-                                            <strong>{{ Auth::guard('student')->user()->full_name }}</strong><br>
-                                            <small class="text-muted">{{ Auth::guard('student')->user()->username_std }}</small>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <hr>
-                                <div class="d-flex justify-content-between">
-                                    <a href="{{ route('student.menu') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-1"></i>ยกเลิก
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>สร้างกลุ่มโครงงาน
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
     </div>
+@endsection
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2 for student selection
-            $('#invite_username').select2({
-                placeholder: 'พิมพ์ชื่อหรือรหัสนักศึกษา...',
-                allowClear: true,
-                ajax: {
-                    url: '{{ route("groups.search-students") }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            search: params.term || ''
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data.map(function(student) {
-                                return {
-                                    id: student.username_std,
-                                    text: student.firstname_std + ' ' + student.lastname_std + ' (' + student.username_std + ')'
-                                };
-                            })
-                        };
-                    },
-                    cache: true
-                }
-            });
+@push('scripts')
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-            // Show selected member info
-            $('#invite_username').on('select2:select', function (e) {
-                var data = e.params.data;
-                if (data.id) {
-                    $('#member-info').text(data.text);
-                    $('#selected-member').show();
-                }
-            });
-
-            // Hide selected member info when cleared
-            $('#invite_username').on('select2:unselect', function (e) {
-                $('#selected-member').hide();
-            });
-
-            // Form validation
-            $('#createGroupForm').on('submit', function(e) {
-                var projectName = $('#project_name').val().trim();
-                var projectCode = $('#project_code').val().trim();
-                var subjectCode = $('#subject_code').val().trim();
-                var year = $('#year').val();
-                var semester = $('#semester').val();
-
-                if (!projectName || !projectCode || !subjectCode || !year || !semester) {
-                    e.preventDefault();
-                    alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
-                    return false;
-                }
-            });
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for student selection
+        $('#invite_username').select2({
+            placeholder: 'พิมพ์ชื่อหรือรหัสนักศึกษา...',
+            allowClear: true,
+            width: '100%',
+            dropdownAutoWidth: true,
+            ajax: {
+                url: '{{ route("groups.search-students") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term || ''
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(function(student) {
+                            return {
+                                id: student.username_std,
+                                text: student.firstname_std + ' ' + student.lastname_std + ' (' + student.username_std + ')'
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            // ป้องกันการเลื่อนหน้า
+            dropdownParent: $('#invite_username').parent()
         });
-    </script>
-</body>
-</html>
+
+        // Show selected member info
+        $('#invite_username').on('select2:select', function (e) {
+            var data = e.params.data;
+            if (data.id) {
+                $('#member-info').text(data.text);
+                $('#selected-member').show();
+            }
+        });
+
+        // Hide selected member info when cleared
+        $('#invite_username').on('select2:unselect', function (e) {
+            $('#selected-member').hide();
+        });
+
+        // Form validation
+        $('#createGroupForm').on('submit', function(e) {
+            var subjectCode = $('#subject_code').val();
+            var year = $('#year').val();
+            var semester = $('#semester').val();
+
+            if (!subjectCode || !year || !semester) {
+                e.preventDefault();
+                alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+                return false;
+            }
+        });
+    });
+</script>
+@endpush

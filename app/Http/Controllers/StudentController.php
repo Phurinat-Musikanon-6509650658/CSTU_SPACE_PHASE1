@@ -18,8 +18,8 @@ class StudentController extends Controller
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
-        // ดึงข้อมูลกลุ่มของ student
-        $myGroup = $student->groups()->with('members.student')->first();
+        // ดึงข้อมูลกลุ่มของ student พร้อม proposal ล่าสุด
+        $myGroup = $student->groups()->with(['members.student', 'latestProposal.lecturer'])->first();
         
         // ดึงคำเชิญที่ค้างอยู่
         $pendingInvitations = $student->pendingInvitations()
@@ -27,7 +27,14 @@ class StudentController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('student.menu', compact('student', 'myGroup', 'pendingInvitations'));
+        // เช็คว่าเป็นหัวหน้ากลุ่มหรือไม่
+        $isGroupLeader = false;
+        if ($myGroup) {
+            $firstMember = $myGroup->members()->orderBy('groupmem_id', 'asc')->first();
+            $isGroupLeader = $firstMember && $firstMember->username_std === $student->username_std;
+        }
+
+        return view('student.menu', compact('student', 'myGroup', 'pendingInvitations', 'isGroupLeader'));
     }
 
     public function dashboard()

@@ -14,13 +14,10 @@ return new class extends Migration
         // สร้างตาราง groups
         Schema::create('groups', function (Blueprint $table) {
             $table->id('group_id');
-            $table->string('project_name');
-            $table->string('project_code')->unique();
-            $table->string('subject_code');
-            $table->year('year');
+            $table->integer('year'); // ใช้ integer เพื่อรองรับปี พ.ศ. (2568)
             $table->tinyInteger('semester');
-            $table->string('status_group')->default('active');
-            $table->text('description')->nullable();
+            $table->string('subject_code');
+            $table->string('status_group')->default('created'); // created, pending, approved, rejected
             $table->timestamps();
         });
 

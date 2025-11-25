@@ -197,7 +197,6 @@ class AuthController extends Controller
                         ->update(['password_std' => Hash::make($password)]);
                     \Log::info('Password hashed for student: ' . $username);
                     $this->setUserSession('student', $student);
-                    return redirect()->route('student.menu');
                 }
             }
         }

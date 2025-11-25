@@ -190,28 +190,28 @@ class MenuController extends Controller
             'title' => 'Project Management',
             'items' => [
                 [
-                    'title' => 'Track All Projects',
-                    'description' => 'View and track status of all projects',
-                    'icon' => 'bi-clipboard-check',
-                    'url' => '#',
+                    'title' => 'Coordinator Dashboard',
+                    'description' => 'จัดการโครงงานและกลุ่มทั้งหมด',
+                    'icon' => 'bi-speedometer2',
+                    'url' => route('coordinator.dashboard'),
                     'class' => 'primary-card',
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'Manage Advisors',
-                    'description' => 'View advisor list and their projects',
-                    'icon' => 'bi-person-badge',
-                    'url' => '#',
-                    'class' => 'info-card',
-                    'btn_class' => 'info-btn'
+                    'title' => 'Manage Groups',
+                    'description' => 'อนุมัติและจัดการกลุ่มโครงงาน',
+                    'icon' => 'bi-people-fill',
+                    'url' => route('coordinator.groups.index'),
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
                 ],
                 [
                     'title' => 'Manage Students',
                     'description' => 'View all student records',
                     'icon' => 'bi-mortarboard-fill',
                     'url' => '#',
-                    'class' => 'success-card',
-                    'btn_class' => 'success-btn'
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
                 ]
             ]
         ];
@@ -225,6 +225,14 @@ class MenuController extends Controller
         return [
             'title' => 'Advisory Work',
             'items' => [
+                [
+                    'title' => 'Project Proposals',
+                    'description' => 'รับและพิจารณาข้อเสนอโครงงาน',
+                    'icon' => 'bi-file-earmark-text-fill',
+                    'url' => route('lecturer.proposals.index'),
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
+                ],
                 [
                     'title' => 'My Projects',
                     'description' => 'View projects I\'m advising',
