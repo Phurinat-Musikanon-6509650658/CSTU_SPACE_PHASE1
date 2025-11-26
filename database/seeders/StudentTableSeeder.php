@@ -59,6 +59,62 @@ class StudentTableSeeder extends Seeder
                 'password_std' => Hash::make('1104000099105'),
                 'role' => 2048,
             ]
-        );        
+        );
+
+        // เพิ่ม student เพื่อทดสอบกลุ่ม
+        DB::table('student')->updateOrInsert(
+            ['username_std' => '6509650001'],
+            [
+                'firstname_std' => 'สมชาย',
+                'lastname_std' => 'ใจดี',
+                'email_std' => '6509650001@dome.tu.ac.th',
+                'password_std' => Hash::make('password'),
+                'role' => 2048,
+            ]
+        );
+
+        DB::table('student')->updateOrInsert(
+            ['username_std' => '6509650002'],
+            [
+                'firstname_std' => 'สมหญิง',
+                'lastname_std' => 'รักเรียน',
+                'email_std' => '6509650002@dome.tu.ac.th',
+                'password_std' => Hash::make('password'),
+                'role' => 2048,
+            ]
+        );
+
+        DB::table('student')->updateOrInsert(
+            ['username_std' => '6509650003'],
+            [
+                'firstname_std' => 'วิทยา',
+                'lastname_std' => 'ศรีสุข',
+                'email_std' => '6509650003@dome.tu.ac.th',
+                'password_std' => Hash::make('password'),
+                'role' => 2048,
+            ]
+        );
+
+        DB::table('student')->updateOrInsert(
+            ['username_std' => '6509650004'],
+            [
+                'firstname_std' => 'ชัยชนะ',
+                'lastname_std' => 'มั่นคง',
+                'email_std' => '6509650004@dome.tu.ac.th',
+                'password_std' => Hash::make('password'),
+                'role' => 2048,
+            ]
+        );
+
+        DB::table('student')->updateOrInsert(
+            ['username_std' => '6509650005'],
+            [
+                'firstname_std' => 'ปรีชา',
+                'lastname_std' => 'เจริญ',
+                'email_std' => '6509650005@dome.tu.ac.th',
+                'password_std' => Hash::make('password'),
+                'role' => 2048,
+            ]
+        );
     }
 }

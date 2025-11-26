@@ -28,8 +28,22 @@ class GroupController extends Controller
             ->whereDoesntHave('groups') // student ที่ยังไม่มีกลุ่ม
             ->get();
 
-        // หาหมายเลขกลุ่มถัดไป (group_id ล่าสุด + 1)
-        $nextGroupNumber = Group::max('group_id') + 1;
+        // หาหมายเลขกลุ่มถัดไป (หาช่องว่างก่อน ถ้าไม่มีค่อยใช้เลขใหม่)
+        $existingGroupIds = Group::pluck('group_id')->sort()->values()->toArray();
+        $nextGroupNumber = null;
+        
+        // หาเลขที่ว่าง (ถูกลบไปแล้ว)
+        for ($i = 1; $i <= count($existingGroupIds) + 1; $i++) {
+            if (!in_array($i, $existingGroupIds)) {
+                $nextGroupNumber = $i;
+                break;
+            }
+        }
+        
+        // ถ้ายังไม่ได้เลข (กรณีไม่มีกลุ่มเลย)
+        if ($nextGroupNumber === null) {
+            $nextGroupNumber = 1;
+        }
 
         return view('student.group.create', compact('students', 'nextGroupNumber'));
     }
@@ -52,8 +66,28 @@ class GroupController extends Controller
 
         DB::beginTransaction();
         try {
-            // สร้างกลุ่ม
+            // ล็อคตาราง groups เพื่อป้องกัน race condition (หลายคนสร้างพร้อมกัน)
+            // ใช้ lockForUpdate() เพื่อให้คนอื่นรอจนกว่าจะสร้างเสร็จ
+            $existingGroupIds = Group::lockForUpdate()->pluck('group_id')->sort()->values()->toArray();
+            
+            $nextGroupId = null;
+            
+            // หาเลขที่ว่าง (ถูกลบไปแล้ว)
+            for ($i = 1; $i <= count($existingGroupIds) + 1; $i++) {
+                if (!in_array($i, $existingGroupIds)) {
+                    $nextGroupId = $i;
+                    break;
+                }
+            }
+            
+            // ถ้ายังไม่ได้เลข (กรณีไม่มีกลุ่มเลย)
+            if ($nextGroupId === null) {
+                $nextGroupId = 1;
+            }
+            
+            // สร้างกลุ่มโดยระบุ group_id (ใครมาก่อนได้เลขนั้นก่อน)
             $group = Group::create([
+                'group_id' => $nextGroupId,
                 'subject_code' => $request->subject_code,
                 'year' => $request->year,
                 'semester' => $request->semester,
@@ -100,6 +134,13 @@ class GroupController extends Controller
             DB::commit();
             return redirect()->route('student.menu')->with('success', 'สร้างกลุ่มสำเร็จ');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollback();
+            // กรณี duplicate key (เผื่อมีปัญหา race condition)
+            if ($e->getCode() == 23000) {
+                return back()->with('error', 'มีคนสร้างกลุ่มพร้อมกันกับคุณ กรุณาลองใหม่อีกครั้ง');
+            }
+            return back()->with('error', 'เกิดข้อผิดพลาดในการสร้างกลุ่ม: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());

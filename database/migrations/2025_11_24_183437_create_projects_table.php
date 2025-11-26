@@ -31,8 +31,8 @@ return new class extends Migration
             // ประเภทนักศึกษา (r=ปกติ, s=พิเศษ)
             $table->enum('student_type', ['r', 's'])->default('r');
             
-            // สถานะโปรเจ็ค (กำลังดำเนินงาน, ส่งตรงเวลา, สมาชิกออก, เพิ่มสมาชิก, ฯลฯ)
-            $table->string('status_project')->default('pending'); // pending, in_progress, submitted, late, member_left, member_added, completed, etc.
+            // สถานะโปรเจ็ค
+            $table->enum('status_project', ['not_proposed', 'pending', 'approved', 'rejected', 'in_progress', 'late_submission', 'submitted'])->default('not_proposed');
             
             // ประเภทโปรเจ็ค (สามารถผสมได้ เช่น soft-en,ai หรือ network,datasci)
             $table->text('project_type')->nullable(); // soft-en, network, datasci, ai, etc. (comma-separated)

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('year'); // ใช้ integer เพื่อรองรับปี พ.ศ. (2568)
             $table->tinyInteger('semester');
             $table->string('subject_code');
-            $table->string('status_group')->default('created'); // created, pending, approved, rejected
+            $table->enum('status_group', ['not_created', 'created', 'member_left', 'member_added', 'disbanded'])->default('created');
             $table->timestamps();
         });
 
