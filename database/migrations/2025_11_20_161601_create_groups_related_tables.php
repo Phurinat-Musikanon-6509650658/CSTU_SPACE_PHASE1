@@ -11,6 +11,31 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // สร้างตาราง groups
+        Schema::create('groups', function (Blueprint $table) {
+            $table->id('group_id');
+            $table->integer('year'); // ใช้ integer เพื่อรองรับปี พ.ศ. (2568)
+            $table->tinyInteger('semester');
+            $table->string('subject_code');
+            $table->enum('status_group', ['not_created', 'created', 'member_left', 'member_added', 'disbanded'])->default('created');
+            $table->timestamps();
+        });
+
+        // สร้างตาราง group_members
+        Schema::create('group_members', function (Blueprint $table) {
+            $table->id('groupmem_id');
+            $table->unsignedBigInteger('group_id');
+            $table->string('username_std', 50);
+            $table->timestamps();
+            
+            // Foreign key constraints
+            $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
+            
+            // Unique constraint to prevent duplicate memberships
+            $table->unique(['group_id', 'username_std']);
+        });
+
+        // สร้างตาราง group_invitations
         Schema::create('group_invitations', function (Blueprint $table) {
             $table->id('invitation_id');
             $table->unsignedBigInteger('group_id');
@@ -21,7 +46,7 @@ return new class extends Migration
             $table->timestamp('responded_at')->nullable(); // วันที่ตอบรับ
             $table->timestamps();
 
-            // Foreign key constraint เฉพาะ groups table
+            // Foreign key constraint
             $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
             
             // Unique constraint เพื่อป้องกันการเชิญซ้ำในกลุ่มเดียวกัน
@@ -39,5 +64,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('group_invitations');
+        Schema::dropIfExists('group_members');
+        Schema::dropIfExists('groups');
     }
 };

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use App\Helpers\PermissionHelper;
+use App\Models\User;
+use App\Models\LoginLog;
+use App\Models\SystemSetting;
+use App\Models\ExamSchedule;
+use App\Models\Project;
 
 class SystemSettingsController extends Controller
 {
@@ -26,7 +31,12 @@ class SystemSettingsController extends Controller
         $databaseInfo = $this->getDatabaseInformation();
         $cacheInfo = $this->getCacheInformation();
         
-        return view('admin.system.index', compact('systemInfo', 'databaseInfo', 'cacheInfo'));
+        // ข้อมูลสถานะระบบ
+        $systemStatus = SystemSetting::get('system_status', 'open');
+        $currentYear = SystemSetting::get('current_year', '2568');
+        $currentSemester = SystemSetting::get('current_semester', '1');
+        
+        return view('admin.system.index', compact('systemInfo', 'databaseInfo', 'cacheInfo', 'systemStatus', 'currentYear', 'currentSemester'));
     }
 
     /**
@@ -252,5 +262,472 @@ class SystemSettingsController extends Controller
         }
 
         return view('admin.system.logs', compact('logs'));
+    }
+
+    /**
+     * Toggle system status (open/close)
+     */
+    public function toggleSystemStatus(Request $request)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
+        $currentStatus = SystemSetting::get('system_status', 'open');
+        $newStatus = $currentStatus === 'open' ? 'closed' : 'open';
+        
+        SystemSetting::set('system_status', $newStatus, 'System status (open/closed)');
+
+        return response()->json([
+            'success' => true,
+            'status' => $newStatus,
+            'message' => 'System status updated to ' . $newStatus
+        ]);
+    }
+
+    /**
+     * Update system settings (year/semester)
+     */
+    public function updateSettings(Request $request)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $request->validate([
+            'current_year' => 'required|numeric|digits:4',
+            'current_semester' => 'required|in:1,2,3'
+        ]);
+
+        SystemSetting::set('current_year', $request->current_year, 'Current academic year');
+        SystemSetting::set('current_semester', $request->current_semester, 'Current semester (1/2/3)');
+
+        return back()->with('success', 'System settings updated successfully');
+    }
+
+    /**
+     * List all exam schedules (Admin)
+     */
+    public function examScheduleIndex()
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'desc')
+            ->paginate(20);
+
+        return view('admin.exam-schedules.index', compact('examSchedules'));
+    }
+
+    /**
+     * List all exam schedules (Coordinator)
+     */
+    public function coordinatorExamScheduleIndex()
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'desc')
+            ->paginate(20);
+
+        return view('coordinator.exam-schedules.index', compact('examSchedules'));
+    }
+
+    /**
+     * Show exam schedules in calendar view (Admin)
+     */
+    public function examScheduleCalendar()
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'asc')
+            ->get();
+
+        // Group by date
+        $examsByDate = $examSchedules->groupBy(function($schedule) {
+            return $schedule->ex_start_time->format('Y-m-d');
+        });
+
+        // Get unique locations for filter
+        $locations = $examSchedules->pluck('location')->unique()->filter()->values();
+
+        // Statistics
+        $totalExams = $examSchedules->count();
+        $upcomingExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isFuture();
+        })->count();
+        $todayExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isToday();
+        })->count();
+        $pastExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isPast() && !$schedule->ex_start_time->isToday();
+        })->count();
+
+        return view('admin.exam-schedules.calendar', compact(
+            'examsByDate', 
+            'locations', 
+            'totalExams', 
+            'upcomingExams', 
+            'todayExams', 
+            'pastExams'
+        ));
+    }
+
+    /**
+     * Show exam schedules in calendar view (Coordinator)
+     */
+    public function coordinatorExamScheduleCalendar()
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'asc')
+            ->get();
+
+        // Group by date
+        $examsByDate = $examSchedules->groupBy(function($schedule) {
+            return $schedule->ex_start_time->format('Y-m-d');
+        });
+
+        // Get unique locations for filter
+        $locations = $examSchedules->pluck('location')->unique()->filter()->values();
+
+        // Statistics
+        $totalExams = $examSchedules->count();
+        $upcomingExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isFuture();
+        })->count();
+        $todayExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isToday();
+        })->count();
+        $pastExams = $examSchedules->filter(function($schedule) {
+            return $schedule->ex_start_time->isPast() && !$schedule->ex_start_time->isToday();
+        })->count();
+
+        return view('coordinator.exam-schedules.calendar', compact(
+            'examsByDate', 
+            'locations', 
+            'totalExams', 
+            'upcomingExams', 
+            'todayExams', 
+            'pastExams'
+        ));
+    }
+
+    /**
+     * Show form for creating new exam schedule (Coordinator)
+     */
+    public function coordinatorExamScheduleCreate()
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $projects = Project::orderBy('project_id', 'desc')->get();
+
+        return view('coordinator.exam-schedules.create', compact('projects'));
+    }
+
+    /**
+     * Store exam schedule (Coordinator)
+     */
+    public function coordinatorExamScheduleStore(Request $request)
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $request->validate([
+            'project_ids' => 'required|array|min:1',
+            'project_ids.*' => 'required|exists:projects,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string'
+        ]);
+
+        $createdCount = 0;
+        foreach ($request->project_ids as $projectId) {
+            $existing = ExamSchedule::where('project_id', $projectId)->first();
+            
+            if (!$existing) {
+                ExamSchedule::create([
+                    'project_id' => $projectId,
+                    'ex_start_time' => $request->ex_start_time,
+                    'ex_end_time' => $request->ex_end_time,
+                    'location' => $request->location,
+                    'notes' => $request->notes
+                ]);
+                $createdCount++;
+            }
+        }
+
+        $message = $createdCount > 0 
+            ? "สร้างตารางสอบสำเร็จ {$createdCount} โครงงาน" 
+            : "ไม่มีการสร้างตารางสอบ (โครงงานที่เลือกมีตารางสอบอยู่แล้ว)";
+        
+        $type = $createdCount > 0 ? 'success' : 'warning';
+
+        return redirect()->route('coordinator.exam-schedules.index')
+            ->with($type, $message);
+    }
+
+    /**
+     * Show form for editing exam schedule (Coordinator)
+     */
+    public function coordinatorExamScheduleEdit($id)
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $projects = Project::orderBy('project_id', 'desc')->get();
+
+        return view('coordinator.exam-schedules.edit', compact('examSchedule', 'projects'));
+    }
+
+    /**
+     * Update exam schedule (Coordinator)
+     */
+    public function coordinatorExamScheduleUpdate(Request $request, $id)
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:projects,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string'
+        ]);
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $examSchedule->update([
+            'project_id' => $request->project_id,
+            'ex_start_time' => $request->ex_start_time,
+            'ex_end_time' => $request->ex_end_time,
+            'location' => $request->location,
+            'notes' => $request->notes
+        ]);
+
+        return redirect()->route('coordinator.exam-schedules.index')
+            ->with('success', 'อัปเดตตารางสอบสำเร็จ');
+    }
+
+    /**
+     * Delete exam schedule (Coordinator)
+     */
+    public function coordinatorExamScheduleDestroy($id)
+    {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $examSchedule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ลบตารางสอบสำเร็จ'
+        ]);
+    }
+
+    /**
+     * Show form for creating new exam schedule (Admin)
+     */
+    public function examScheduleCreate()
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $projects = Project::orderBy('project_id', 'desc')->get();
+
+        return view('admin.exam-schedules.create', compact('projects'));
+    }
+
+    /**
+     * Store a newly created exam schedule
+     */
+    public function examScheduleStore(Request $request)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $request->validate([
+            'project_ids' => 'required|array|min:1',
+            'project_ids.*' => 'required|exists:projects,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string'
+        ]);
+
+        // Create exam schedule for each selected project
+        $createdCount = 0;
+        foreach ($request->project_ids as $projectId) {
+            // Check if this project already has an exam schedule
+            $existing = ExamSchedule::where('project_id', $projectId)->first();
+            
+            if (!$existing) {
+                ExamSchedule::create([
+                    'project_id' => $projectId,
+                    'ex_start_time' => $request->ex_start_time,
+                    'ex_end_time' => $request->ex_end_time,
+                    'location' => $request->location,
+                    'notes' => $request->notes
+                ]);
+                $createdCount++;
+            }
+        }
+
+        $message = $createdCount > 0 
+            ? "สร้างตารางสอบสำเร็จ {$createdCount} โครงงาน" 
+            : "ไม่มีการสร้างตารางสอบ (โครงงานที่เลือกมีตารางสอบอยู่แล้ว)";
+        
+        $type = $createdCount > 0 ? 'success' : 'warning';
+
+        return redirect()->route('admin.exam-schedules.index')
+            ->with($type, $message);
+    }
+
+    /**
+     * Show form for editing exam schedule
+     */
+    public function examScheduleEdit($id)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $projects = Project::orderBy('project_id', 'desc')->get();
+
+        return view('admin.exam-schedules.edit', compact('examSchedule', 'projects'));
+    }
+
+    /**
+     * Update exam schedule
+     */
+    public function examScheduleUpdate(Request $request, $id)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:projects,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string'
+        ]);
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $examSchedule->update([
+            'project_id' => $request->project_id,
+            'ex_start_time' => $request->ex_start_time,
+            'ex_end_time' => $request->ex_end_time,
+            'location' => $request->location,
+            'notes' => $request->notes
+        ]);
+
+        return redirect()->route('admin.exam-schedules.index')
+            ->with('success', 'Exam schedule updated successfully');
+    }
+
+    /**
+     * Delete exam schedule
+     */
+    public function examScheduleDestroy($id)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
+        $examSchedule = ExamSchedule::findOrFail($id);
+        $examSchedule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Exam schedule deleted successfully'
+        ]);
+    }
+
+    // ==========================================
+    // Staff Exam Schedules (View Only)
+    // ==========================================
+    
+    /**
+     * แสดงรายการตารางสอบทั้งหมดสำหรับ Staff (ดูอย่างเดียว)
+     */
+    public function staffExamSchedules()
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'asc')
+            ->paginate(20);
+
+        return view('staff.exam-schedules.index', compact('examSchedules'));
+    }
+
+    /**
+     * แสดงตารางสอบแบบปฏิทินสำหรับ Staff
+     */
+    public function staffExamSchedulesCalendar()
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $query = ExamSchedule::with('project');
+
+        // Filter by project status if provided
+        if (request('status')) {
+            $query->whereHas('project', function($q) {
+                $q->where('status', request('status'));
+            });
+        }
+
+        // Filter by location if provided
+        if (request('location')) {
+            $query->where('location', 'LIKE', '%' . request('location') . '%');
+        }
+
+        // Search by project name or notes
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('project', function($subQ) use ($search) {
+                    $subQ->where('project_name', 'LIKE', '%' . $search . '%');
+                })
+                ->orWhere('notes', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $examSchedules = $query->orderBy('ex_start_time', 'asc')->get();
+
+        // Group by date
+        $schedulesByDate = $examSchedules->groupBy(function($schedule) {
+            return $schedule->ex_start_time->format('Y-m-d');
+        });
+
+        return view('staff.exam-schedules.calendar', compact('schedulesByDate'));
     }
 }

@@ -10,12 +10,12 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="page-title">
-                        <i class="bi bi-gear-fill me-2"></i>System Settings
+                        <i class="bi bi-gear-fill me-2"></i>ตั้งค่าระบบ
                     </h2>
-                    <p class="text-muted">Manage system configuration and maintenance</p>
+                    <p class="text-muted">จัดการการตั้งค่าและบำรุงรักษาระบบ</p>
                 </div>
                 <a href="{{ route('menu') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    <i class="bi bi-arrow-left me-2"></i>กลับสู่หน้าหลัก
                 </a>
             </div>
         </div>
@@ -38,6 +38,75 @@
         </div>
     @endif
 
+    <!-- System Status Control -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-{{ $systemStatus === 'open' ? 'success' : 'danger' }}">
+                <div class="card-header bg-{{ $systemStatus === 'open' ? 'success' : 'danger' }} text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-power me-2"></i>การควบคุมสถานะระบบ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="mb-0">
+                                    <span class="badge bg-{{ $systemStatus === 'open' ? 'success' : 'danger' }} fs-4" id="system-status-badge">
+                                        <i class="bi bi-{{ $systemStatus === 'open' ? 'unlock' : 'lock' }}-fill me-2"></i>
+                                        {{ strtoupper($systemStatus) }}
+                                    </span>
+                                </h3>
+                                <small class="text-muted">สถานะปัจจุบัน</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>ปีการศึกษา:</strong> {{ $currentYear }} 
+                                <span class="mx-2">|</span>
+                                <strong>ภาคเรียน:</strong> {{ $currentSemester }}
+                            </p>
+                            <p class="text-muted mb-0 small">
+                                {{ $systemStatus === 'open' ? 'ระบบเปิดให้นักศึกษาส่งข้อมูลและดำเนินการได้' : 'ระบบปิดอยู่ นักศึกษาไม่สามารถส่งหรือแก้ไขข้อมูลได้' }}
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button type="button" class="btn btn-{{ $systemStatus === 'open' ? 'danger' : 'success' }} btn-lg" id="toggle-system-btn">
+                                <i class="bi bi-{{ $systemStatus === 'open' ? 'lock' : 'unlock' }}-fill me-2"></i>
+                                {{ $systemStatus === 'open' ? 'ปิดระบบ' : 'เปิดระบบ' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Year/Semester Settings Form -->
+                    <hr class="my-3">
+                    <form method="POST" action="{{ route('admin.system.settings.update') }}" class="row g-3">
+                        @csrf
+                        @method('PUT')
+                        <div class="col-md-4">
+                            <label for="current_year" class="form-label">ปีการศึกษา</label>
+                            <input type="number" class="form-control" id="current_year" name="current_year" 
+                                   value="{{ $currentYear }}" min="2560" max="2600" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="current_semester" class="form-label">ภาคเรียน</label>
+                            <select class="form-select" id="current_semester" name="current_semester" required>
+                                <option value="1" {{ $currentSemester == '1' ? 'selected' : '' }}>1</option>
+                                <option value="2" {{ $currentSemester == '2' ? 'selected' : '' }}>2</option>
+                                <option value="3" {{ $currentSemester == '3' ? 'selected' : '' }}>3 (ฤดูร้อน)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-save me-2"></i>บันทึกการตั้งค่า
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- System Information Cards -->
     <div class="row mb-4">
         <!-- System Info Card -->
@@ -45,7 +114,7 @@
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-server me-2"></i>System Information
+                        <i class="bi bi-server me-2"></i>ข้อมูลระบบ
                     </h5>
                 </div>
                 <div class="card-body">
@@ -80,7 +149,7 @@
             <div class="card h-100">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-database me-2"></i>Database Information
+                        <i class="bi bi-database me-2"></i>ข้อมูลฐานข้อมูล
                     </h5>
                 </div>
                 <div class="card-body">
@@ -118,7 +187,7 @@
             <div class="card h-100">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-lightning-charge me-2"></i>Cache Information
+                        <i class="bi bi-lightning-charge me-2"></i>ข้อมูล Cache
                     </h5>
                 </div>
                 <div class="card-body">
@@ -154,17 +223,17 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="bi bi-arrow-clockwise me-2"></i>Cache Management
+                        <i class="bi bi-arrow-clockwise me-2"></i>การจัดการ Cache
                     </h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Clear various types of application cache</p>
+                    <p class="text-muted">ล้าง Cache ประเภทต่างๆ ของแอปพลิเคชัน</p>
                     
                     <form method="POST" action="{{ route('admin.system.clear-cache') }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="cache_type" value="all">
                         <button type="submit" class="btn btn-danger me-2 mb-2">
-                            <i class="bi bi-trash me-1"></i>Clear All Cache
+                            <i class="bi bi-trash me-1"></i>ล้าง Cache ทั้งหมด
                         </button>
                     </form>
 
@@ -172,7 +241,7 @@
                         @csrf
                         <input type="hidden" name="cache_type" value="application">
                         <button type="submit" class="btn btn-warning me-2 mb-2">
-                            <i class="bi bi-app me-1"></i>Clear App Cache
+                            <i class="bi bi-app me-1"></i>ล้าง App Cache
                         </button>
                     </form>
 
@@ -180,14 +249,14 @@
                         @csrf
                         <input type="hidden" name="cache_type" value="config">
                         <button type="submit" class="btn btn-info me-2 mb-2">
-                            <i class="bi bi-gear me-1"></i>Clear Config Cache
+                            <i class="bi bi-gear me-1"></i>ล้าง Config Cache
                         </button>
                     </form>
 
                     <form method="POST" action="{{ route('admin.system.optimize') }}" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-success mb-2">
-                            <i class="bi bi-speedometer2 me-1"></i>Optimize Application
+                            <i class="bi bi-speedometer2 me-1"></i>ปรับปรุงประสิทธิภาพ
                         </button>
                     </form>
                 </div>
@@ -231,29 +300,34 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                        <i class="bi bi-lightning me-2"></i>เมนูด่วน
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-2">
                             <a href="{{ route('users.index') }}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-people me-1"></i>Manage Users
+                                <i class="bi bi-people me-1"></i>จัดการผู้ใช้
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
                             <a href="{{ route('admin.logs.index') }}" class="btn btn-outline-warning w-100">
-                                <i class="bi bi-shield-lock me-1"></i>Login Logs
+                                <i class="bi bi-shield-lock me-1"></i>บันทึกการเข้าใช้
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
                             <a href="{{ route('statistics.index') }}" class="btn btn-outline-success w-100">
-                                <i class="bi bi-graph-up me-1"></i>Statistics
+                                <i class="bi bi-graph-up me-1"></i>สถิติ
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('admin.exam-schedules.index') }}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-calendar-event me-1"></i>ตารางสอบ
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
                             <a href="{{ route('menu') }}" class="btn btn-outline-secondary w-100">
-                                <i class="bi bi-house me-1"></i>Dashboard
+                                <i class="bi bi-house me-1"></i>หน้าหลัก
                             </a>
                         </div>
                     </div>
@@ -283,4 +357,54 @@
         });
     </script>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // System Status Toggle
+    const toggleBtn = document.getElementById('toggle-system-btn');
+    const statusBadge = document.getElementById('system-status-badge');
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const currentStatus = '{{ $systemStatus }}';
+            const confirmMessage = currentStatus === 'open' 
+                ? 'คุณแน่ใจหรือไม่ที่จะปิดระบบ? นักศึกษาจะไม่สามารถส่งหรือแก้ไขข้อมูลได้' 
+                : 'คุณแน่ใจหรือไม่ที่จะเปิดระบบ? นักศึกษาจะสามารถส่งและแก้ไขข้อมูลได้';
+            
+            if (confirm(confirmMessage)) {
+                toggleBtn.disabled = true;
+                toggleBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+                
+                fetch('{{ route('admin.system.toggle-status') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('ไม่สามารถเปลี่ยนสถานะระบบได้');
+                        toggleBtn.disabled = false;
+                        toggleBtn.innerHTML = currentStatus === 'open' 
+                            ? '<i class="bi bi-lock-fill me-2"></i>ปิดระบบ' 
+                            : '<i class="bi bi-unlock-fill me-2"></i>เปิดระบบ';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาดในการเปลี่ยนสถานะระบบ');
+                    toggleBtn.disabled = false;
+                    toggleBtn.innerHTML = currentStatus === 'open' 
+                        ? '<i class="bi bi-lock-fill me-2"></i>ปิดระบบ' 
+                        : '<i class="bi bi-unlock-fill me-2"></i>เปิดระบบ';
+                });
+            }
+        });
+    }
+});
+</script>
 @endsection

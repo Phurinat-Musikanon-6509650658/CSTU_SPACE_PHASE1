@@ -104,6 +104,7 @@
 
         <!-- Project Information -->
         <div class="col-lg-6">
+            <!-- กรณียังไม่มีโครงงาน -->
             @if(!$group->project)
                 @if(Auth::guard('web')->user()->canEdit())
                 <!-- Approve Group Form -->
@@ -146,6 +147,7 @@
                     </div>
                 </div>
                 @else
+                <!-- Staff View - ยังไม่มีโครงงาน -->
                 <div class="card mb-4">
                     <div class="card-header bg-secondary text-white">
                         <i class="bi bi-info-circle me-1"></i>ข้อมูลกลุ่ม
@@ -158,13 +160,15 @@
                     </div>
                 </div>
                 @endif
+            
+            <!-- กรณีมีโครงงานแล้ว -->
             @else
-                <!-- Project Details -->
                 <div class="card mb-4">
                     <div class="card-header bg-success text-white">
                         <i class="bi bi-folder me-1"></i>ข้อมูลโครงงาน
                     </div>
                     <div class="card-body">
+                        <!-- Coordinator/Admin สามารถแก้ไขได้ -->
                         @if(Auth::guard('web')->user()->canEdit())
                         <form action="{{ route('coordinator.projects.update', $group->group_id) }}" method="POST">
                             @csrf
@@ -256,8 +260,9 @@
                                 <i class="bi bi-save"></i> บันทึกการเปลี่ยนแปลง
                             </button>
                         </form>
+                        
+                        <!-- Staff แสดงแบบ Read-only -->
                         @else
-                        {{-- Read-only view for Staff --}}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted">รหัสโครงงาน</label>
@@ -284,10 +289,51 @@
                                     {{ $group->project->exam_datetime ? $group->project->exam_datetime->format('d/m/Y H:i') : '-' }}
                                 </p>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">สถานะโครงงาน</label>
+                                <p class="fw-bold">
+                                    @php
+                                        $statusMap = [
+                                            'pending' => 'รอดำเนินการ',
+                                            'in_progress' => 'กำลังดำเนินการ',
+                                            'submitted' => 'ส่งแล้ว',
+                                            'late' => 'ส่งช้า',
+                                            'completed' => 'เสร็จสิ้น'
+                                        ];
+                                    @endphp
+                                    {{ $statusMap[$group->project->status_project] ?? $group->project->status_project }}
+                                </p>
+                            </div>
                             <div class="col-12">
                                 <div class="alert alert-info mb-0">
                                     <i class="bi bi-info-circle"></i>
                                     <strong>หมายเหตุ:</strong> คุณมีสิทธิ์ดูข้อมูลเท่านั้น (Staff read-only)
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <!-- แสดงข้อมูลเล่มรายงาน (ทั้ง Coordinator และ Staff) -->
+                        @if($group->project->submission_file)
+                        <div class="alert alert-success mt-3">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-file-earmark-pdf-fill me-2"></i>เล่มรายงาน
+                            </h6>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>ชื่อไฟล์:</strong> {{ $group->project->submission_original_name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>ส่งเมื่อ:</strong> {{ $group->project->submitted_at->format('d/m/Y H:i') }} น.
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <strong>ส่งโดย:</strong> {{ $group->project->submitted_by }}
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <a href="{{ route('coordinator.submission.download', $group->project->project_id) }}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-download me-1"></i>ดาวน์โหลด
+                                    </a>
                                 </div>
                             </div>
                         </div>

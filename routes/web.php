@@ -14,6 +14,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\SubmissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,13 @@ Route::middleware(['auth:student'])->group(function () {
         Route::post('groups/{group}', [ProposalController::class, 'store'])->name('store');
     });
     
+    // Submission Routes (PDF Report Upload)
+    Route::prefix('submission')->name('student.submission.')->group(function () {
+        Route::get('/', [SubmissionController::class, 'showUploadForm'])->name('form');
+        Route::post('/{project}/upload', [SubmissionController::class, 'upload'])->name('upload');
+        Route::get('/{project}/download', [SubmissionController::class, 'download'])->name('download');
+    });
+    
 });
 
 // ======================================
@@ -101,6 +109,17 @@ Route::middleware('session.timeout')->group(function () {
     Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin')->group(function () {
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
+        // Exam Schedules Management (Full Access for Coordinator)
+        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
+            Route::get('/', [SystemSettingsController::class, 'coordinatorExamScheduleIndex'])->name('index');
+            Route::get('calendar', [SystemSettingsController::class, 'coordinatorExamScheduleCalendar'])->name('calendar');
+            Route::get('create', [SystemSettingsController::class, 'coordinatorExamScheduleCreate'])->name('create');
+            Route::post('/', [SystemSettingsController::class, 'coordinatorExamScheduleStore'])->name('store');
+            Route::get('{id}/edit', [SystemSettingsController::class, 'coordinatorExamScheduleEdit'])->name('edit');
+            Route::put('{id}', [SystemSettingsController::class, 'coordinatorExamScheduleUpdate'])->name('update');
+            Route::delete('{id}', [SystemSettingsController::class, 'coordinatorExamScheduleDestroy'])->name('destroy');
+        });
+        
         Route::prefix('groups')->name('groups.')->group(function () {
             Route::get('/', [CoordinatorController::class, 'groups'])->name('index');
             Route::get('{id}', [CoordinatorController::class, 'groupShow'])->name('show');
@@ -115,6 +134,9 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('/', [ProposalController::class, 'coordinatorIndex'])->name('index');
         });
         
+        // Submission Download for Coordinator/Staff
+        Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
+        
         Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
     });
     
@@ -128,46 +150,70 @@ Route::middleware('session.timeout')->group(function () {
             Route::post('{proposal}/approve', [ProposalController::class, 'approve'])->name('approve');
             Route::post('{proposal}/reject', [ProposalController::class, 'reject'])->name('reject');
         });
+        
+        // Submission Download for Lecturer
+        Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
     });
     
+    // ======================================
+    // Staff Routes (Staff role only)
+    // ======================================
+    Route::middleware(['role:staff'])->prefix('staff')->name('staff.')->group(function () {
+        
+        // Exam Schedules (View Only for Staff)
+        Route::get('exam-schedules', [SystemSettingsController::class, 'staffExamSchedules'])->name('exam-schedules');
+        Route::get('exam-schedules/calendar', [SystemSettingsController::class, 'staffExamSchedulesCalendar'])->name('exam-schedules.calendar');
+        
+    });
+
     // ======================================
     // Main Menu
     // ======================================
     Route::get('menu', [MenuController::class, 'index'])->name('menu');
 
     // ======================================
-    // User Management (Admin Only)
+    // User Management (Admin/Coordinator Only)
     // ======================================
-    Route::prefix('users')->name('users.')->group(function () {
+    Route::prefix('users')->name('users.')->middleware('role:coordinator,admin')->group(function () {
+        // View list - Coordinator, Admin can view
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        
+        // Create, Edit, Delete
         Route::get('create', [UserManagementController::class, 'create'])->name('create');
         Route::post('/', [UserManagementController::class, 'store'])->name('store');
-        Route::get('{user}', [UserManagementController::class, 'show'])->name('show');
         Route::get('{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
         Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
         Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');
         
-        // Import/Export functionality
+        // Import/Export
         Route::get('import/form', [UserManagementController::class, 'importForm'])->name('importForm');
         Route::post('import', [UserManagementController::class, 'import'])->name('import');
         Route::get('template/download', [UserManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::get('export/all', [UserManagementController::class, 'exportAll'])->name('exportAll');
+        
+        // View details
+        Route::get('{user}', [UserManagementController::class, 'show'])->name('show');
     });
 
     // ======================================
-    // Student Management (Admin/Coordinator)
+    // Student Management (Admin/Coordinator Only)
     // ======================================
-    Route::prefix('students')->name('students.')->group(function () {
+    Route::prefix('students')->name('students.')->middleware('role:coordinator,admin')->group(function () {
+        // Create, Edit, Delete
         Route::get('create', [StudentManagementController::class, 'create'])->name('create');
         Route::post('/', [StudentManagementController::class, 'store'])->name('store');
-        Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
         Route::get('{student}/edit', [StudentManagementController::class, 'edit'])->name('edit');
         Route::put('{student}', [StudentManagementController::class, 'update'])->name('update');
         Route::delete('{student}', [StudentManagementController::class, 'destroy'])->name('destroy');
         
-        // Import/Export functionality
+        // Import/Export
         Route::get('import/form', [StudentManagementController::class, 'importForm'])->name('importForm');
         Route::post('import', [StudentManagementController::class, 'import'])->name('import');
         Route::get('template/download', [StudentManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::get('export/all', [StudentManagementController::class, 'exportAll'])->name('exportAll');
+        
+        // View details
+        Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
     });
 
     // ======================================
@@ -190,6 +236,19 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('config', [SystemSettingsController::class, 'showConfig'])->name('config');
             Route::post('migrate', [SystemSettingsController::class, 'runMigrations'])->name('migrate');
             Route::get('logs', [SystemSettingsController::class, 'showLogs'])->name('logs');
+            Route::post('toggle-status', [SystemSettingsController::class, 'toggleSystemStatus'])->name('toggle-status');
+            Route::put('settings', [SystemSettingsController::class, 'updateSettings'])->name('settings.update');
+        });
+
+        // Exam Schedule Management (Admin Only)
+        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
+            Route::get('/', [SystemSettingsController::class, 'examScheduleIndex'])->name('index');
+            Route::get('calendar', [SystemSettingsController::class, 'examScheduleCalendar'])->name('calendar');
+            Route::get('create', [SystemSettingsController::class, 'examScheduleCreate'])->name('create');
+            Route::post('/', [SystemSettingsController::class, 'examScheduleStore'])->name('store');
+            Route::get('{id}/edit', [SystemSettingsController::class, 'examScheduleEdit'])->name('edit');
+            Route::put('{id}', [SystemSettingsController::class, 'examScheduleUpdate'])->name('update');
+            Route::delete('{id}', [SystemSettingsController::class, 'examScheduleDestroy'])->name('destroy');
         });
         
     });

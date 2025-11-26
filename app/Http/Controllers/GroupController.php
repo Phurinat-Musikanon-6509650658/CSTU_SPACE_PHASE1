@@ -149,8 +149,27 @@ class GroupController extends Controller
 
     public function show(Group $group)
     {
-        $group->load(['members.student', 'invitations.invitee', 'invitations.inviter', 'latestProposal.lecturer']);
-        return view('student.group.show', compact('group'));
+        $student = Auth::guard('student')->user();
+        
+        // ตรวจสอบว่า student อยู่ในกลุ่มนี้หรือไม่
+        $isMember = $group->members->contains('username_std', $student->username_std);
+        
+        if (!$isMember) {
+            return redirect()->route('student.menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลกลุ่มนี้');
+        }
+        
+        $group->load([
+            'members.student', 
+            'invitations.invitee', 
+            'invitations.inviter', 
+            'latestProposal.lecturer',
+            'project.advisor',
+            'project.committee1',
+            'project.committee2',
+            'project.committee3'
+        ]);
+        
+        return view('student.groups.show', compact('group'));
     }
 
     // API สำหรับค้นหา student

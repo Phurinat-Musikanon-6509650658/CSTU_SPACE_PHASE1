@@ -54,6 +54,19 @@ class UserTableSeeder extends Seeder
             ]
         );
 
+        // Staff (role_code = 4096)
+        DB::table('user')->updateOrInsert(
+            ['username_user' => 'staff'],
+            [
+                'firstname_user' => 'เจ้าหน้าที่',
+                'lastname_user' => 'ทดสอบ',
+                'user_code' => 'STF',
+                'role' => 4096,  // Staff role_code
+                'email_user' => 'staff@cstu.ac.th',
+                'password_user' => Hash::make('staff123'),
+            ]
+        );
+
         // ข้อมูลเดิม
         DB::table('user')->updateOrInsert(
             ['username_user' => '6503640226'],

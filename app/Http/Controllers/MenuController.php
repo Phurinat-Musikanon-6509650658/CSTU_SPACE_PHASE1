@@ -122,14 +122,14 @@ class MenuController extends Controller
             $menuGroups[] = $this->getProjectManagementMenu();
         }
 
+        // Staff Menu (View exam schedules)
+        if ($hasStaff && !$hasAdmin && !$hasCoordinator) {
+            $menuGroups[] = $this->getStaffMenu();
+        }
+
         // Lecturer/Advisor Advisory Work
         if ($hasLecturer || $hasCoordinator || $hasAdmin) {
             $menuGroups[] = $this->getAdvisoryWorkMenu();
-        }
-
-        // Staff Management Tools
-        if ($hasStaff || $hasAdmin) {
-            $menuGroups[] = $this->getStaffManagementMenu();
         }
 
         // Student Work (for students or when viewing as student perspective)
@@ -146,6 +146,26 @@ class MenuController extends Controller
     }
 
     /**
+     * เมนูสำหรับ Staff (ดูตารางสอบอย่างเดียว)
+     */
+    private function getStaffMenu()
+    {
+        return [
+            'title' => 'Staff Dashboard',
+            'items' => [
+                [
+                    'title' => 'ตารางสอบโครงงาน',
+                    'description' => 'ดูตารางสอบทั้งหมด',
+                    'icon' => 'bi-calendar-event-fill',
+                    'url' => route('staff.exam-schedules'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ]
+            ]
+        ];
+    }
+
+    /**
      * เมนู System Management สำหรับ Admin
      */
     private function getAdminSystemMenu()
@@ -153,6 +173,22 @@ class MenuController extends Controller
         return [
             'title' => 'System Management',
             'items' => [
+                [
+                    'title' => 'ตั้งค่าระบบ',
+                    'description' => 'จัดการการตั้งค่าและสถานะระบบ',
+                    'icon' => 'bi-gear-fill',
+                    'url' => route('admin.system.index'),
+                    'class' => 'danger-card',
+                    'btn_class' => 'danger-btn'
+                ],
+                [
+                    'title' => 'ตารางสอบ',
+                    'description' => 'จัดการตารางสอบโครงงาน',
+                    'icon' => 'bi-calendar-event-fill',
+                    'url' => route('admin.exam-schedules.index'),
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ],
                 [
                     'title' => 'User Management',
                     'description' => 'Add/Edit/Delete users',
@@ -198,20 +234,28 @@ class MenuController extends Controller
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'Manage Groups',
-                    'description' => 'อนุมัติและจัดการกลุ่มโครงงาน',
-                    'icon' => 'bi-people-fill',
-                    'url' => route('coordinator.groups.index'),
+                    'title' => 'ตารางสอบโครงงาน',
+                    'description' => 'ดูและจัดการตารางสอบทั้งหมด',
+                    'icon' => 'bi-calendar-event-fill',
+                    'url' => route('coordinator.exam-schedules.index'),
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
                 ],
                 [
-                    'title' => 'Manage Students',
-                    'description' => 'View all student records',
-                    'icon' => 'bi-mortarboard-fill',
-                    'url' => '#',
+                    'title' => 'Manage Groups',
+                    'description' => 'อนุมัติและจัดการกลุ่มโครงงาน',
+                    'icon' => 'bi-people-fill',
+                    'url' => route('coordinator.groups.index'),
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'User & Student Management',
+                    'description' => 'จัดการผู้ใช้และนักศึกษาในระบบ',
+                    'icon' => 'bi-person-lines-fill',
+                    'url' => route('users.index'),
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
                 ]
             ]
         ];
@@ -270,17 +314,17 @@ class MenuController extends Controller
             'title' => 'Staff Management',
             'items' => [
                 [
-                    'title' => 'Document Management',
-                    'description' => 'Manage official documents',
-                    'icon' => 'bi-files',
-                    'url' => '#',
+                    'title' => 'User & Student Records',
+                    'description' => 'ดูและ Export รายชื่อผู้ใช้และนักศึกษา',
+                    'icon' => 'bi-person-lines-fill',
+                    'url' => route('users.index'),
                     'class' => 'primary-card',
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'Schedule Management',
-                    'description' => 'Manage academic schedules',
-                    'icon' => 'bi-calendar-event',
+                    'title' => 'Document Management',
+                    'description' => 'Manage official documents',
+                    'icon' => 'bi-files',
                     'url' => '#',
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'

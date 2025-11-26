@@ -7,31 +7,24 @@ use App\Models\UserRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use App\Helpers\PermissionHelper;
 
 class UserManagementController extends Controller
 {
     /**
-     * Display a listing of users (admin only)
+     * Display a listing of users (Admin/Coordinator can view)
      */
     public function index()
     {
-        // Admin เห็นทุกคน
-        if (PermissionHelper::canViewAllData()) {
-            $users = DB::table('user')->get();
-            $students = DB::table('student')->get();
-            return view('admin.users.index', compact('users', 'students'));
-        }
+        // Admin, Coordinator สามารถดูได้ทั้งหมด
+        $users = DB::table('user')->get();
+        $students = DB::table('student')->get();
         
-        // Coordinator/Lecturer/Staff เห็นเฉพาะตัวเอง
-        if (PermissionHelper::isCoordinator() || PermissionHelper::isLecturer() || PermissionHelper::isStaff()) {
-            $userId = PermissionHelper::getCurrentUserId();
-            $users = DB::table('user')->where('user_id', $userId)->get();
-            $students = collect(); // ไม่แสดง students
-            return view('admin.users.index', compact('users', 'students'));
-        }
-
-        return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        // ไม่มี Staff ทั่วไป ทุกคนแก้ไขได้
+        $canEdit = true;
+        
+        return view('admin.users.index', compact('users', 'students', 'canEdit'));
     }
 
     /**
@@ -279,10 +272,7 @@ class UserManagementController extends Controller
      */
     public function downloadTemplate()
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-        }
-
+        // Coordinator, Admin, Staff สามารถดาวน์โหลดได้
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="user_import_template.csv"',
@@ -304,5 +294,46 @@ class UserManagementController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
-}
+    
+    /**
+     * Export all users to CSV
+     */
+    public function exportAll()
+    {
+        // Coordinator, Admin, Staff สามารถ export ได้
+        $users = DB::table('user')->get();
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="users_export_' . date('Y-m-d_His') . '.csv"',
+        ];
 
+        $callback = function() use ($users) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Header
+            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'Role', 'User Code', 'วันที่สร้าง']);
+            
+            // Data
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->user_id,
+                    $user->username_user,
+                    $user->firstname_user,
+                    $user->lastname_user,
+                    $user->email_user,
+                    $user->role,
+                    $user->user_code ?? '-',
+                    $user->created_at ?? '-'
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+}

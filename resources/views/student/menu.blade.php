@@ -774,6 +774,58 @@
             </div>
             @endif
             
+            <!-- การ์ดส่งเล่มรายงาน - แสดงเมื่อโครงงานได้รับการอนุมัติ แต่ยังไม่ได้ส่งเล่มรายงาน -->
+            @if(isset($myGroup) && $myGroup && $myGroup->project && 
+                ($myGroup->project->status_project === 'approved' || $myGroup->project->status_project === 'in_progress') &&
+                !$myGroup->project->submission_file)
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-orange);">
+                    <div class="card-icon mb-3" style="color: var(--color-orange);">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                    </div>
+                    <div class="card-content">
+                        <h5 class="card-title">ส่งเล่มรายงาน</h5>
+                        <p class="card-description">
+                            <span class="badge bg-warning text-dark">รอส่งเล่มรายงาน</span><br>
+                            <small class="text-muted mt-2 d-block">อัพโหลดไฟล์รายงานฉบับสมบูรณ์ (PDF)</small>
+                        </p>
+                        <a href="{{ route('student.submission.form') }}" class="btn btn-warning mt-2">
+                            <span>ส่งเล่มรายงาน</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
+            <!-- การ์ดจัดการเล่มรายงาน - แสดงเมื่อส่งเล่มรายงานแล้ว -->
+            @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->submission_file)
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-green);">
+                    <div class="card-icon mb-3" style="color: var(--color-green);">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="card-content">
+                        <h5 class="card-title">เล่มรายงาน</h5>
+                        <p class="card-description">
+                            <span class="badge bg-success">ส่งแล้ว</span><br>
+                            <small class="text-muted mt-2 d-block">
+                                ส่งเมื่อ: {{ \Carbon\Carbon::parse($myGroup->project->submitted_at)->locale('th')->translatedFormat('j M Y H:i') }} น.
+                            </small>
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center mt-2">
+                            <a href="{{ route('student.submission.download', $myGroup->project->project_id) }}" class="btn btn-success">
+                                <i class="bi bi-download me-1"></i>ดาวน์โหลด
+                            </a>
+                            <a href="{{ route('student.submission.form') }}" class="btn btn-outline-warning">
+                                <i class="bi bi-arrow-clockwise me-1"></i>อัพโหลดใหม่
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
             <!-- โครงงานที่ได้รับการอนุมัติแล้ว -->
             @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->status_project === 'approved')
             <div class="col-lg-4 col-md-6">

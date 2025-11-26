@@ -20,11 +20,16 @@ class Project extends Model
         'exam_datetime',
         'student_type',
         'status_project',
-        'project_type'
+        'project_type',
+        'submission_file',
+        'submission_original_name',
+        'submitted_at',
+        'submitted_by'
     ];
 
     protected $casts = [
         'exam_datetime' => 'datetime',
+        'submitted_at' => 'datetime',
     ];
 
     // Relationships
@@ -55,6 +60,11 @@ class Project extends Model
     {
         return $this->belongsTo(User::class, 'committee3_code', 'user_code')
             ->where('role', 8192); // Lecturer role only
+    }
+
+    public function examSchedule()
+    {
+        return $this->hasOne(ExamSchedule::class, 'project_id', 'project_id');
     }
 
     // Accessor สำหรับ ID ที่ coordinator เห็น (format: 01-01 คือ semester-group_id)

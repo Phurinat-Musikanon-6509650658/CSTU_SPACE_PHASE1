@@ -75,6 +75,11 @@
                 <div class="section-header">
                     <h4><i class="bi bi-person-badge me-2"></i>System Users</h4>
                     <div class="action-buttons">
+                        <a href="{{ route('users.exportAll') }}" class="btn modern-btn btn-info">
+                            <i class="bi bi-download"></i>
+                            <span>Export CSV</span>
+                        </a>
+                        @if($canEdit ?? true)
                         <a href="{{ route('users.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                             <span>Import CSV</span>
@@ -83,6 +88,7 @@
                             <i class="bi bi-plus-circle"></i>
                             <span>Add New User</span>
                         </a>
+                        @endif
                     </div>
                 </div>
 
@@ -134,6 +140,7 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="action-buttons-table">
+                                            @if($canEdit ?? true)
                                             <a href="{{ route('users.edit', $user->user_id) }}" class="btn btn-sm modern-btn btn-warning-modern">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -144,6 +151,9 @@
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
+                                            @else
+                                            <span class="text-muted"><i class="bi bi-eye"></i> View Only</span>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -170,6 +180,11 @@
                 <div class="section-header">
                     <h4><i class="bi bi-mortarboard me-2"></i>Students</h4>
                     <div class="action-buttons">
+                        <a href="{{ route('students.exportAll') }}" class="btn modern-btn btn-info">
+                            <i class="bi bi-download"></i>
+                            <span>Export CSV</span>
+                        </a>
+                        @if($canEdit ?? true)
                         <a href="{{ route('students.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                             <span>Import CSV</span>
@@ -178,6 +193,7 @@
                             <i class="bi bi-plus-circle"></i>
                             <span>Add New Student</span>
                         </a>
+                        @endif
                     </div>
                 </div>
 
@@ -202,6 +218,7 @@
                                     <td>{{ $student->email_std }}</td>
                                     <td class="text-center">
                                         <div class="action-buttons-table">
+                                            @if($canEdit ?? true)
                                             <a href="{{ route('students.edit', $student->student_id) }}" class="btn btn-sm modern-btn btn-warning-modern">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -212,6 +229,9 @@
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
+                                            @else
+                                            <span class="text-muted"><i class="bi bi-eye"></i> View Only</span>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

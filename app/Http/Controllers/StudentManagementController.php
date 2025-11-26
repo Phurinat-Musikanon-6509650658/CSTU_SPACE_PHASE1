@@ -216,10 +216,7 @@ class StudentManagementController extends Controller
      */
     public function downloadTemplate()
     {
-        if (!PermissionHelper::isAdmin()) {
-            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-        }
-
+        // Coordinator, Admin, Staff สามารถดาวน์โหลดได้
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="student_import_template.csv"',
@@ -241,5 +238,44 @@ class StudentManagementController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
-}
+    
+    /**
+     * Export all students to CSV
+     */
+    public function exportAll()
+    {
+        // Coordinator, Admin, Staff สามารถ export ได้
+        $students = DB::table('student')->get();
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="students_export_' . date('Y-m-d_His') . '.csv"',
+        ];
 
+        $callback = function() use ($students) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Header
+            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'วันที่สร้าง']);
+            
+            // Data
+            foreach ($students as $student) {
+                fputcsv($file, [
+                    $student->student_id,
+                    $student->username_std,
+                    $student->firstname_std,
+                    $student->lastname_std,
+                    $student->email_std,
+                    $student->created_at ?? '-'
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+}

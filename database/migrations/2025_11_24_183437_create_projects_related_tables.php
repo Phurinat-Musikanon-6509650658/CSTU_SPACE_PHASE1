@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // สร้างตาราง projects
         Schema::create('projects', function (Blueprint $table) {
             $table->id('project_id');
             $table->unsignedBigInteger('group_id')->unique();
@@ -37,6 +38,12 @@ return new class extends Migration
             // ประเภทโปรเจ็ค (สามารถผสมได้ เช่น soft-en,ai หรือ network,datasci)
             $table->text('project_type')->nullable(); // soft-en, network, datasci, ai, etc. (comma-separated)
             
+            // ไฟล์รายงาน PDF
+            $table->string('submission_file')->nullable();
+            $table->string('submission_original_name')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->string('submitted_by', 50)->nullable(); // username_std ของคนส่ง
+            
             $table->timestamps();
             
             // Foreign keys
@@ -46,6 +53,36 @@ return new class extends Migration
             $table->foreign('committee2_code')->references('user_code')->on('user')->onDelete('set null');
             $table->foreign('committee3_code')->references('user_code')->on('user')->onDelete('set null');
         });
+
+        // สร้างตาราง project_proposals
+        Schema::create('project_proposals', function (Blueprint $table) {
+            $table->id('proposal_id');
+            $table->unsignedBigInteger('group_id');
+            
+            // ข้อมูลข้อเสนอ
+            $table->string('proposed_title'); // ชื่อโครงงานที่เสนอ
+            $table->text('description')->nullable(); // รายละเอียด
+            $table->string('proposed_to', 50); // username_user ของ lecturer ที่เสนอไป
+            $table->string('proposed_by', 50); // username_std ของหัวหน้ากลุ่มที่เสนอ
+            
+            // สถานะข้อเสนอ
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('rejection_reason')->nullable(); // เหตุผลที่ปฏิเสธ (ถ้ามี)
+            
+            // วันที่ดำเนินการ
+            $table->timestamp('proposed_at')->useCurrent();
+            $table->timestamp('responded_at')->nullable();
+            
+            $table->timestamps();
+            
+            // Foreign keys
+            $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
+            
+            // Index สำหรับ username columns
+            $table->index(['group_id', 'status']);
+            $table->index('proposed_to');
+            $table->index('proposed_by');
+        });
     }
 
     /**
@@ -53,6 +90,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('project_proposals');
         Schema::dropIfExists('projects');
     }
 };
