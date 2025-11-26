@@ -105,6 +105,7 @@
         <!-- Project Information -->
         <div class="col-lg-6">
             @if(!$group->project)
+                @if(Auth::guard('web')->user()->canEdit())
                 <!-- Approve Group Form -->
                 <div class="card mb-4">
                     <div class="card-header bg-warning text-white">
@@ -144,6 +145,19 @@
                         </form>
                     </div>
                 </div>
+                @else
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <i class="bi bi-info-circle me-1"></i>ข้อมูลกลุ่ม
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-exclamation-triangle text-warning"></i>
+                            กลุ่มนี้ยังไม่ได้รับการอนุมัติ (Staff ไม่สามารถอนุมัติกลุ่มได้)
+                        </p>
+                    </div>
+                </div>
+                @endif
             @else
                 <!-- Project Details -->
                 <div class="card mb-4">
@@ -151,6 +165,7 @@
                         <i class="bi bi-folder me-1"></i>ข้อมูลโครงงาน
                     </div>
                     <div class="card-body">
+                        @if(Auth::guard('web')->user()->canEdit())
                         <form action="{{ route('coordinator.projects.update', $group->group_id) }}" method="POST">
                             @csrf
                             @method('PUT')
@@ -241,6 +256,42 @@
                                 <i class="bi bi-save"></i> บันทึกการเปลี่ยนแปลง
                             </button>
                         </form>
+                        @else
+                        {{-- Read-only view for Staff --}}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">รหัสโครงงาน</label>
+                                <p class="fw-bold">{{ $group->project->project_code }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">ชื่อโครงงาน</label>
+                                <p class="fw-bold">{{ $group->project->project_name ?? '-' }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">อาจารย์ที่ปรึกษา</label>
+                                <p class="fw-bold">
+                                    @if($group->project->advisor)
+                                        {{ $group->project->advisor->firstname_user }} {{ $group->project->advisor->lastname_user }}
+                                        <span class="text-muted">({{ $group->project->advisor_code }})</span>
+                                    @else
+                                        -
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">วันเวลาสอบ</label>
+                                <p class="fw-bold">
+                                    {{ $group->project->exam_datetime ? $group->project->exam_datetime->format('d/m/Y H:i') : '-' }}
+                                </p>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>หมายเหตุ:</strong> คุณมีสิทธิ์ดูข้อมูลเท่านั้น (Staff read-only)
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             @endif

@@ -74,6 +74,14 @@ class CoordinatorController extends Controller
     // อนุมัติกลุ่มและสร้าง Project
     public function approveGroup(Request $request, $id)
     {
+        $user = Auth::guard('web')->user();
+        
+        // ป้องกัน Staff แก้ไขข้อมูล
+        if (!$user->canEdit()) {
+            return redirect()->route('coordinator.groups.show', $id)
+                ->with('error', 'คุณไม่มีสิทธิ์อนุมัติกลุ่ม (Staff read-only)');
+        }
+
         $request->validate([
             'project_name' => 'required|string|max:255',
             'advisor_code' => 'required|string|exists:user,user_code',
@@ -125,6 +133,13 @@ class CoordinatorController extends Controller
     // อัพเดทข้อมูล Project
     public function updateProject(Request $request, $id)
     {
+        $user = Auth::guard('web')->user();
+        
+        // ป้องกัน Staff แก้ไขข้อมูล
+        if (!$user->canEdit()) {
+            return back()->with('error', 'คุณไม่มีสิทธิ์แก้ไขข้อมูล (Staff read-only)');
+        }
+
         $request->validate([
             'project_name' => 'nullable|string|max:255',
             'advisor_code' => 'nullable|string|exists:user,user_code',
