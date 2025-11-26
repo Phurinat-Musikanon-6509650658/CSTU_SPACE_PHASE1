@@ -110,6 +110,38 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is Lecturer
+     */
+    public function isLecturer(): bool
+    {
+        return ($this->role & 8192) === 8192;
+    }
+
+    /**
+     * Check if user is Staff (read-only)
+     */
+    public function isStaff(): bool
+    {
+        return ($this->role & 4096) === 4096;
+    }
+
+    /**
+     * Check if user is Staff ONLY (not Coordinator/Admin)
+     */
+    public function isStaffOnly(): bool
+    {
+        return $this->isStaff() && !$this->isCoordinator() && !$this->isAdmin();
+    }
+
+    /**
+     * Check if user can edit (not staff-only)
+     */
+    public function canEdit(): bool
+    {
+        return !$this->isStaffOnly();
+    }
+
+    /**
      * Get user role information from user_role table
      */
     public function userRole()

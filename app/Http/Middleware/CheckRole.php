@@ -37,8 +37,16 @@ class CheckRole
             }
         }
 
-        // ตรวจสอบว่า user มี role ที่อนุญาตหรือไม่
-        if (!in_array($user->role, $allowedRoleCodes)) {
+        // ตรวจสอบว่า user มี role ที่อนุญาตหรือไม่ (ใช้ bitwise AND)
+        $hasPermission = false;
+        foreach ($allowedRoleCodes as $roleCode) {
+            if (($user->role & $roleCode) === $roleCode) {
+                $hasPermission = true;
+                break;
+            }
+        }
+
+        if (!$hasPermission) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
