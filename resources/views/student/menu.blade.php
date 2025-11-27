@@ -379,22 +379,6 @@
             margin-bottom: 2rem;
         }
         
-        .no-group-card .btn {
-            background: var(--gradient-primary);
-            border: none;
-            padding: 1rem 3rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
-            transition: var(--transition);
-        }
-        
-        .no-group-card .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-        }
-        
         /* Alerts */
         .alert {
             border-radius: 15px;
@@ -483,6 +467,91 @@
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('member_accepted'))
+            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-person-check-fill me-2"></i>สมาชิกใหม่เข้าร่วมกลุ่ม!
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('member_accepted') }}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('proposal_approved'))
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-check-circle-fill me-2"></i>ข้อเสนอโครงงานได้รับการอนุมัติ!
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('proposal_approved') }}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('proposal_rejected'))
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-x-circle-fill me-2"></i>ข้อเสนอโครงงานถูกปฏิเสธ
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('proposal_rejected') }}</p>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>คุณสามารถเสนอโครงงานใหม่หรือติดต่ออาจารย์ท่านอื่นได้
+                </small>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('report_submitted'))
+            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-file-earmark-check-fill me-2"></i>เล่มรายงานถูกส่งแล้ว!
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('report_submitted') }}</p>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>คุณสามารถดาวน์โหลดเล่มรายงานได้จากการ์ด "เล่มรายงาน"
+                </small>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('exam_scheduled'))
+            <div class="alert alert-primary alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-calendar-check-fill me-2"></i>📅 กำหนดการสอบโครงงาน
+                </h5>
+                <hr>
+                <p class="mb-2">
+                    <strong>โครงงาน:</strong> {{ session('exam_scheduled')['project_name'] }}
+                </p>
+                <p class="mb-0">
+                    <strong>วันเวลาสอบ:</strong> {{ session('exam_scheduled')['exam_datetime'] }}
+                </p>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>กรุณาเตรียมตัวสอบให้พร้อม
+                </small>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('grade_released'))
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-award-fill me-2"></i>🎓 เกรดของคุณได้รับการประกาศแล้ว!
+                </h5>
+                <hr>
+                <p class="mb-0">
+                    อาจารย์ได้ประกาศเกรดโครงงานของคุณแล้ว
+                </p>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>คุณสามารถดูรายละเอียดเกรดและคะแนนได้จากการ์ด "ดูเกรด"
+                </small>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -606,7 +675,7 @@
                     <i class="bi bi-people fa-4x"></i>
                     <h4>คุณยังไม่มีกลุ่มโครงงาน</h4>
                     <p>สร้างกลุ่มใหม่และเชิญเพื่อนร่วมงาน หรือรอคำเชิญจากเพื่อน</p>
-                    <a href="{{ route('groups.create') }}" class="btn btn-primary">
+                    <a href="{{ route('groups.create') }}" class="btn" style="background: white; color: #0066CC; border: 2px solid #0066CC; padding: 1rem 3rem; border-radius: 50px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <i class="bi bi-plus-circle-fill me-2"></i>สร้างกลุ่มโครงงาน
                     </a>
                 </div>
@@ -624,7 +693,7 @@
         </div>
         
         <div class="row g-4 mb-4">
-            <!-- จัดการโครงงาน / สร้างกลุ่ม -->
+            <!-- 1. จัดการกลุ่ม / สร้างกลุ่ม -->
             @if($myGroup)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-blue);">
@@ -659,14 +728,14 @@
             </div>
             @endif
             
-            <!-- คำเชิญ -->
+            <!-- 2. คำเชิญ -->
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-yellow);">
                     <div class="card-icon mb-3" style="color: var(--color-yellow);">
                         <i class="bi bi-envelope-fill"></i>
                     </div>
                     <div class="card-content">
-                        <h5 class="card-title">คำเชิญ</h5>
+                        <h5 class="card-title">คำเชิญเข้ากลุ่ม</h5>
                         @if($pendingInvitations->count() > 0)
                         <p class="card-description">
                             <span class="badge bg-danger">{{ $pendingInvitations->count() }}</span> คำเชิญใหม่
@@ -682,7 +751,7 @@
                 </div>
             </div>
             
-            <!-- การ์ดรอการตอบรับคำเชิญ - แสดงเมื่อมีคำเชิญรออยู่ -->
+            <!-- 3. รอการตอบรับคำเชิญ (หัวหน้ากลุ่ม) -->
             @if(isset($myGroup) && $myGroup && $myGroup->hasPendingInvitation() && isset($isGroupLeader) && $isGroupLeader)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid #6c757d;">
@@ -704,7 +773,7 @@
             </div>
             @endif
             
-            <!-- การ์ดเสนอหัวข้อโครงงาน - แสดงเมื่อเป็นหัวหน้ากลุ่ม, ไม่มีคำเชิญรออยู่, และยังไม่ได้รับการอนุมัติ -->
+            <!-- 4. เสนอหัวข้อโครงงาน (หัวหน้ากลุ่ม) -->
             @if(isset($myGroup) && $myGroup && isset($isGroupLeader) && $isGroupLeader && !$myGroup->hasPendingInvitation())
                 @php
                     $latestProposal = $myGroup->latestProposal;
@@ -752,8 +821,10 @@
                 @endif
             @endif
             
-            <!-- การ์ดโครงงานที่ได้รับอนุมัติ - แสดงเมื่อได้รับการอนุมัติแล้ว -->
-            @if(isset($myGroup) && $myGroup && $myGroup->latestProposal && $myGroup->latestProposal->status === 'approved')
+            <!-- 5. โครงงานอนุมัติแล้ว -->
+            @if(isset($myGroup) && $myGroup && $myGroup->project && 
+                $myGroup->project->status_project === 'approved' && 
+                !$myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-green);">
                     <div class="card-icon mb-3" style="color: var(--color-green);">
@@ -763,7 +834,7 @@
                         <h5 class="card-title">โครงงานอนุมัติแล้ว</h5>
                         <p class="card-description">
                             <span class="badge bg-success">อนุมัติแล้ว</span><br>
-                            <small class="text-muted mt-2 d-block">{{ Str::limit($myGroup->latestProposal->proposed_title, 35) }}</small>
+                            <small class="text-muted mt-2 d-block">{{ Str::limit($myGroup->project->project_name, 35) }}</small>
                         </p>
                         <a href="{{ route('groups.show', $myGroup->group_id) }}" class="btn btn-success mt-2">
                             <span>ดูรายละเอียด</span>
@@ -774,9 +845,9 @@
             </div>
             @endif
             
-            <!-- การ์ดส่งเล่มรายงาน - แสดงเมื่อโครงงานได้รับการอนุมัติ แต่ยังไม่ได้ส่งเล่มรายงาน -->
+            <!-- 6. ส่งเล่มรายงาน -->
             @if(isset($myGroup) && $myGroup && $myGroup->project && 
-                ($myGroup->project->status_project === 'approved' || $myGroup->project->status_project === 'in_progress') &&
+                $myGroup->project->status_project === 'approved' &&
                 !$myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-orange);">
@@ -798,12 +869,12 @@
             </div>
             @endif
             
-            <!-- การ์ดจัดการเล่มรายงาน - แสดงเมื่อส่งเล่มรายงานแล้ว -->
+            <!-- 7. เล่มรายงานที่ส่งแล้ว -->
             @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-green);">
                     <div class="card-icon mb-3" style="color: var(--color-green);">
-                        <i class="bi bi-check-circle-fill"></i>
+                        <i class="bi bi-file-earmark-check-fill"></i>
                     </div>
                     <div class="card-content">
                         <h5 class="card-title">เล่มรายงาน</h5>
@@ -814,10 +885,10 @@
                             </small>
                         </p>
                         <div class="d-flex gap-2 justify-content-center mt-2">
-                            <a href="{{ route('student.submission.download', $myGroup->project->project_id) }}" class="btn btn-success">
+                            <a href="{{ route('student.submission.download', $myGroup->project->project_id) }}" class="btn btn-success btn-sm">
                                 <i class="bi bi-download me-1"></i>ดาวน์โหลด
                             </a>
-                            <a href="{{ route('student.submission.form') }}" class="btn btn-outline-warning">
+                            <a href="{{ route('student.submission.form') }}" class="btn btn-outline-warning btn-sm">
                                 <i class="bi bi-arrow-clockwise me-1"></i>อัพโหลดใหม่
                             </a>
                         </div>
@@ -826,60 +897,21 @@
             </div>
             @endif
             
-            <!-- โครงงานที่ได้รับการอนุมัติแล้ว -->
-            @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->status_project === 'approved')
+            <!-- 8. ดูคะแนนและผลการประเมิน -->
+            @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
-                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-green);">
-                    <div class="card-icon mb-3" style="color: var(--color-green);">
-                        <i class="bi bi-check-circle-fill"></i>
+                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid #9333ea;">
+                    <div class="card-icon mb-3" style="color: #9333ea;">
+                        <i class="bi bi-award-fill"></i>
                     </div>
                     <div class="card-content">
-                        <h5 class="card-title">โครงงานอนุมัติแล้ว</h5>
+                        <h5 class="card-title">คะแนนและผลประเมิน</h5>
                         <p class="card-description">
-                            <span class="badge bg-success">อนุมัติแล้ว</span><br>
-                            <small class="text-muted mt-2 d-block">{{ Str::limit($myGroup->project->project_name, 35) }}</small>
+                            <span class="badge" style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white;">ดูคะแนน</span><br>
+                            <small class="text-muted mt-2 d-block">ตรวจสอบคะแนนและผลการประเมินโครงงาน</small>
                         </p>
-                        <a href="{{ route('groups.show', $myGroup->group_id) }}" class="btn btn-success mt-2">
-                            <span>ดูรายละเอียด</span>
-                            <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endif
-            
-            <!-- โครงงานที่กำลังดำเนินการ -->
-            @if(isset($myGroup) && $myGroup && $myGroup->project && in_array($myGroup->project->status_project, ['in_progress', 'late_submission', 'submitted']))
-            <div class="col-lg-4 col-md-6">
-                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-blue);">
-                    <div class="card-icon mb-3" style="color: var(--color-blue);">
-                        <i class="bi bi-folder-fill"></i>
-                    </div>
-                    <div class="card-content">
-                        <h5 class="card-title">โครงงาน</h5>
-                        @if($myGroup->project->status_project === 'in_progress')
-                            <p class="card-description">
-                                <span class="badge bg-info">กำลังดำเนินงาน</span><br>
-                                <small class="text-muted">{{ Str::limit($myGroup->project->project_name, 30) }}</small>
-                            </p>
-                        @elseif($myGroup->project->status_project === 'late_submission')
-                            <p class="card-description">
-                                <span class="badge bg-warning">ส่งเล่มล่าช้า</span><br>
-                                <small class="text-muted">{{ Str::limit($myGroup->project->project_name, 30) }}</small>
-                            </p>
-                        @elseif($myGroup->project->status_project === 'submitted')
-                            <p class="card-description">
-                                <span class="badge bg-success">ส่งเล่มแล้ว</span><br>
-                                <small class="text-muted">{{ Str::limit($myGroup->project->project_name, 30) }}</small>
-                            </p>
-                        @else
-                            <p class="card-description">
-                                <span class="badge bg-secondary">{{ $myGroup->project->status_project }}</span><br>
-                                <small class="text-muted">{{ Str::limit($myGroup->project->project_name, 30) }}</small>
-                            </p>
-                        @endif
-                        <a href="{{ route('groups.show', $myGroup->group_id) }}" class="btn btn-primary mt-2">
-                            <span>ดูรายละเอียด</span>
+                        <a href="{{ route('student.grades') }}" class="btn btn-sm mt-2" style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white; border: none;">
+                            <span>ดูคะแนน</span>
                             <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>

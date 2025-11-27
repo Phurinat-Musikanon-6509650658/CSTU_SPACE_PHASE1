@@ -286,6 +286,14 @@ class MenuController extends Controller
             'title' => 'Advisory Work',
             'items' => [
                 [
+                    'title' => 'Lecturer Dashboard',
+                    'description' => 'ระบบจัดการข้อเสนอและโครงงานนักศึกษา',
+                    'icon' => 'bi-mortarboard-fill',
+                    'url' => route('lecturer.dashboard'),
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
                     'title' => 'Project Proposals',
                     'description' => 'รับและพิจารณาข้อเสนอโครงงาน',
                     'icon' => 'bi-file-earmark-text-fill',
@@ -294,18 +302,10 @@ class MenuController extends Controller
                     'btn_class' => 'warning-btn'
                 ],
                 [
-                    'title' => 'My Projects',
-                    'description' => 'View projects I\'m advising',
-                    'icon' => 'bi-folder-fill',
-                    'url' => '#',
-                    'class' => 'primary-card',
-                    'btn_class' => 'primary-btn'
-                ],
-                [
-                    'title' => 'My Students',
-                    'description' => 'View students under my guidance',
-                    'icon' => 'bi-people',
-                    'url' => '#',
+                    'title' => 'Project Evaluations',
+                    'description' => 'ประเมินและให้คะแนนโครงงาน',
+                    'icon' => 'bi-clipboard-check-fill',
+                    'url' => route('lecturer.evaluations.index'),
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
                 ],

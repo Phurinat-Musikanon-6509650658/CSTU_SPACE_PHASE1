@@ -164,22 +164,30 @@ try {
     $testResults[] = ['test' => 'Proposal Updated', 'status' => 'PASS'];
     
     echo "================================================================================\n";
-    echo "STEP 5: ระบบอัปเดต Project (status, advisor_code)\n";
+    echo "STEP 5: ระบบอัปเดต Project (status, advisor_code, project_code)\n";
     echo "================================================================================\n\n";
     
     $oldProjectStatus = $project->status_project;
     $oldAdvisorCode = $project->advisor_code;
+    $oldProjectCode = $project->project_code;
     
     // อัปเดต Project
     $project->status_project = 'approved';
     $project->advisor_code = $lecturer->user_code; // ใช้ user_code (ไม่ใช่ username_user!)
+    
+    // อัปเดต project_code เปลี่ยน TBD เป็นรหัสอาจารย์
+    $newProjectCode = preg_replace('/_TBD-/', "_{$lecturer->user_code}-", $oldProjectCode);
+    $project->project_code = $newProjectCode;
+    
     $project->save();
     
     echo "✅ อัปเดต Project:\n";
     echo "   Old Status: {$oldProjectStatus}\n";
     echo "   New Status: {$project->status_project}\n";
     echo "   Old Advisor Code: " . ($oldAdvisorCode ?: '(null)') . "\n";
-    echo "   New Advisor Code: {$project->advisor_code}\n\n";
+    echo "   New Advisor Code: {$project->advisor_code}\n";
+    echo "   Old Project Code: {$oldProjectCode}\n";
+    echo "   New Project Code: {$newProjectCode}\n\n";
     
     $testResults[] = ['test' => 'Project Updated', 'status' => 'PASS'];
     
@@ -230,6 +238,17 @@ try {
     } else {
         echo "❌ Advisor Code Mismatch: {$project->advisor_code} ≠ {$lecturer->user_code}\n";
         $testResults[] = ['test' => 'Advisor Code Match Lecturer', 'status' => 'FAIL'];
+    }
+    
+    // ตรวจสอบว่า project_code ถูกอัปเดตจาก TBD เป็นรหัสอาจารย์
+    if (strpos($project->project_code, '_TBD-') === false && strpos($project->project_code, "_{$lecturer->user_code}-") !== false) {
+        echo "✅ Project Code Updated: ไม่มี TBD และมีรหัสอาจารย์ {$lecturer->user_code} (ถูกต้อง)\n";
+        echo "   Project Code: {$project->project_code}\n";
+        $testResults[] = ['test' => 'Project Code Updated from TBD', 'status' => 'PASS'];
+    } else {
+        echo "❌ Project Code Not Updated: ยังมี TBD หรือไม่มีรหัสอาจารย์\n";
+        echo "   Project Code: {$project->project_code}\n";
+        $testResults[] = ['test' => 'Project Code Updated from TBD', 'status' => 'FAIL'];
     }
     
     // ตรวจสอบ Relationship: Project->Advisor

@@ -244,12 +244,12 @@ try {
     echo "STEP 6: ตรวจสอบความถูกต้องของข้อมูล\n";
     echo "================================================================================\n\n";
     
-    // ตรวจสอบ final_score
-    if ($projectGrade->final_score == $finalScore) {
+    // ตรวจสอบ final_score (เปรียบเทียบทศนิยม 2 ตำแหน่ง เพราะ database เป็น decimal(5,2))
+    if (abs($projectGrade->final_score - $finalScore) < 0.01) {
         echo "✅ Final Score: " . number_format($projectGrade->final_score, 2) . " (ถูกต้อง)\n";
         $testResults[] = ['test' => 'Final Score Match', 'status' => 'PASS'];
     } else {
-        echo "❌ Final Score: ไม่ตรงกัน\n";
+        echo "❌ Final Score: ไม่ตรงกัน (Expected: " . number_format($finalScore, 2) . ", Got: " . number_format($projectGrade->final_score, 2) . ")\n";
         $testResults[] = ['test' => 'Final Score Match', 'status' => 'FAIL'];
     }
     

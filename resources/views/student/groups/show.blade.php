@@ -137,6 +137,31 @@
             </div>
         @endif
 
+        @if(session('proposal_approved'))
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm">
+                <h5 class="alert-heading">
+                    <i class="bi bi-check-circle-fill me-2"></i>ข้อเสนอโครงงานได้รับการอนุมัติ!
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('proposal_approved') }}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('proposal_rejected'))
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm">
+                <h5 class="alert-heading">
+                    <i class="bi bi-x-circle-fill me-2"></i>ข้อเสนอโครงงานถูกปฏิเสธ
+                </h5>
+                <hr>
+                <p class="mb-0">{{ session('proposal_rejected') }}</p>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>คุณสามารถเสนอโครงงานใหม่หรือติดต่ออาจารย์ท่านอื่นได้
+                </small>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="row">
             <!-- Group Information -->
             <div class="col-lg-6 mb-4">

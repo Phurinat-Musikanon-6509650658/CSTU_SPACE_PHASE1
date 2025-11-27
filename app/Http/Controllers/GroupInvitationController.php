@@ -90,7 +90,17 @@ class GroupInvitationController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('student.menu')->with('success', 'เข้าร่วมกลุ่มสำเร็จ');
+            
+            // เก็บข้อมูลสำหรับแจ้งเตือน
+            $inviterStudent = Student::where('username_std', $invitation->inviter_username)->first();
+            $inviterName = $inviterStudent 
+                ? "{$inviterStudent->firstname_std} {$inviterStudent->lastname_std}" 
+                : $invitation->inviter_username;
+            
+            $groupNumber = sprintf('%02d-%02d', $invitation->group->semester, $invitation->group_id);
+            
+            return redirect()->route('student.menu')
+                ->with('success', "🎉 คุณได้เข้าร่วมกลุ่ม #{$groupNumber} ของ {$inviterName} เรียบร้อยแล้ว!");
 
         } catch (\Exception $e) {
             DB::rollback();

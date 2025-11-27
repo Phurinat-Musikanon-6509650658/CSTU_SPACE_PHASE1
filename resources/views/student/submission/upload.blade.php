@@ -21,6 +21,15 @@
                 </div>
 
                 <div class="card-body">
+                    @if(!$isGroupLeader)
+                    <!-- แจ้งเตือนสมาชิกที่ไม่ใช่หัวหน้า -->
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-info-circle-fill me-2"></i>สำหรับสมาชิกกลุ่ม</h5>
+                        <hr>
+                        <p class="mb-0">คุณสามารถดูและดาวน์โหลดเล่มรายงานได้ แต่เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถส่งหรืออัพโหลดเล่มรายงานได้</p>
+                    </div>
+                    @endif
+
                     @if($project->submission_file)
                     <!-- แสดงไฟล์ที่ส่งแล้ว -->
                     <div class="alert alert-success">
@@ -92,6 +101,7 @@
                     </div>
 
                     <!-- Form Upload -->
+                    @if($isGroupLeader)
                     <form action="{{ route('student.submission.upload', $project->project_id) }}" 
                           method="POST" 
                           enctype="multipart/form-data"
@@ -125,10 +135,16 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                <i class="bi bi-cloud-upload me-2"></i>ส่งเล่มรายงาน
+                                <i class="bi bi-cloud-upload me-2"></i>{{ $project->submission_file ? 'อัพโหลดไฟล์ใหม่' : 'ส่งเล่มรายงาน' }}
                             </button>
                         </div>
                     </form>
+                    @else
+                    <div class="text-center py-4">
+                        <i class="bi bi-lock text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถส่งเล่มรายงานได้</p>
+                    </div>
+                    @endif
 
                     <!-- กำหนดรูปแบบชื่อไฟล์ -->
                     <div class="card bg-light mt-4">

@@ -95,6 +95,9 @@ Route::middleware(['auth:student'])->group(function () {
         Route::get('/{project}/download', [SubmissionController::class, 'download'])->name('download');
     });
     
+    // Student Grades View
+    Route::get('grades', [StudentController::class, 'viewGrades'])->name('student.grades');
+    
 });
 
 // ======================================
@@ -108,6 +111,7 @@ Route::middleware('session.timeout')->group(function () {
     // Coordinator Routes
     // ======================================
     Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin')->group(function () {
+        Route::get('/', function() { return view('coordinator.menu'); })->name('menu');
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
         // Exam Schedules Management (Full Access for Coordinator)
@@ -165,6 +169,8 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('/', [CoordinatorController::class, 'evaluationsIndex'])->name('index');
             Route::get('{project}/scores', [CoordinatorController::class, 'viewScores'])->name('scores');
             Route::get('{project}/grades', [CoordinatorController::class, 'viewGrades'])->name('grades');
+            Route::get('summary', [CoordinatorController::class, 'scoreSummary'])->name('summary');
+            Route::post('{project}/release', [CoordinatorController::class, 'releaseGrade'])->name('release');
         });
         
         Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
@@ -174,6 +180,13 @@ Route::middleware('session.timeout')->group(function () {
     // Lecturer Routes
     // ======================================
     Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin')->group(function () {
+        // Menu/Dashboard
+        Route::get('/', function() { return view('lecturer.menu'); })->name('menu');
+        Route::get('/dashboard', [App\Http\Controllers\LecturerController::class, 'dashboard'])->name('dashboard');
+        
+        // My Projects
+        Route::get('/projects', [App\Http\Controllers\LecturerController::class, 'myProjects'])->name('projects.index');
+        
         Route::prefix('proposals')->name('proposals.')->group(function () {
             Route::get('/', [ProposalController::class, 'lecturerIndex'])->name('index');
             Route::get('{proposal}', [ProposalController::class, 'show'])->name('show');
@@ -192,6 +205,9 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('{project}/grades', [App\Http\Controllers\LecturerController::class, 'viewGrade'])->name('grade');
             Route::post('{project}/confirm', [App\Http\Controllers\LecturerController::class, 'confirmGrade'])->name('confirm');
         });
+        
+        // Grade Confirmation
+        Route::get('grades/confirmation', [App\Http\Controllers\LecturerController::class, 'gradeConfirmationIndex'])->name('grades.confirmation');
     });
     
     // ======================================

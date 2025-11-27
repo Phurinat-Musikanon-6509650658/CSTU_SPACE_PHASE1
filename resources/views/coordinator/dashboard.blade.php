@@ -212,11 +212,9 @@
             </div>
             <a href="{{ route('menu') }}" class="btn modern-btn btn-light">
                 <i class="bi bi-arrow-left"></i>
-                <span>Back to Menu</span>
+                <span>กลับไปเมนู</span>
             </a>
         </div>
-    </div>
-
     </div>
 
     <!-- Statistics Cards -->
@@ -262,6 +260,69 @@
         </div>
     </div>
 
+    <!-- Menu Grid -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3" style="color: #2c3e50;">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>เมนูด่วน
+            </h5>
+        </div>
+    </div>
+
+    <div class="menu-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- 1. จัดการกลุ่ม -->
+        <a href="{{ route('coordinator.groups.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #f6ad55;">
+            <div style="font-size: 2.5rem; color: #f6ad55; margin-bottom: 1rem;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">จัดการกลุ่ม</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">อนุมัติและจัดการกลุ่มโครงงาน</p>
+        </a>
+
+        <!-- 2. ข้อเสนอโครงงาน -->
+        <a href="{{ route('coordinator.proposals.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #4299e1;">
+            <div style="font-size: 2.5rem; color: #4299e1; margin-bottom: 1rem;">
+                <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">ข้อเสนอโครงงาน</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูรายการข้อเสนอทั้งหมด</p>
+        </a>
+
+        <!-- 3. ตารางสอบและกรรมการ -->
+        <a href="{{ route('coordinator.schedules.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #48bb78;">
+            <div style="font-size: 2.5rem; color: #48bb78; margin-bottom: 1rem;">
+                <i class="bi bi-calendar-event-fill"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">ตารางสอบและกรรมการ</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">กำหนดตารางและมอบหมายกรรมการ</p>
+        </a>
+
+        <!-- 4. การประเมินและเกรด -->
+        <a href="{{ route('coordinator.evaluations.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #667eea;">
+            <div style="font-size: 2.5rem; color: #667eea; margin-bottom: 1rem;">
+                <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">การประเมินและเกรด</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูผลการประเมินและคำนวณเกรด</p>
+        </a>
+
+        <!-- 5. สรุปคะแนนทั้งหมด -->
+        <a href="{{ route('coordinator.evaluations.summary') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #f6ad55;">
+            <div style="font-size: 2.5rem; color: #f6ad55; margin-bottom: 1rem;">
+                <i class="bi bi-award-fill"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">สรุปคะแนนทั้งหมด</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูสรุปคะแนนและผลการประเมิน</p>
+        </a>
+
+        <!-- 6. จัดการผู้ใช้ -->
+        <a href="{{ route('coordinator.users.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #4299e1;">
+            <div style="font-size: 2.5rem; color: #4299e1; margin-bottom: 1rem;">
+                <i class="bi bi-person-gear"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">จัดการผู้ใช้</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">นำเข้าและจัดการข้อมูลผู้ใช้</p>
+        </a>
     </div>
 
     <!-- Pending Groups Table -->

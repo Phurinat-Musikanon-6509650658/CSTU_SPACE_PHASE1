@@ -194,12 +194,9 @@ class CoordinatorController extends Controller
                 'status_project'
             ]));
 
-            // อัพเดต group status ตามสถานะโครงงาน
-            if ($request->status_project === 'approved' && $group->status_group !== 'approved') {
-                $group->update(['status_group' => 'approved']);
-            } elseif ($request->status_project === 'rejected' && $group->status_group !== 'rejected') {
-                $group->update(['status_group' => 'rejected']);
-            }
+            // หมายเหตุ: ไม่อัพเดต group status เพราะ groups.status_group มี ENUM แยกต่างหาก
+            // status_group ใช้สำหรับสถานะการจัดกลุ่ม (not_created, created, member_left, member_added, disbanded)
+            // ส่วนสถานะการอนุมัติอยู่ใน projects.status_project แล้ว
 
             DB::commit();
             return back()->with('success', 'อัพเดทข้อมูลโครงงานและกลุ่มเรียบร้อยแล้ว');
@@ -358,6 +355,17 @@ class CoordinatorController extends Controller
         ]);
 
         $project = Project::findOrFail($projectId);
+        
+        // Check if exam_datetime changed (for notification)
+        $examDateChanged = $project->exam_datetime != $request->exam_datetime && $request->exam_datetime != null;
+        
+        // Check if committee changed
+        $committeeChanged = (
+            $project->advisor_code != $request->advisor_code ||
+            $project->committee1_code != $request->committee1_code ||
+            $project->committee2_code != $request->committee2_code ||
+            $project->committee3_code != $request->committee3_code
+        );
 
         $project->update([
             'exam_datetime' => $request->exam_datetime,
@@ -366,6 +374,20 @@ class CoordinatorController extends Controller
             'committee2_code' => $request->committee2_code,
             'committee3_code' => $request->committee3_code,
         ]);
+
+        // Set flash notifications
+        if ($examDateChanged) {
+            session()->flash('exam_schedule_updated', [
+                'project_id' => $project->project_id,
+                'exam_datetime' => $request->exam_datetime,
+            ]);
+        }
+        
+        if ($committeeChanged) {
+            session()->flash('committee_updated', [
+                'project_id' => $project->project_id,
+            ]);
+        }
 
         return redirect()->route('coordinator.schedules.index')
             ->with('success', 'อัพเดทตารางสอบและคณะกรรมการเรียบร้อยแล้ว');
@@ -405,5 +427,91 @@ class CoordinatorController extends Controller
             ->findOrFail($projectId);
 
         return view('coordinator.evaluations.grades', compact('project'));
+    }
+
+    /**
+     * แสดงหน้าสรุปคะแนนทั้งหมด
+     */
+    public function scoreSummary(Request $request)
+    {
+        $query = Project::with([
+            'group.members.student', 
+            'grade', 
+            'evaluations.evaluator',
+            'advisor'
+        ]);
+
+        // Filter by semester/year
+        if ($request->semester) {
+            $query->whereHas('group', function($q) use ($request) {
+                $q->where('semester', $request->semester);
+            });
+        }
+
+        if ($request->year) {
+            $query->whereHas('group', function($q) use ($request) {
+                $q->where('year', $request->year);
+            });
+        }
+
+        // Filter by grade released
+        if ($request->has('grade_released')) {
+            if ($request->grade_released === '1') {
+                $query->whereHas('grade', function($q) {
+                    $q->where('grade_released', true);
+                });
+            } elseif ($request->grade_released === '0') {
+                $query->whereHas('grade', function($q) {
+                    $q->where('grade_released', false);
+                });
+            }
+        }
+
+        $projects = $query->whereHas('grade')
+            ->orderBy('project_id', 'desc')
+            ->paginate(20);
+
+        // Statistics
+        $stats = [
+            'total_projects' => Project::whereHas('grade')->count(),
+            'grade_released' => Project::whereHas('grade', function($q) {
+                $q->where('grade_released', true);
+            })->count(),
+            'pending_confirmation' => Project::whereHas('grade', function($q) {
+                $q->where('all_confirmed', false);
+            })->count(),
+            'average_score' => Project::whereHas('grade')->join('project_grades', 'projects.project_id', '=', 'project_grades.project_id')->avg('final_score'),
+        ];
+
+        return view('coordinator.evaluations.summary', compact('projects', 'stats'));
+    }
+
+    /**
+     * ปล่อยเกรดให้นักศึกษาดู
+     */
+    public function releaseGrade($projectId)
+    {
+        $project = Project::with('grade')->findOrFail($projectId);
+
+        if (!$project->grade) {
+            return redirect()->back()->with('error', 'ยังไม่มีเกรดสำหรับโครงงานนี้');
+        }
+
+        if (!$project->grade->all_confirmed) {
+            return redirect()->back()->with('error', 'ยังมีอาจารย์บางท่านที่ยังไม่ยืนยันเกรด');
+        }
+
+        $project->grade->update([
+            'grade_released' => true,
+            'grade_released_at' => now()
+        ]);
+        
+        // Flash notification for students
+        session()->flash('grade_released', [
+            'project_id' => $project->project_id,
+            'final_grade' => $project->grade->final_grade,
+        ]);
+
+        return redirect()->back()->with('success', 'ปล่อยเกรดให้นักศึกษาดูเรียบร้อยแล้ว');
     }
 }

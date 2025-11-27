@@ -174,6 +174,29 @@ class GroupController extends Controller
             'project.committee3'
         ]);
         
+        // ตรวจสอบสถานะ proposal ล่าสุดและแจ้งเตือน
+        if ($group->latestProposal) {
+            $proposal = $group->latestProposal;
+            
+            if ($proposal->status === 'approved' && $proposal->responded_at) {
+                $lecturerName = $proposal->lecturer 
+                    ? "{$proposal->lecturer->firstname_user} {$proposal->lecturer->lastname_user}" 
+                    : 'อาจารย์';
+                
+                $message = "🎉 {$lecturerName} ได้ตอบรับเป็นอาจารย์ที่ปรึกษาโครงงาน \"{$proposal->proposed_title}\" เรียบร้อยแล้ว!";
+                session()->flash('proposal_approved', $message);
+            } 
+            elseif ($proposal->status === 'rejected' && $proposal->responded_at) {
+                $lecturerName = $proposal->lecturer 
+                    ? "{$proposal->lecturer->firstname_user} {$proposal->lecturer->lastname_user}" 
+                    : 'อาจารย์';
+                
+                $reason = $proposal->rejection_reason ? " เหตุผล: {$proposal->rejection_reason}" : '';
+                $message = "❌ {$lecturerName} ได้ปฏิเสธข้อเสนอโครงงาน \"{$proposal->proposed_title}\"{$reason}";
+                session()->flash('proposal_rejected', $message);
+            }
+        }
+        
         return view('student.groups.show', compact('group'));
     }
 

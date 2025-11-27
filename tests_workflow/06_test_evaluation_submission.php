@@ -288,7 +288,7 @@ try {
     
     // ตรวจสอบ Committee ประเมินแล้ว
     $committeeEvalCount = ProjectEvaluation::where('project_id', $project->project_id)
-        ->where('evaluator_role', 'committee')
+        ->whereIn('evaluator_role', ['committee1', 'committee2', 'committee3'])
         ->count();
     
     if ($committeeEvalCount == 3) {

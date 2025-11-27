@@ -159,9 +159,16 @@ class ProposalController extends Controller
             
             // อัพเดต project status เป็น approved
             if ($proposal->group->project) {
-                $proposal->group->project->update([
+                $project = $proposal->group->project;
+                
+                // อัปเดต project_code โดยเปลี่ยน TBD เป็นรหัสอาจารย์
+                $oldProjectCode = $project->project_code;
+                $newProjectCode = preg_replace('/_TBD-/', "_{$user->user_code}-", $oldProjectCode);
+                
+                $project->update([
                     'status_project' => 'approved',
-                    'advisor_code' => $user->user_code // บันทึก lecturer ที่อนุมัติเป็นที่ปรึกษา (ใช้ user_code)
+                    'advisor_code' => $user->user_code, // บันทึก lecturer ที่อนุมัติเป็นที่ปรึกษา (ใช้ user_code)
+                    'project_code' => $newProjectCode // อัปเดต project_code เปลี่ยน TBD เป็นรหัสอาจารย์
                 ]);
             }
             

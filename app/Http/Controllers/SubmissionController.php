@@ -19,7 +19,7 @@ class SubmissionController extends Controller
         $student = Auth::guard('student')->user();
         
         // หากลุ่มของ student
-        $group = $student->groups()->first();
+        $group = $student->groups()->with('members.student')->first();
         
         if (!$group) {
             return redirect()->route('student.menu')
@@ -40,7 +40,11 @@ class SubmissionController extends Controller
                 ->with('error', 'โครงงานยังไม่ได้รับการอนุมัติ ไม่สามารถส่งเล่มรายงานได้');
         }
         
-        return view('student.submission.upload', compact('project'));
+        // ตรวจสอบว่าเป็นหัวหน้ากลุ่มหรือไม่
+        $firstMember = $group->members()->orderBy('groupmem_id', 'asc')->first();
+        $isGroupLeader = $firstMember && $firstMember->username_std === $student->username_std;
+        
+        return view('student.submission.upload', compact('project', 'group', 'isGroupLeader'));
     }
     
     /**
@@ -63,6 +67,14 @@ class SubmissionController extends Controller
         $group = $project->group;
         if (!$group->members->contains('username_std', $student->username_std)) {
             return back()->with('error', 'คุณไม่มีสิทธิ์ส่งเล่มรายงานโครงงานนี้');
+        }
+        
+        // ตรวจสอบว่าเป็นหัวหน้ากลุ่มหรือไม่
+        $firstMember = $group->members()->orderBy('groupmem_id', 'asc')->first();
+        $isGroupLeader = $firstMember && $firstMember->username_std === $student->username_std;
+        
+        if (!$isGroupLeader) {
+            return back()->with('error', 'เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถส่งเล่มรายงานได้');
         }
         
         DB::beginTransaction();
@@ -91,7 +103,7 @@ class SubmissionController extends Controller
             
             DB::commit();
             
-            return redirect()->route('student.submission.form')
+            return redirect()->route('student.menu')
                 ->with('success', 'ส่งเล่มรายงานเรียบร้อยแล้ว');
                 
         } catch (\Exception $e) {

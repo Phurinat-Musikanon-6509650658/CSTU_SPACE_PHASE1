@@ -40,26 +40,22 @@ class Project extends Model
 
     public function advisor()
     {
-        return $this->belongsTo(User::class, 'advisor_code', 'user_code')
-            ->where('role', 8192); // Lecturer role only
+        return $this->belongsTo(User::class, 'advisor_code', 'user_code');
     }
 
     public function committee1()
     {
-        return $this->belongsTo(User::class, 'committee1_code', 'user_code')
-            ->where('role', 8192); // Lecturer role only
+        return $this->belongsTo(User::class, 'committee1_code', 'user_code');
     }
 
     public function committee2()
     {
-        return $this->belongsTo(User::class, 'committee2_code', 'user_code')
-            ->where('role', 8192); // Lecturer role only
+        return $this->belongsTo(User::class, 'committee2_code', 'user_code');
     }
 
     public function committee3()
     {
-        return $this->belongsTo(User::class, 'committee3_code', 'user_code')
-            ->where('role', 8192); // Lecturer role only
+        return $this->belongsTo(User::class, 'committee3_code', 'user_code');
     }
 
     public function examSchedule()
@@ -75,6 +71,18 @@ class Project extends Model
     public function grade()
     {
         return $this->hasOne(ProjectGrade::class, 'project_id', 'project_id');
+    }
+
+    public function latestProposal()
+    {
+        return $this->hasOneThrough(
+            ProjectProposal::class,
+            Group::class,
+            'group_id', // Foreign key on groups table
+            'group_id', // Foreign key on project_proposals table
+            'group_id', // Local key on projects table
+            'group_id'  // Local key on groups table
+        )->latest('proposed_at');
     }
 
     // Accessor สำหรับ ID ที่ coordinator เห็น (format: 01-01 คือ semester-group_id)
