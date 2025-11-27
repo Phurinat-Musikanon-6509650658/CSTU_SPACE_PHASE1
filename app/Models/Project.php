@@ -67,6 +67,16 @@ class Project extends Model
         return $this->hasOne(ExamSchedule::class, 'project_id', 'project_id');
     }
 
+    public function evaluations()
+    {
+        return $this->hasMany(ProjectEvaluation::class, 'project_id', 'project_id');
+    }
+
+    public function grade()
+    {
+        return $this->hasOne(ProjectGrade::class, 'project_id', 'project_id');
+    }
+
     // Accessor สำหรับ ID ที่ coordinator เห็น (format: 01-01 คือ semester-group_id)
     public function getDisplayIdAttribute()
     {

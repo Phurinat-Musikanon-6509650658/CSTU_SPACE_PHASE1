@@ -150,6 +150,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get user roles (for whereHas compatibility)
+     */
+    public function roles()
+    {
+        return $this->belongsTo(UserRole::class, 'role', 'role_code');
+    }
+
+    /**
      * Get role name
      */
     public function getRoleName(): string

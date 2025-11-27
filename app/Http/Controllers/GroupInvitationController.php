@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\GroupInvitation;
 use App\Models\GroupMember;
+use App\Models\Project;
+use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -45,8 +47,47 @@ class GroupInvitationController extends Controller
                 'username_std' => $student->username_std
             ]);
             
-            // อัพเดตสถานะกลุ่มเป็น member_added (ถ้ามีการเพิ่มสมาชิกใหม่)
+            // อัพเดตสถานะกลุ่มเป็น member_added
             $invitation->group->update(['status_group' => 'member_added']);
+            
+            // อัพเดต project_code และ student_type
+            $project = Project::where('group_id', $invitation->group_id)->first();
+            if ($project) {
+                $members = GroupMember::where('group_id', $invitation->group_id)
+                    ->get()
+                    ->pluck('username_std');
+                
+                $students = Student::whereIn('username_std', $members)->get();
+                $memberCount = $students->count();
+                
+                // ตรวจสอบ student_type ของสมาชิกทั้งหมด
+                $hasRegular = $students->where('student_type', 'r')->count() > 0;
+                $hasSpecial = $students->where('student_type', 's')->count() > 0;
+                
+                // กำหนด student_type
+                if ($hasRegular && $hasSpecial) {
+                    $studentType = 'rs'; // ผสม
+                } elseif ($hasSpecial) {
+                    $studentType = 's';
+                } else {
+                    $studentType = 'r';
+                }
+                
+                // อัพเดต project_code
+                $projectCode = sprintf(
+                    '%02d-%d-%02d_TBD-%s%d',
+                    $invitation->group->year % 100,
+                    $invitation->group->semester,
+                    $invitation->group_id,
+                    $studentType,
+                    $memberCount
+                );
+                
+                $project->update([
+                    'project_code' => $projectCode,
+                    'student_type' => $studentType
+                ]);
+            }
 
             DB::commit();
             return redirect()->route('student.menu')->with('success', 'เข้าร่วมกลุ่มสำเร็จ');

@@ -13,6 +13,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\CoordinatorController;
+use App\Http\Controllers\CoordinatorUserController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\SubmissionController;
 
@@ -128,6 +129,7 @@ Route::middleware('session.timeout')->group(function () {
         
         Route::prefix('projects')->name('projects.')->group(function () {
             Route::put('{id}', [CoordinatorController::class, 'updateProject'])->name('update');
+            Route::get('export/csv', [CoordinatorController::class, 'exportCsv'])->name('export.csv');
         });
         
         Route::prefix('proposals')->name('proposals.')->group(function () {
@@ -136,6 +138,34 @@ Route::middleware('session.timeout')->group(function () {
         
         // Submission Download for Coordinator/Staff
         Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
+        
+        // User & Student Management (Import/Export only - NO role assignment)
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [CoordinatorUserController::class, 'index'])->name('index');
+            Route::get('export', [CoordinatorUserController::class, 'exportUsers'])->name('export');
+            Route::get('import', [CoordinatorUserController::class, 'importUserForm'])->name('importForm');
+            Route::post('import', [CoordinatorUserController::class, 'importUsers'])->name('import');
+        });
+        
+        Route::prefix('students')->name('students.')->group(function () {
+            Route::get('export', [CoordinatorUserController::class, 'exportStudents'])->name('export');
+            Route::get('import', [CoordinatorUserController::class, 'importStudentForm'])->name('importForm');
+            Route::post('import', [CoordinatorUserController::class, 'importStudents'])->name('import');
+        });
+        
+        // Schedule & Committee Assignment
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/', [CoordinatorController::class, 'schedulesIndex'])->name('index');
+            Route::get('{project}/edit', [CoordinatorController::class, 'scheduleEdit'])->name('edit');
+            Route::put('{project}', [CoordinatorController::class, 'scheduleUpdate'])->name('update');
+        });
+        
+        // Evaluation & Grading
+        Route::prefix('evaluations')->name('evaluations.')->group(function () {
+            Route::get('/', [CoordinatorController::class, 'evaluationsIndex'])->name('index');
+            Route::get('{project}/scores', [CoordinatorController::class, 'viewScores'])->name('scores');
+            Route::get('{project}/grades', [CoordinatorController::class, 'viewGrades'])->name('grades');
+        });
         
         Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
     });
@@ -153,6 +183,15 @@ Route::middleware('session.timeout')->group(function () {
         
         // Submission Download for Lecturer
         Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
+        
+        // Evaluation & Grading
+        Route::prefix('evaluations')->name('evaluations.')->group(function () {
+            Route::get('/', [App\Http\Controllers\LecturerController::class, 'evaluationsIndex'])->name('index');
+            Route::get('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'evaluateForm'])->name('form');
+            Route::post('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'submitEvaluation'])->name('submit');
+            Route::get('{project}/grades', [App\Http\Controllers\LecturerController::class, 'viewGrade'])->name('grade');
+            Route::post('{project}/confirm', [App\Http\Controllers\LecturerController::class, 'confirmGrade'])->name('confirm');
+        });
     });
     
     // ======================================

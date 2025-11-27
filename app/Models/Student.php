@@ -12,11 +12,14 @@ class Student extends Authenticatable
 
     protected $table = 'student';
     protected $primaryKey = 'student_id';
+    public $timestamps = false; // ไม่ใช้ timestamps
     
     protected $fillable = [
         'firstname_std',
         'lastname_std',
         'email_std',
+        'department',
+        'student_type',
         'username_std',
         'password_std',
         'role'

@@ -251,11 +251,27 @@ class MenuController extends Controller
                 ],
                 [
                     'title' => 'User & Student Management',
-                    'description' => 'จัดการผู้ใช้และนักศึกษาในระบบ',
+                    'description' => 'Import/Export ผู้ใช้และนักศึกษา (Read-only)',
                     'icon' => 'bi-person-lines-fill',
-                    'url' => route('users.index'),
+                    'url' => route('coordinator.users.index'),
                     'class' => 'warning-card',
                     'btn_class' => 'warning-btn'
+                ],
+                [
+                    'title' => 'จัดตารางสอบ & คณะกรรมการ',
+                    'description' => 'จัดการตารางสอบและมอบหมายคณะกรรมการ',
+                    'icon' => 'bi-calendar-check-fill',
+                    'url' => route('coordinator.schedules.index'),
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'ประเมินและให้คะแนน',
+                    'description' => 'จัดการแบบฟอร์มประเมินและดูคะแนนโครงงาน',
+                    'icon' => 'bi-clipboard-check-fill',
+                    'url' => route('coordinator.evaluations.index'),
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
                 ]
             ]
         ];

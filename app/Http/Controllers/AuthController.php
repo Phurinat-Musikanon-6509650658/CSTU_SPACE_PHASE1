@@ -51,6 +51,23 @@ class AuthController extends Controller
 
                 $found = $this->findLocalRecord($username);
                     if ($found) {
+                    // อัปเดตข้อมูล department และ student_type จาก API (ถ้าเป็น student)
+                    if ($found['type'] === 'student' && isset($data['department'])) {
+                        $department = $data['department'];
+                        $studentType = $this->determineStudentType($department);
+                        
+                        DB::table('student')
+                            ->where('username_std', $username)
+                            ->update([
+                                'department' => $department,
+                                'student_type' => $studentType
+                            ]);
+                        
+                        // อัปเดต record ที่จะใช้ต่อ
+                        $found['record']->department = $department;
+                        $found['record']->student_type = $studentType;
+                    }
+                    
                     $this->setUserSession($found['type'], $found['record']);
                     
                     // Redirect based on user type
@@ -261,7 +278,23 @@ class AuthController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Session refreshed']);
         }
         
-        return response()->json(['status' => 'error', 'message' => 'No active session'], 401);
+        return response()->json(['status' => 'error', 'message' => 'Not logged in'], 401);
+    }
+
+    /**
+     * กำหนด student_type จาก department
+     * @param string $department
+     * @return string 'r' หรือ 's'
+     */
+    private function determineStudentType($department)
+    {
+        // ภาคพิเศษ -> s
+        if (strpos($department, 'ภาคพิเศษ') !== false || strpos($department, 'พิเศษ') !== false) {
+            return 's';
+        }
+        
+        // ภาคปกติ -> r
+        return 'r';
     }
 
     /**

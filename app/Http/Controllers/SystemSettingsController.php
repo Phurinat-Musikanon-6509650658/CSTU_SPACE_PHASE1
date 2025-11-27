@@ -467,6 +467,12 @@ class SystemSettingsController extends Controller
                     'location' => $request->location,
                     'notes' => $request->notes
                 ]);
+                
+                // อัพเดต exam_datetime ใน projects table
+                DB::table('projects')
+                    ->where('project_id', $projectId)
+                    ->update(['exam_datetime' => $request->ex_start_time]);
+                
                 $createdCount++;
             }
         }
@@ -514,6 +520,14 @@ class SystemSettingsController extends Controller
         ]);
 
         $examSchedule = ExamSchedule::findOrFail($id);
+        
+        // ลบ exam_datetime เดิมจาก project เดิม (ถ้าเปลี่ยน project)
+        if ($examSchedule->project_id != $request->project_id) {
+            DB::table('projects')
+                ->where('project_id', $examSchedule->project_id)
+                ->update(['exam_datetime' => null]);
+        }
+        
         $examSchedule->update([
             'project_id' => $request->project_id,
             'ex_start_time' => $request->ex_start_time,
@@ -521,9 +535,14 @@ class SystemSettingsController extends Controller
             'location' => $request->location,
             'notes' => $request->notes
         ]);
+        
+        // อัพเดต exam_datetime ใน projects table
+        DB::table('projects')
+            ->where('project_id', $request->project_id)
+            ->update(['exam_datetime' => $request->ex_start_time]);
 
         return redirect()->route('coordinator.exam-schedules.index')
-            ->with('success', 'อัปเดตตารางสอบสำเร็จ');
+            ->with('success', 'Exam schedule updated successfully');
     }
 
     /**
@@ -536,6 +555,18 @@ class SystemSettingsController extends Controller
         }
 
         $examSchedule = ExamSchedule::findOrFail($id);
+        
+        // ลบ exam_datetime ใน projects table
+        DB::table('projects')
+            ->where('project_id', $examSchedule->project_id)
+            ->update(['exam_datetime' => null]);
+        
+        $examSchedule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ลบตารางสอบสำเร็จ'
+        ]);
         $examSchedule->delete();
 
         return response()->json([
@@ -590,6 +621,12 @@ class SystemSettingsController extends Controller
                     'location' => $request->location,
                     'notes' => $request->notes
                 ]);
+                
+                // อัพเดต exam_datetime ใน projects table
+                DB::table('projects')
+                    ->where('project_id', $projectId)
+                    ->update(['exam_datetime' => $request->ex_start_time]);
+                
                 $createdCount++;
             }
         }
@@ -637,6 +674,14 @@ class SystemSettingsController extends Controller
         ]);
 
         $examSchedule = ExamSchedule::findOrFail($id);
+        
+        // ลบ exam_datetime เดิมจาก project เดิม (ถ้าเปลี่ยน project)
+        if ($examSchedule->project_id != $request->project_id) {
+            DB::table('projects')
+                ->where('project_id', $examSchedule->project_id)
+                ->update(['exam_datetime' => null]);
+        }
+        
         $examSchedule->update([
             'project_id' => $request->project_id,
             'ex_start_time' => $request->ex_start_time,
@@ -644,6 +689,11 @@ class SystemSettingsController extends Controller
             'location' => $request->location,
             'notes' => $request->notes
         ]);
+        
+        // อัพเดต exam_datetime ใน projects table
+        DB::table('projects')
+            ->where('project_id', $request->project_id)
+            ->update(['exam_datetime' => $request->ex_start_time]);
 
         return redirect()->route('admin.exam-schedules.index')
             ->with('success', 'Exam schedule updated successfully');
@@ -659,6 +709,12 @@ class SystemSettingsController extends Controller
         }
 
         $examSchedule = ExamSchedule::findOrFail($id);
+        
+        // ลบ exam_datetime ใน projects table
+        DB::table('projects')
+            ->where('project_id', $examSchedule->project_id)
+            ->update(['exam_datetime' => null]);
+        
         $examSchedule->delete();
 
         return response()->json([

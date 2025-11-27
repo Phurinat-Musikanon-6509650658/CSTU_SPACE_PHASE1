@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Run our SQL-based seeders (they will update or insert hashed passwords)
         $this->call([
+            \Database\Seeders\RelationshipWithProjectsSeeder::class,
             \Database\Seeders\UserRoleSeeder::class,
             \Database\Seeders\UserTableSeeder::class,
             \Database\Seeders\StudentTableSeeder::class,

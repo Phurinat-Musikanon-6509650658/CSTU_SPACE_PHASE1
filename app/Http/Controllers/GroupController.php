@@ -101,19 +101,24 @@ class GroupController extends Controller
             ]);
 
             // สร้าง Project record (ยังไม่มีข้อมูลเต็ม)
-            // project_code format: 68-1-01 (year-semester-group_id)
+            // project_code format: 68-1-01_TBD-r2 (year-semester-groupid_advisor-type+count)
+            $memberCount = 1; // ตอนสร้างมีแค่คนเดียว
+            $studentType = $student->student_type ?? 'r'; // ใช้จาก student ที่ login
+            
             $projectCode = sprintf(
-                '%02d-%d-%02d',
+                '%02d-%d-%02d_TBD-%s%d',
                 $request->year % 100,
                 $request->semester,
-                $group->group_id
+                $group->group_id,
+                $studentType,
+                $memberCount
             );
             
             Project::create([
                 'group_id' => $group->group_id,
                 'project_code' => $projectCode,
-                'status_project' => 'not_proposed', // ยังไม่ได้เสนอหัวข้อ
-                'student_type' => 'r' // default ปกติ
+                'status_project' => 'not_proposed',
+                'student_type' => $studentType
             ]);
 
             // ส่งคำเชิญหากมีการระบุสมาชิกคนที่ 2
