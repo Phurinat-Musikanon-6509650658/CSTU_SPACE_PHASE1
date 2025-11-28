@@ -151,11 +151,11 @@ class MenuController extends Controller
     private function getStaffMenu()
     {
         return [
-            'title' => 'Staff Dashboard',
+            'title' => 'แดชบอร์ดเจ้าหน้าที่',
             'items' => [
                 [
                     'title' => 'ตารางสอบโครงงาน',
-                    'description' => 'ดูตารางสอบทั้งหมด',
+                    'description' => 'ดูตารางสอบของโครงงานทั้งหมด',
                     'icon' => 'bi-calendar-event-fill',
                     'url' => route('staff.exam-schedules'),
                     'class' => 'info-card',
@@ -171,18 +171,18 @@ class MenuController extends Controller
     private function getAdminSystemMenu()
     {
         return [
-            'title' => 'System Management',
+            'title' => 'การจัดการระบบ',
             'items' => [
                 [
-                    'title' => 'ตั้งค่าระบบ',
-                    'description' => 'จัดการการตั้งค่าและสถานะระบบ',
-                    'icon' => 'bi-gear-fill',
-                    'url' => route('admin.system.index'),
-                    'class' => 'danger-card',
-                    'btn_class' => 'danger-btn'
+                    'title' => 'จัดการผู้ใช้',
+                    'description' => 'เพิ่ม/แก้ไข/ลบผู้ใช้ระบบ',
+                    'icon' => 'bi-people-fill',
+                    'url' => route('users.index'),
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'ตารางสอบ',
+                    'title' => 'จัดการตารางสอบ',
                     'description' => 'จัดการตารางสอบโครงงาน',
                     'icon' => 'bi-calendar-event-fill',
                     'url' => route('admin.exam-schedules.index'),
@@ -190,28 +190,28 @@ class MenuController extends Controller
                     'btn_class' => 'success-btn'
                 ],
                 [
-                    'title' => 'User Management',
-                    'description' => 'Add/Edit/Delete users',
-                    'icon' => 'bi-people-fill',
-                    'url' => route('users.index'),
-                    'class' => 'primary-card',
-                    'btn_class' => 'primary-btn'
+                    'title' => 'สถิติการใช้งาน',
+                    'description' => 'ดูสถิติการใช้งานระบบ',
+                    'icon' => 'bi-graph-up',
+                    'url' => route('statistics.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
                 ],
                 [
-                    'title' => 'Login Logs',
-                    'description' => 'Track system access logs',
+                    'title' => 'ประวัติการเข้าสู่ระบบ',
+                    'description' => 'ติดตามประวัติการเข้าใช้งาน',
                     'icon' => 'bi-shield-lock',
                     'url' => route('admin.logs.index'),
                     'class' => 'warning-card',
                     'btn_class' => 'warning-btn'
                 ],
                 [
-                    'title' => 'Statistics',
-                    'description' => 'View usage statistics',
-                    'icon' => 'bi-graph-up',
-                    'url' => route('statistics.index'),
-                    'class' => 'info-card',
-                    'btn_class' => 'info-btn'
+                    'title' => 'ตั้งค่าระบบ',
+                    'description' => 'จัดการการตั้งค่าและสถานะระบบ',
+                    'icon' => 'bi-gear-fill',
+                    'url' => route('admin.system.index'),
+                    'class' => 'danger-card',
+                    'btn_class' => 'danger-btn'
                 ]
             ]
         ];
@@ -223,26 +223,18 @@ class MenuController extends Controller
     private function getProjectManagementMenu()
     {
         return [
-            'title' => 'Project Management',
+            'title' => 'การจัดการโครงงาน',
             'items' => [
                 [
-                    'title' => 'Coordinator Dashboard',
-                    'description' => 'จัดการโครงงานและกลุ่มทั้งหมด',
+                    'title' => 'แดชบอร์ดผู้ประสานงาน',
+                    'description' => 'ภาพรวมโครงงานและกลุ่มทั้งหมด',
                     'icon' => 'bi-speedometer2',
                     'url' => route('coordinator.dashboard'),
                     'class' => 'primary-card',
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'ตารางสอบโครงงาน',
-                    'description' => 'ดูและจัดการตารางสอบทั้งหมด',
-                    'icon' => 'bi-calendar-event-fill',
-                    'url' => route('coordinator.exam-schedules.index'),
-                    'class' => 'success-card',
-                    'btn_class' => 'success-btn'
-                ],
-                [
-                    'title' => 'Manage Groups',
+                    'title' => 'จัดการกลุ่มโครงงาน',
                     'description' => 'อนุมัติและจัดการกลุ่มโครงงาน',
                     'icon' => 'bi-people-fill',
                     'url' => route('coordinator.groups.index'),
@@ -250,28 +242,36 @@ class MenuController extends Controller
                     'btn_class' => 'info-btn'
                 ],
                 [
-                    'title' => 'User & Student Management',
-                    'description' => 'Import/Export ผู้ใช้และนักศึกษา (Read-only)',
-                    'icon' => 'bi-person-lines-fill',
-                    'url' => route('coordinator.users.index'),
-                    'class' => 'warning-card',
-                    'btn_class' => 'warning-btn'
-                ],
-                [
-                    'title' => 'จัดตารางสอบ & คณะกรรมการ',
-                    'description' => 'จัดการตารางสอบและมอบหมายคณะกรรมการ',
+                    'title' => 'จัดตารางสอบและกรรมการ',
+                    'description' => 'จัดตารางสอบและมอบหมายคณะกรรมการ',
                     'icon' => 'bi-calendar-check-fill',
                     'url' => route('coordinator.schedules.index'),
                     'class' => 'primary-card',
                     'btn_class' => 'primary-btn'
                 ],
                 [
+                    'title' => 'ตารางสอบโครงงาน',
+                    'description' => 'ดูและจัดการตารางสอบโครงงาน',
+                    'icon' => 'bi-calendar-event-fill',
+                    'url' => route('coordinator.exam-schedules.index'),
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
+                ],
+                [
                     'title' => 'ประเมินและให้คะแนน',
-                    'description' => 'จัดการแบบฟอร์มประเมินและดูคะแนนโครงงาน',
+                    'description' => 'จัดการแบบฟอร์มประเมินและดูคะแนน',
                     'icon' => 'bi-clipboard-check-fill',
                     'url' => route('coordinator.evaluations.index'),
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'จัดการผู้ใช้และนักศึกษา',
+                    'description' => 'นำเข้า/ส่งออกข้อมูลผู้ใช้และนักศึกษา',
+                    'icon' => 'bi-person-lines-fill',
+                    'url' => route('coordinator.users.index'),
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
                 ]
             ]
         ];
@@ -283,18 +283,18 @@ class MenuController extends Controller
     private function getAdvisoryWorkMenu()
     {
         return [
-            'title' => 'Advisory Work',
+            'title' => 'งานอาจารย์ที่ปรึกษา',
             'items' => [
                 [
-                    'title' => 'Lecturer Dashboard',
-                    'description' => 'ระบบจัดการข้อเสนอและโครงงานนักศึกษา',
+                    'title' => 'แดชบอร์ดอาจารย์',
+                    'description' => 'จัดการข้อเสนอและโครงงานนักศึกษา',
                     'icon' => 'bi-mortarboard-fill',
                     'url' => route('lecturer.dashboard'),
                     'class' => 'primary-card',
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'Project Proposals',
+                    'title' => 'ข้อเสนอโครงงาน',
                     'description' => 'รับและพิจารณาข้อเสนอโครงงาน',
                     'icon' => 'bi-file-earmark-text-fill',
                     'url' => route('lecturer.proposals.index'),
@@ -302,7 +302,7 @@ class MenuController extends Controller
                     'btn_class' => 'warning-btn'
                 ],
                 [
-                    'title' => 'Project Evaluations',
+                    'title' => 'ประเมินโครงงาน',
                     'description' => 'ประเมินและให้คะแนนโครงงาน',
                     'icon' => 'bi-clipboard-check-fill',
                     'url' => route('lecturer.evaluations.index'),
@@ -310,8 +310,8 @@ class MenuController extends Controller
                     'btn_class' => 'success-btn'
                 ],
                 [
-                    'title' => 'Project Reports',
-                    'description' => 'Generate reports for my projects',
+                    'title' => 'รายงานโครงงาน',
+                    'description' => 'สร้างรายงานโครงงานของฉัน',
                     'icon' => 'bi-file-earmark-text',
                     'url' => '#',
                     'class' => 'info-card',
@@ -363,19 +363,19 @@ class MenuController extends Controller
     private function getGuestMenu()
     {
         return [
-            'title' => 'Guest Access',
+            'title' => 'ผู้เยี่ยมชม',
             'items' => [
                 [
-                    'title' => 'View Information',
-                    'description' => 'View public information',
+                    'title' => 'ดูข้อมูล',
+                    'description' => 'ดูข้อมูลทั่วไป',
                     'icon' => 'bi-info-circle',
                     'url' => '#',
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
                 ],
                 [
-                    'title' => 'Contact Support',
-                    'description' => 'Get help and support',
+                    'title' => 'ติดต่อสนับสนุน',
+                    'description' => 'รับความช่วยเหลือและสนับสนุน',
                     'icon' => 'bi-headset',
                     'url' => '#',
                     'class' => 'warning-card',
@@ -427,27 +427,27 @@ class MenuController extends Controller
     private function getStudentWorkMenu()
     {
         return [
-            'title' => 'My Work',
+            'title' => 'งานของฉัน',
             'items' => [
                 [
-                    'title' => 'Group Project',
-                    'description' => 'View and manage my group project',
+                    'title' => 'โครงงานกลุ่ม',
+                    'description' => 'ดูและจัดการโครงงานของกลุ่ม',
                     'icon' => 'bi-journal-text',
                     'url' => '#',
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
                 ],
                 [
-                    'title' => 'Group Members',
-                    'description' => 'View members in my group',
+                    'title' => 'สมาชิกกลุ่ม',
+                    'description' => 'ดูสมาชิกในกลุ่มของฉัน',
                     'icon' => 'bi-person-lines-fill',
                     'url' => '#',
                     'class' => 'warning-card',
                     'btn_class' => 'warning-btn'
                 ],
                 [
-                    'title' => 'Submit Documents',
-                    'description' => 'Submit project documents and reports',
+                    'title' => 'ส่งเอกสาร',
+                    'description' => 'ส่งเอกสารและรายงานโครงงาน',
                     'icon' => 'bi-cloud-upload-fill',
                     'url' => '#',
                     'class' => 'info-card',

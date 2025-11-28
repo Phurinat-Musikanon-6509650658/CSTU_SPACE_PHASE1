@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard | CSTU SPACE')
+@section('title', 'แดชบอร์ด | CSTU SPACE')
 
 @section('content')
 <div class="menu-container">
@@ -13,7 +13,7 @@
                         <i class="bi bi-person-circle"></i>
                     </div>
                     <div class="welcome-text">
-                        <h2 class="welcome-title">Welcome</h2>
+                        <h2 class="welcome-title">ยินดีต้อนรับ</h2>
                         <h4 class="welcome-name">{{ $displayname }}</h4>
                         <div class="role-badge">
                             <span class="badge role-{{ $role }}">
@@ -47,7 +47,7 @@
                                                 <h6 class="card-title">{{ $item['title'] }}</h6>
                                                 <p class="card-description">{{ $item['description'] }}</p>
                                                 <a href="{{ $item['url'] }}" class="menu-btn {{ $item['btn_class'] }}">
-                                                    <span>Access</span>
+                                                    <span>เข้าใช้งาน</span>
                                                     <i class="bi bi-arrow-right"></i>
                                                 </a>
                                             </div>
@@ -60,10 +60,10 @@
                     @endforeach
                 @else
                     <div class="menu-section">
-                        <h5 class="section-title">No Menu Available</h5>
+                        <h5 class="section-title">ไม่มีเมนูที่สามารถใช้งานได้</h5>
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            No menu items are available for your current role.
+                            ไม่มีรายการเมนูสำหรับบทบาทของคุณ
                         </div>
                     </div>
                 @endif
@@ -74,7 +74,7 @@
                 <div class="logout-container">
                     <a href="{{ route('logout') }}" class="logout-btn">
                         <i class="bi bi-box-arrow-right"></i>
-                        <span>Logout</span>
+                        <span>ออกจากระบบ</span>
                     </a>
                 </div>
             </div>

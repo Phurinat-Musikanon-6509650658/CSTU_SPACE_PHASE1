@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login | CSTU SPACE')
+@section('title', 'เข้าสู่ระบบ | CSTU SPACE')
 
 @section('content')
 <div class="login-container">
@@ -16,7 +16,8 @@
             <!-- Brand Header -->
             <div class="brand-header mb-4">
                 <h1 class="brand-title">CSTU SPACE</h1>
-                <p class="brand-subtitle">Special Project Management System</p>
+                <p class="brand-subtitle">ระบบบริหารและประสานงานโครงงานพิเศษ ภาควิชาวิทยาการคอมพิวเตอร์
+</p>
             </div>
             
             <!-- Error Messages -->
@@ -35,7 +36,7 @@
             <div class="login-card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="bi bi-person-circle me-2"></i>Login
+                        <i class="bi bi-person-circle me-2"></i>เข้าสู่ระบบ
                     </h5>
                 </div>
                 
@@ -52,24 +53,24 @@
                         
                         <!-- Username Field -->
                         <div class="form-group">
-                            <label for="username" class="form-label">Username</label>
+                            <label for="username" class="form-label">ชื่อผู้ใช้</label>
                             <div class="input-group">
                                 <span class="input-icon">
                                     <i class="bi bi-person"></i>
                                 </span>
                                 <input type="text" class="form-control custom-input" name="username" id="username" 
-                                       placeholder="Enter your username" required>
+                                       placeholder="กรอกชื่อผู้ใช้" required>
                             </div>
                         </div>
                         <!-- Password Field -->
                         <div class="form-group">
-                            <label for="password" class="form-label">Password</label>
+                            <label for="password" class="form-label">รหัสผ่าน</label>
                             <div class="input-group">
                                 <span class="input-icon">
                                     <i class="bi bi-lock"></i>
                                 </span>
                                 <input type="password" class="form-control custom-input" name="password" id="password" 
-                                       placeholder="Enter your password" required>
+                                       placeholder="กรอกรหัสผ่าน" required>
                                 <button type="button" class="input-toggle" onclick="togglePassword()">
                                     <i class="bi bi-eye" id="toggleIcon"></i>
                                 </button>
@@ -78,7 +79,7 @@
 
                         <!-- Login Button -->
                         <button type="submit" class="btn btn-primary w-100 login-btn">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
                         </button>
                     </form>
                     
@@ -86,7 +87,7 @@
                     <div class="login-footer">
                         <p class="text-muted small text-center mb-0">
                             <i class="bi bi-shield-check me-1"></i>
-                            Secure System | CSTU IT Department
+                            ระบบปลอดภัย | ภาควิชาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยธรรมศาสตร์
                         </p>
                     </div>
                 </div>
