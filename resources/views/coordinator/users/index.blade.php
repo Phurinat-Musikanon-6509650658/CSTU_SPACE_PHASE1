@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'User Management | Coordinator')
+@section('title', 'จัดการผู้ใช้งาน | ผู้ประสานงาน')
 
 @section('content')
 <div class="container">
@@ -10,13 +10,13 @@
             <div>
                 <h2 class="mb-1">
                     <i class="bi bi-people-fill me-2"></i>
-                    User Management
+                    จัดการผู้ใช้งานระบบ
                 </h2>
-                <p class="mb-0 opacity-75">Manage users and students in the system (Coordinator - Read Only)</p>
+                <p class="mb-0 opacity-75">ดูข้อมูล นำเข้า และส่งออกข้อมูลผู้ใช้งาน (ผู้ประสานงาน - ดูได้อย่างเดียว)</p>
             </div>
             <a href="{{ route('menu') }}" class="btn modern-btn btn-light">
                 <i class="bi bi-arrow-left"></i>
-                <span>Back to Menu</span>
+                <span>กลับเมนูหลัก</span>
             </a>
         </div>
     </div>
@@ -56,12 +56,12 @@
         <ul class="nav nav-pills nav-modern" id="userTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-panel" type="button" role="tab">
-                    <i class="bi bi-person-badge me-2"></i>Users
+                    <i class="bi bi-person-badge me-2"></i>ผู้ใช้งานระบบ
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="student-tab" data-bs-toggle="tab" data-bs-target="#student-panel" type="button" role="tab">
-                    <i class="bi bi-mortarboard me-2"></i>Students
+                    <i class="bi bi-mortarboard me-2"></i>นักศึกษา
                 </button>
             </li>
         </ul>
@@ -73,15 +73,15 @@
         <div class="tab-pane fade show active" id="user-panel" role="tabpanel">
             <div class="management-section">
                 <div class="section-header">
-                    <h4><i class="bi bi-person-badge me-2"></i>System Users</h4>
+                    <h4><i class="bi bi-person-badge me-2"></i>ผู้ใช้งานระบบ</h4>
                     <div class="action-buttons">
                         <a href="{{ route('coordinator.users.export') }}" class="btn modern-btn btn-info">
                             <i class="bi bi-download"></i>
-                            <span>Export CSV</span>
+                            <span>ส่งออก CSV</span>
                         </a>
                         <a href="{{ route('coordinator.users.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
-                            <span>Import CSV</span>
+                            <span>นำเข้า CSV</span>
                         </a>
                     </div>
                 </div>
@@ -91,12 +91,12 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-header">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
-                                    <th>Full Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>User Code</th>
+                                    <th>รหัส</th>
+                                    <th>ชื่อผู้ใช้</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>อีเมล</th>
+                                    <th>บทบาท</th>
+                                    <th>รหัสผู้ใช้</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,7 +137,7 @@
                                     <td colspan="6" class="text-center py-4">
                                         <div class="empty-state">
                                             <i class="bi bi-person-x text-muted fs-1"></i>
-                                            <p class="text-muted mt-2 mb-0">No users found</p>
+                                            <p class="text-muted mt-2 mb-0">ไม่พบข้อมูลผู้ใช้งาน</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -150,7 +150,7 @@
                     <div class="card-footer bg-white border-top">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                Showing {{ $users->firstItem() ?? 0 }} to {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} entries
+                                แสดง {{ $users->firstItem() ?? 0 }} ถึง {{ $users->lastItem() ?? 0 }} จากทั้งหมด {{ $users->total() }} รายการ
                             </small>
                             {{ $users->appends(['student_page' => request('student_page')])->links() }}
                         </div>
@@ -171,15 +171,15 @@
         <div class="tab-pane fade" id="student-panel" role="tabpanel">
             <div class="management-section">
                 <div class="section-header">
-                    <h4><i class="bi bi-mortarboard me-2"></i>Students</h4>
+                    <h4><i class="bi bi-mortarboard me-2"></i>นักศึกษา</h4>
                     <div class="action-buttons">
                         <a href="{{ route('coordinator.students.export') }}" class="btn modern-btn btn-info">
                             <i class="bi bi-download"></i>
-                            <span>Export CSV</span>
+                            <span>ส่งออก CSV</span>
                         </a>
                         <a href="{{ route('coordinator.students.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
-                            <span>Import CSV</span>
+                            <span>นำเข้า CSV</span>
                         </a>
                     </div>
                 </div>
@@ -189,10 +189,10 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-header">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
-                                    <th>Full Name</th>
-                                    <th>Email</th>
+                                    <th>รหัส</th>
+                                    <th>รหัสนักศึกษา</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>อีเมล</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -208,7 +208,7 @@
                                     <td colspan="4" class="text-center py-4">
                                         <div class="empty-state">
                                             <i class="bi bi-mortarboard text-muted fs-1"></i>
-                                            <p class="text-muted mt-2 mb-0">No students found</p>
+                                            <p class="text-muted mt-2 mb-0">ไม่พบข้อมูลนักศึกษา</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -221,7 +221,7 @@
                     <div class="card-footer bg-white border-top">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                Showing {{ $students->firstItem() ?? 0 }} to {{ $students->lastItem() ?? 0 }} of {{ $students->total() }} entries
+                                แสดง {{ $students->firstItem() ?? 0 }} ถึง {{ $students->lastItem() ?? 0 }} จากทั้งหมด {{ $students->total() }} รายการ
                             </small>
                             {{ $students->appends(['user_page' => request('user_page')])->links() }}
                         </div>
