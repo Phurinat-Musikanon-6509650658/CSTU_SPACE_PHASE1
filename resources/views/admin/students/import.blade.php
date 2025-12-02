@@ -16,8 +16,11 @@
                         <h5><i class="bi bi-info-circle"></i> คำแนะนำการใช้งาน:</h5>
                         <ol class="mb-2">
                             <li>ไฟล์ CSV ต้องมี header แถวแรก</li>
-                            <li>คอลัมน์ต้องเรียงตามลำดับ: <strong>username, firstname, lastname, email, password</strong></li>
+                            <li>คอลัมน์ต้องเรียงตามลำดับ: <strong>username, firstname, lastname, email, password, course_code, semester, year</strong></li>
                             <li>Password จะถูก hash อัตโนมัติ</li>
+                            <li>course_code: CS303 หรือ CS403</li>
+                            <li>semester: 1 หรือ 2</li>
+                            <li>year: ปีการศึกษา (พ.ศ.) เช่น 2568</li>
                         </ol>
                         <p class="mb-0">
                             <a href="{{ route('students.downloadTemplate') }}" class="btn btn-sm btn-outline-primary">
@@ -32,9 +35,9 @@
                             <strong>ตัวอย่างไฟล์ CSV:</strong>
                         </div>
                         <div class="card-body">
-                            <pre class="mb-0" style="font-size: 12px;">username,firstname,lastname,email,password
-6509650001,สมชาย,ใจดี,somchai.std@dome.tu.ac.th,pass1234
-6509650002,สมหญิง,รักเรียน,somying.std@dome.tu.ac.th,pass5678</pre>
+                            <pre class="mb-0" style="font-size: 12px;">username,firstname,lastname,email,password,course_code,semester,year
+6509650099,ทดสอบ,ระบบ,test.std@dome.tu.ac.th,testpass123,CS303,2,2568
+6509650098,ตัวอย่าง,นักศึกษา,example.std@dome.tu.ac.th,examplepass456,CS403,1,2568</pre>
                         </div>
                     </div>
 

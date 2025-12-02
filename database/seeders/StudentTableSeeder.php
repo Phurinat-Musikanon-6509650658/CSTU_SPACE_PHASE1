@@ -24,10 +24,13 @@ class StudentTableSeeder extends Seeder
                 'email_std' => 'student@cstu.ac.th',
                 'password_std' => Hash::make('student123'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
-        // ข้อมูลเดิม
+        // ข้อมูลเดิม - นักศึกษาชั้นปี 3 ลง CS303 (โครงงานพิเศษ 1)
         DB::table('student')->updateOrInsert(
             ['username_std' => '6509650757'],
             [
@@ -36,6 +39,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => 'haritch.utc@dome.tu.ac.th',
                 'password_std' => Hash::make('1101700338550'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -47,6 +53,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => 'natcha.wattan@dome.tu.ac.th',
                 'password_std' => Hash::make('1709700292985'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -58,10 +67,13 @@ class StudentTableSeeder extends Seeder
                 'email_std' => 'phurinat.mus@dome.tu.ac.th',
                 'password_std' => Hash::make('1104000099105'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
-        // เพิ่ม student เพื่อทดสอบกลุ่ม
+        // เพิ่ม student เพื่อทดสอบกลุ่ม - นักศึกษาชั้นปี 3 ลง CS303 (โครงงานพิเศษ 1)
         DB::table('student')->updateOrInsert(
             ['username_std' => '6509650001'],
             [
@@ -70,6 +82,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => '6509650001@dome.tu.ac.th',
                 'password_std' => Hash::make('password'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -81,6 +96,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => '6509650002@dome.tu.ac.th',
                 'password_std' => Hash::make('password'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -92,6 +110,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => '6509650003@dome.tu.ac.th',
                 'password_std' => Hash::make('password'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -103,6 +124,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => '6509650004@dome.tu.ac.th',
                 'password_std' => Hash::make('password'),
                 'role' => 2048,
+                'course_code' => 'CS303',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
 
@@ -114,6 +138,9 @@ class StudentTableSeeder extends Seeder
                 'email_std' => '6509650005@dome.tu.ac.th',
                 'password_std' => Hash::make('password'),
                 'role' => 2048,
+                'course_code' => 'CS403',
+                'semester' => 2,
+                'year' => 2568,
             ]
         );
     }

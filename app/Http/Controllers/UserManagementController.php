@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\UserRole;
+use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -19,7 +20,8 @@ class UserManagementController extends Controller
     {
         // Admin, Coordinator สามารถดูได้ทั้งหมด
         $users = DB::table('user')->get();
-        $students = DB::table('student')->get();
+        $students = Student::select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role', 'course_code', 'semester', 'year')
+            ->get();
         
         // ไม่มี Staff ทั่วไป ทุกคนแก้ไขได้
         $canEdit = true;

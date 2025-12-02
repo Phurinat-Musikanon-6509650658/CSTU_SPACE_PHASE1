@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 
@@ -24,9 +25,8 @@ class CoordinatorUserController extends Controller
             ->orderBy('user_id', 'asc')
             ->paginate(20, ['*'], 'user_page');
 
-        // ดึงข้อมูล Students
-        $students = DB::table('student')
-            ->select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role')
+        // ดึงข้อมูล Students (รวม course_code, semester, year) - ใช้ Eloquent Model
+        $students = Student::select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role', 'course_code', 'semester', 'year')
             ->orderBy('student_id', 'asc')
             ->paginate(20, ['*'], 'student_page');
 
@@ -102,7 +102,7 @@ class CoordinatorUserController extends Controller
     public function exportStudents()
     {
         $students = DB::table('student')
-            ->select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role')
+            ->select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'course_code', 'semester', 'year', 'role')
             ->orderBy('student_id', 'asc')
             ->get();
 
@@ -120,7 +120,7 @@ class CoordinatorUserController extends Controller
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
             // Header
-            fputcsv($file, ['ID', 'Username', 'Firstname', 'Lastname', 'Email', 'Role']);
+            fputcsv($file, ['ID', 'Username', 'Firstname', 'Lastname', 'Email', 'Course Code', 'Semester', 'Year', 'Role']);
             
             // Data
             foreach ($students as $student) {
@@ -130,6 +130,9 @@ class CoordinatorUserController extends Controller
                     $student->firstname_std,
                     $student->lastname_std,
                     $student->email_std,
+                    $student->course_code ?? '-',
+                    $student->semester ?? '-',
+                    $student->year ?? '-',
                     'Student'
                 ]);
             }
@@ -233,39 +236,83 @@ class CoordinatorUserController extends Controller
         $header = array_shift($csv);
         
         $imported = 0;
+        $skipped = 0;
         $errors = [];
 
-        foreach ($csv as $row) {
-            if (count($row) < 4) continue;
+        foreach ($csv as $index => $row) {
+            // ข้ามแถวที่ว่าง
+            if (empty(array_filter($row))) {
+                continue;
+            }
+            
+            // Map columns: username, firstname, lastname, email, password, course_code, semester, year
+            $username = trim($row[0] ?? '');
+            $firstname = trim($row[1] ?? '');
+            $lastname = trim($row[2] ?? '');
+            $email = trim($row[3] ?? '');
+            $password = trim($row[4] ?? '');
+            $courseCode = trim($row[5] ?? 'CS303');
+            $semester = trim($row[6] ?? '2');
+            $year = trim($row[7] ?? '2568');
+
+            // Validate required fields
+            if (empty($username) || empty($firstname) || empty($lastname) || empty($email) || empty($password)) {
+                $errors[] = "แถวที่ " . ($index + 2) . ": ข้อมูลไม่ครบถ้วน";
+                $skipped++;
+                continue;
+            }
+
+            // Validate course_code
+            if (!in_array($courseCode, ['CS303', 'CS403'])) {
+                $errors[] = "แถวที่ " . ($index + 2) . ": รหัสวิชาต้องเป็น CS303 หรือ CS403";
+                $skipped++;
+                continue;
+            }
+
+            // Validate semester
+            if (!in_array($semester, ['1', '2'])) {
+                $errors[] = "แถวที่ " . ($index + 2) . ": เทอมต้องเป็น 1 หรือ 2";
+                $skipped++;
+                continue;
+            }
             
             try {
                 $exists = DB::table('student')
-                    ->where('username_std', $row[0])
+                    ->where('username_std', $username)
                     ->exists();
                 
                 if (!$exists) {
                     DB::table('student')->insert([
-                        'username_std' => $row[0],
-                        'firstname_std' => $row[1],
-                        'lastname_std' => $row[2],
-                        'email_std' => $row[3],
+                        'username_std' => $username,
+                        'firstname_std' => $firstname,
+                        'lastname_std' => $lastname,
+                        'email_std' => $email,
+                        'password_std' => bcrypt($password),
+                        'course_code' => $courseCode,
+                        'semester' => (int)$semester,
+                        'year' => (int)$year,
                         'role' => 2048, // Student role
-                        'password_std' => bcrypt('student123') // Default password
                     ]);
                     $imported++;
                 }
             } catch (\Exception $e) {
-                $errors[] = "Row {$row[0]}: {$e->getMessage()}";
+                $errors[] = "แถวที่ " . ($index + 2) . ": " . $e->getMessage();
+                $skipped++;
             }
         }
 
-        if (count($errors) > 0) {
+        $message = "Import นักศึกษาสำเร็จ {$imported} รายการ";
+        if ($skipped > 0) {
+            $message .= ", ข้าม {$skipped} รายการ";
+        }
+
+        if (!empty($errors)) {
             return redirect()->route('coordinator.users.index')
                 ->with('import_errors', $errors)
-                ->with('success', "Imported $imported students");
+                ->with('success', $message);
         }
 
         return redirect()->route('coordinator.users.index')
-            ->with('success', "Successfully imported $imported students");
+            ->with('success', $message);
     }
 }

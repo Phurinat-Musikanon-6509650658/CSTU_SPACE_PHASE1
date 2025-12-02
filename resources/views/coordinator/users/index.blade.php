@@ -92,11 +92,11 @@
                             <thead class="table-header">
                                 <tr>
                                     <th>รหัส</th>
-                                    <th>ชื่อผู้ใช้</th>
+                                    <th>Username</th>
                                     <th>ชื่อ-นามสกุล</th>
                                     <th>อีเมล</th>
-                                    <th>บทบาท</th>
-                                    <th>รหัสผู้ใช้</th>
+                                    <th>Role</th>
+                                    <th>User Code</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -193,6 +193,8 @@
                                     <th>รหัสนักศึกษา</th>
                                     <th>ชื่อ-นามสกุล</th>
                                     <th>อีเมล</th>
+                                    <th>รหัสวิชา</th>
+                                    <th>เทอม/ปีการศึกษา</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -202,10 +204,24 @@
                                     <td><strong>{{ $student->username_std }}</strong></td>
                                     <td>{{ $student->firstname_std }} {{ $student->lastname_std }}</td>
                                     <td>{{ $student->email_std }}</td>
+                                    <td>
+                                        @if($student->course_code)
+                                            <span class="badge bg-primary">{{ $student->course_code }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($student->semester && $student->year)
+                                            <span class="badge bg-info">{{ $student->semester }}/{{ $student->year }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4">
+                                    <td colspan="6" class="text-center py-4">
                                         <div class="empty-state">
                                             <i class="bi bi-mortarboard text-muted fs-1"></i>
                                             <p class="text-muted mt-2 mb-0">ไม่พบข้อมูลนักศึกษา</p>

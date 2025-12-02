@@ -394,13 +394,9 @@
                                 <label for="subject_code" class="form-label">
                                     รหัสวิชา <span class="required">*</span>
                                 </label>
-                                <select class="form-select" id="subject_code" name="subject_code" required>
-                                    <option value="">เลือกรหัสวิชา</option>
-                                    <option value="CS303" {{ old('subject_code') == 'CS303' ? 'selected' : '' }}>CS303 - โครงงานคอมพิวเตอร์ 1</option>
-                                    <option value="CS403" {{ old('subject_code') == 'CS403' ? 'selected' : '' }}>CS403 - โครงงานคอมพิวเตอร์ 2</option>
-                                </select>
+                                <input type="text" class="form-control" id="subject_code" name="subject_code" value="{{ $courseCode }}" readonly>
                                 <div class="form-text">
-                                    <i class="bi bi-info-circle me-1"></i>เลือกรหัสวิชาที่ทำโครงงาน
+                                    <i class="bi bi-info-circle me-1"></i>รหัสวิชาถูกล็อกตามข้อมูลของคุณ
                                 </div>
                             </div>
 
@@ -410,7 +406,7 @@
                                         <label for="year" class="form-label">
                                             ปีการศึกษา <span class="required">*</span>
                                         </label>
-                                        <input type="text" class="form-control" id="year" name="year" value="2568" readonly>
+                                        <input type="text" class="form-control" id="year" name="year" value="{{ $year }}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-6">
@@ -418,7 +414,7 @@
                                         <label for="semester" class="form-label">
                                             ภาคการศึกษา <span class="required">*</span>
                                         </label>
-                                        <input type="text" class="form-control" id="semester" name="semester" value="1" readonly>
+                                        <input type="text" class="form-control" id="semester" name="semester" value="{{ $semester }}" readonly>
                                     </div>
                                 </div>
                             </div>

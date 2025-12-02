@@ -67,6 +67,7 @@ class UserTableSeeder extends Seeder
             ]
         );
 
+        /*
         // ข้อมูลเดิม
         DB::table('user')->updateOrInsert(
             ['username_user' => '6503640226'],
@@ -91,20 +92,22 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('1102200195289'),
             ]
         );
+        
+        */
 
         // อาจารย์ที่ปรึกษาโครงงาน (19 ท่าน) - role_code = 8192 (Lecturer)
         $advisors = [
             [
-                'username_user' => 'denduang.p',
+                'username_user' => 'denduang',
                 'firstname_user' => 'เด่นดวง',
-                'lastname_user' => 'ปราบศัตรู',
+                'lastname_user' => 'ประดับสุวรรณ',
                 'user_code' => 'ddp',
                 'role' => 8192,
                 'email_user' => 'denduang@tu.ac.th',
                 'password_user' => Hash::make('ddp2025')
             ],
             [
-                'username_user' => 'wsaowalu.w',
+                'username_user' => 'wsaowalu',
                 'firstname_user' => 'เสาวลักษณ์',
                 'lastname_user' => 'วรรธนาภา',
                 'user_code' => 'scw',
@@ -113,7 +116,7 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('scw2025')
             ],
             [
-                'username_user' => 'rongsak.r',
+                'username_user' => 'rongviri',
                 'firstname_user' => 'ทรงศักดิ์',
                 'lastname_user' => 'รองวิริยะพานิช',
                 'user_code' => 'ssr',
@@ -122,7 +125,7 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('ssr2025')
             ],
             [
-                'username_user' => 'tanatorn.t',
+                'username_user' => 'tanatorn',
                 'firstname_user' => 'ธนาธร',
                 'lastname_user' => 'ทะนานทอง',
                 'user_code' => 'tnt',
@@ -131,62 +134,62 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('tnt2025')
             ],
             [
-                'username_user' => 'pakorn.l',
+                'username_user' => 'pakornl',
                 'firstname_user' => 'ปกรณ์',
-                'lastname_user' => 'ลีสุทธิพรชัย',
+                'lastname_user' => 'ลี้สุทธิพรชัย',
                 'user_code' => 'pkl',
                 'role' => 8192,
                 'email_user' => 'pakornl@tu.ac.th',
                 'password_user' => Hash::make('pkl2025')
             ],
             [
-                'username_user' => 'praphaporn.r',
+                'username_user' => 'rattanat',
                 'firstname_user' => 'ประภาพร',
-                'lastname_user' => 'รัศนธารานิ',
+                'lastname_user' => 'รัตนธำรง',
                 'user_code' => 'ppr',
                 'role' => 8192,
                 'email_user' => 'rattanat@tu.ac.th',
                 'password_user' => Hash::make('ppr2025')
             ],
             [
-                'username_user' => 'wirat.j',
+                'username_user' => 'wirat',
                 'firstname_user' => 'วิรัตน์',
-                'lastname_user' => 'จารึงศุภโฆษ',
+                'lastname_user' => 'จารีวงศ์ไพบูลย์',
                 'user_code' => 'wjr',
                 'role' => 8192,
                 'email_user' => 'wirat@tu.ac.th',
                 'password_user' => Hash::make('wjr2025')
             ],
             [
-                'username_user' => 'wilawan.r',
-                'firstname_user' => 'วีลาวรรณ',
-                'lastname_user' => 'รักษ์การงานดี',
+                'username_user' => 'rwilawan',
+                'firstname_user' => 'วิลาวรรณ',
+                'lastname_user' => 'รักผกาวงศ์',
                 'user_code' => 'wlr',
                 'role' => 8192,
                 'email_user' => 'rwilawan@tu.ac.th',
                 'password_user' => Hash::make('wlr2025')
             ],
             [
-                'username_user' => 'ornjira.s',
+                'username_user' => 'onjira',
                 'firstname_user' => 'อรจิรา',
-                'lastname_user' => 'สิทธิ์ศักดิ์',
+                'lastname_user' => 'สิทธิศักดิ์',
                 'user_code' => 'ojs',
                 'role' => 8192,
                 'email_user' => 'onjira@tu.ac.th',
                 'password_user' => Hash::make('ojs2025')
             ],
             [
-                'username_user' => 'phakpor.s',
-                'firstname_user' => 'ภักพร',
-                'lastname_user' => 'เสาร์ฝั่น',
+                'username_user' => 'pakkp',
+                'firstname_user' => 'ภัคพร',
+                'lastname_user' => 'เสาร์ฝืน',
                 'user_code' => 'pkp',
                 'role' => 8192,
                 'email_user' => 'pakkp@tu.ac.th',
                 'password_user' => Hash::make('pkp2025')
             ],
             [
-                'username_user' => 'kasidit.c',
-                'firstname_user' => 'กษิดิ์',
+                'username_user' => 'ckasidit',
+                'firstname_user' => 'กษิดิศ',
                 'lastname_user' => 'ชาญเชี่ยว',
                 'user_code' => 'kdc',
                 'role' => 8192,
@@ -194,44 +197,44 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('kdc2025')
             ],
             [
-                'username_user' => 'thapanee.b',
-                'firstname_user' => 'ธาปนีย์',
-                'lastname_user' => 'บุบผา',
+                'username_user' => 'thapanab',
+                'firstname_user' => 'ฐาปนา',
+                'lastname_user' => 'บุญชู',
                 'user_code' => 'tpb',
                 'role' => 8192,
                 'email_user' => 'thapanab@tu.ac.th',
                 'password_user' => Hash::make('tpb2025')
             ],
             [
-                'username_user' => 'pokpong.s',
+                'username_user' => 'pokpongs',
                 'firstname_user' => 'ปกป้อง',
-                'lastname_user' => 'สองเมือง',
+                'lastname_user' => 'ส่องเมือง',
                 'user_code' => 'pps',
                 'role' => 8192,
                 'email_user' => 'pokpongs@tu.ac.th',
                 'password_user' => Hash::make('pps2025')
             ],
             [
-                'username_user' => 'lumpapan.p',
+                'username_user' => 'lumpapun',
                 'firstname_user' => 'ลัมพาพรรณ',
-                'lastname_user' => 'พันธุ์รุจิกร',
+                'lastname_user' => 'พันธุ์ซูจิตร์',
                 'user_code' => 'lpp',
                 'role' => 8192,
                 'email_user' => 'lumpapun@tu.ac.th',
                 'password_user' => Hash::make('lpp2025')
             ],
             [
-                'username_user' => 'wanida.p',
+                'username_user' => 'pwanida',
                 'firstname_user' => 'วนิดา',
-                'lastname_user' => 'พฤฒาธิวัฒนา',
+                'lastname_user' => 'พฤทธิวิทยา',
                 'user_code' => 'wdp',
                 'role' => 8192,
                 'email_user' => 'pwanida@tu.ac.th',
                 'password_user' => Hash::make('wdp2025')
             ],
             [
-                'username_user' => 'nuchjakorn.n',
-                'firstname_user' => 'นุชจากร',
+                'username_user' => 'nnuchako',
+                'firstname_user' => 'นุชซากร',
                 'lastname_user' => 'งามเสาวรส',
                 'user_code' => 'nng',
                 'role' => 8192,
@@ -239,8 +242,8 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('nng2025')
             ],
             [
-                'username_user' => 'sirikanya.n',
-                'firstname_user' => 'สิริกัญญา',
+                'username_user' => 'nsirikun',
+                'firstname_user' => 'สิริกันยา',
                 'lastname_user' => 'นิลพานิช',
                 'user_code' => 'skn',
                 'role' => 8192,
@@ -248,18 +251,18 @@ class UserTableSeeder extends Seeder
                 'password_user' => Hash::make('skn2025')
             ],
             [
-                'username_user' => 'sanan.k',
-                'firstname_user' => 'ศานนท์',
-                'lastname_user' => 'กิจศิราบุศดอร์',
+                'username_user' => 'satanat',
+                'firstname_user' => 'ศาตนาฏ',
+                'lastname_user' => 'กิจศิรานุวัตร',
                 'user_code' => 'snk',
                 'role' => 8192,
                 'email_user' => 'satanat@tu.ac.th',
                 'password_user' => Hash::make('snk2025')
             ],
             [
-                'username_user' => 'nawaresh.c',
-                'firstname_user' => 'นวเรศ',
-                'lastname_user' => 'ชลาเรศ',
+                'username_user' => 'nawarerk',
+                'firstname_user' => 'นวฤกษ์',
+                'lastname_user' => 'ชลารักษ์',
                 'user_code' => 'nrc',
                 'role' => 8192,
                 'email_user' => 'nawarerk@tu.ac.th',

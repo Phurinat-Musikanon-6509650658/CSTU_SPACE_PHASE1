@@ -45,7 +45,12 @@ class GroupController extends Controller
             $nextGroupNumber = 1;
         }
 
-        return view('student.group.create', compact('students', 'nextGroupNumber'));
+        // ดึงข้อมูล course_code, semester, year จาก student
+        $courseCode = $student->course_code ?? 'CS303';
+        $semester = $student->semester ?? 2;
+        $year = $student->year ?? 2568;
+
+        return view('student.group.create', compact('students', 'nextGroupNumber', 'courseCode', 'semester', 'year'));
     }
 
     public function store(Request $request)
@@ -86,11 +91,12 @@ class GroupController extends Controller
             }
             
             // สร้างกลุ่มโดยระบุ group_id (ใครมาก่อนได้เลขนั้นก่อน)
+            // ดึงข้อมูล course_code, semester, year จาก student (ล็อกตามนักศึกษา)
             $group = Group::create([
                 'group_id' => $nextGroupId,
-                'subject_code' => $request->subject_code,
-                'year' => $request->year,
-                'semester' => $request->semester,
+                'subject_code' => $student->course_code ?? 'CS303', // ใช้รหัสวิชาจาก student
+                'year' => $student->year ?? 2568, // ใช้ปีจาก student
+                'semester' => $student->semester ?? 2, // ใช้เทอมจาก student
                 'status_group' => 'created'
             ]);
 
@@ -107,8 +113,8 @@ class GroupController extends Controller
             
             $projectCode = sprintf(
                 '%02d-%d-%02d_TBD-%s%d',
-                $request->year % 100,
-                $request->semester,
+                $group->year % 100,
+                $group->semester,
                 $group->group_id,
                 $studentType,
                 $memberCount
@@ -130,7 +136,7 @@ class GroupController extends Controller
                         'group_id' => $group->group_id,
                         'inviter_username' => $student->username_std,
                         'invitee_username' => $request->invite_username,
-                        'message' => 'เชิญเข้าร่วมกลุ่มโครงงาน วิชา ' . $request->subject_code,
+                        'message' => 'เชิญเข้าร่วมกลุ่มโครงงาน วิชา ' . $group->subject_code,
                         'status' => 'pending'
                     ]);
                 }

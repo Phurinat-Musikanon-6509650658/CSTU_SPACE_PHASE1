@@ -82,16 +82,25 @@ class StudentManagementController extends Controller
             'firstname_std' => 'required',
             'lastname_std' => 'required',
             'email_std' => 'required|email',
+            'course_code' => 'required|in:CS303,CS403',
+            'semester' => 'required|integer|between:1,2',
+            'year' => 'required|integer|min:2560|max:2600',
         ]);
 
         $updateData = [
             'firstname_std' => $request->firstname_std,
             'lastname_std' => $request->lastname_std,
             'email_std' => $request->email_std,
+            'course_code' => $request->course_code,
+            'semester' => $request->semester,
+            'year' => $request->year,
         ];
 
         // ถ้ามีการเปลี่ยนรหัสผ่าน
         if ($request->filled('password_std')) {
+            $request->validate([
+                'password_std' => 'min:6',
+            ]);
             $updateData['password_std'] = Hash::make($request->password_std);
         }
 
@@ -159,16 +168,33 @@ class StudentManagementController extends Controller
                 continue;
             }
 
-            // Map columns: username, firstname, lastname, email, password
+            // Map columns: username, firstname, lastname, email, password, course_code, semester, year
             $username = trim($row[0] ?? '');
             $firstname = trim($row[1] ?? '');
             $lastname = trim($row[2] ?? '');
             $email = trim($row[3] ?? '');
             $password = trim($row[4] ?? '');
+            $courseCode = trim($row[5] ?? 'CS303');
+            $semester = trim($row[6] ?? '2');
+            $year = trim($row[7] ?? '2568');
 
             // Validate required fields
             if (empty($username) || empty($firstname) || empty($lastname) || empty($email) || empty($password)) {
                 $errors[] = "แถวที่ " . ($index + 2) . ": ข้อมูลไม่ครบถ้วน";
+                $skipped++;
+                continue;
+            }
+
+            // Validate course_code
+            if (!in_array($courseCode, ['CS303', 'CS403'])) {
+                $errors[] = "แถวที่ " . ($index + 2) . ": รหัสวิชาต้องเป็น CS303 หรือ CS403";
+                $skipped++;
+                continue;
+            }
+
+            // Validate semester
+            if (!in_array($semester, ['1', '2'])) {
+                $errors[] = "แถวที่ " . ($index + 2) . ": เทอมต้องเป็น 1 หรือ 2";
                 $skipped++;
                 continue;
             }
@@ -191,6 +217,9 @@ class StudentManagementController extends Controller
                     'email_std' => $email,
                     'password_std' => Hash::make($password),
                     'role' => 2048, // Student role_code
+                    'course_code' => $courseCode,
+                    'semester' => (int)$semester,
+                    'year' => (int)$year,
                 ]);
                 $imported++;
             } catch (\Exception $e) {
@@ -226,12 +255,12 @@ class StudentManagementController extends Controller
             $file = fopen('php://output', 'w');
             
             // Header
-            fputcsv($file, ['username', 'firstname', 'lastname', 'email', 'password']);
+            fputcsv($file, ['username', 'firstname', 'lastname', 'email', 'password', 'course_code', 'semester', 'year']);
             
             // ตัวอย่างข้อมูล
-            fputcsv($file, ['6509650001', 'สมชาย', 'ใจดี', 'somchai.std@dome.tu.ac.th', 'pass1234']);
-            fputcsv($file, ['6509650002', 'สมหญิง', 'รักเรียน', 'somying.std@dome.tu.ac.th', 'pass5678']);
-            fputcsv($file, ['6509650003', 'สมศักดิ์', 'มานะ', 'somsak.std@dome.tu.ac.th', 'pass9012']);
+            fputcsv($file, ['6509650099', 'ทดสอบ', 'ระบบ', 'test.std@dome.tu.ac.th', 'testpass123', 'CS303', '2', '2568']);
+            fputcsv($file, ['6509650098', 'ตัวอย่าง', 'นักศึกษา', 'example.std@dome.tu.ac.th', 'examplepass456', 'CS403', '1', '2568']);
+            fputcsv($file, ['6509650097', 'สมมติ', 'ข้อมูล', 'sample.std@dome.tu.ac.th', 'samplepass789', 'CS303', '2', '2568']);
             
             fclose($file);
         };
@@ -245,7 +274,9 @@ class StudentManagementController extends Controller
     public function exportAll()
     {
         // Coordinator, Admin, Staff สามารถ export ได้
-        $students = DB::table('student')->get();
+        $students = DB::table('student')
+            ->select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'course_code', 'semester', 'year')
+            ->get();
         
         $headers = [
             'Content-Type' => 'text/csv',
@@ -259,7 +290,7 @@ class StudentManagementController extends Controller
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
             // Header
-            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'วันที่สร้าง']);
+            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'รหัสวิชา', 'เทอม', 'ปีการศึกษา']);
             
             // Data
             foreach ($students as $student) {
@@ -269,7 +300,9 @@ class StudentManagementController extends Controller
                     $student->firstname_std,
                     $student->lastname_std,
                     $student->email_std,
-                    $student->created_at ?? '-'
+                    $student->course_code ?? '-',
+                    $student->semester ?? '-',
+                    $student->year ?? '-'
                 ]);
             }
             

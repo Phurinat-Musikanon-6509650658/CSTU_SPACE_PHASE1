@@ -18,6 +18,7 @@ services:
       - DB_HOST=db
       - DB_USERNAME=root
       - DB_PASSWORD=rootpassword
+      - TZ=Asia/Bangkok
 
   # Nginx Web Server
   webserver:
@@ -46,6 +47,7 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_USER: laravel
       MYSQL_PASSWORD: laravel
+      TZ: Asia/Bangkok
     volumes:
       - dbdata:/var/lib/mysql
       - ./mysql/my.cnf:/etc/mysql/my.cnf
@@ -101,6 +103,7 @@ services:
       - DB_HOST=db
       - DB_USERNAME=root
       - DB_PASSWORD=rootpassword
+      - TZ=Asia/Bangkok
     command: php artisan queue:work --tries=3
 
 networks:

@@ -211,13 +211,20 @@ Route::middleware('session.timeout')->group(function () {
     });
     
     // ======================================
-    // Staff Routes (Staff role only)
+    // Staff Routes (Staff role - Full Exam Schedule Management)
     // ======================================
-    Route::middleware(['role:staff'])->prefix('staff')->name('staff.')->group(function () {
+    Route::middleware(['role:staff,coordinator,admin'])->prefix('staff')->name('staff.')->group(function () {
         
-        // Exam Schedules (View Only for Staff)
-        Route::get('exam-schedules', [SystemSettingsController::class, 'staffExamSchedules'])->name('exam-schedules');
-        Route::get('exam-schedules/calendar', [SystemSettingsController::class, 'staffExamSchedulesCalendar'])->name('exam-schedules.calendar');
+        // Exam Schedules (Full Management for Staff & Coordinator)
+        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
+            Route::get('/', [SystemSettingsController::class, 'staffExamScheduleIndex'])->name('index');
+            Route::get('calendar', [SystemSettingsController::class, 'staffExamScheduleCalendar'])->name('calendar');
+            Route::get('create', [SystemSettingsController::class, 'staffExamScheduleCreate'])->name('create');
+            Route::post('/', [SystemSettingsController::class, 'staffExamScheduleStore'])->name('store');
+            Route::get('{id}/edit', [SystemSettingsController::class, 'staffExamScheduleEdit'])->name('edit');
+            Route::put('{id}', [SystemSettingsController::class, 'staffExamScheduleUpdate'])->name('update');
+            Route::delete('{id}', [SystemSettingsController::class, 'staffExamScheduleDestroy'])->name('destroy');
+        });
         
     });
 

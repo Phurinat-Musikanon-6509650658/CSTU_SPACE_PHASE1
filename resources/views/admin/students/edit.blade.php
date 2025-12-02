@@ -53,6 +53,45 @@
                             @enderror
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="course_code" class="form-label">รหัสวิชา <span class="text-danger">*</span></label>
+                                <select class="form-select @error('course_code') is-invalid @enderror" 
+                                        id="course_code" name="course_code" required>
+                                    <option value="">เลือกรหัสวิชา</option>
+                                    <option value="CS303" {{ old('course_code', $student->course_code) == 'CS303' ? 'selected' : '' }}>CS303 - โครงงานพิเศษ 1</option>
+                                    <option value="CS403" {{ old('course_code', $student->course_code) == 'CS403' ? 'selected' : '' }}>CS403 - โครงงานพิเศษ 2</option>
+                                </select>
+                                @error('course_code')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="semester" class="form-label">เทอม <span class="text-danger">*</span></label>
+                                <select class="form-select @error('semester') is-invalid @enderror" 
+                                        id="semester" name="semester" required>
+                                    <option value="">เลือกเทอม</option>
+                                    <option value="1" {{ old('semester', $student->semester) == 1 ? 'selected' : '' }}>1</option>
+                                    <option value="2" {{ old('semester', $student->semester) == 2 ? 'selected' : '' }}>2</option>
+                                </select>
+                                @error('semester')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="year" class="form-label">ปีการศึกษา (พ.ศ.) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control @error('year') is-invalid @enderror" 
+                                       id="year" name="year" 
+                                       value="{{ old('year', $student->year) }}" 
+                                       min="2560" max="2600" required>
+                                @error('year')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="password_std" class="form-label">Password ใหม่</label>
                             <input type="password" class="form-control @error('password_std') is-invalid @enderror" 

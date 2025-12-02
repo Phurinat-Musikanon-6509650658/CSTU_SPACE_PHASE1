@@ -24,13 +24,34 @@ class MenuController extends Controller
         
         // สร้างเมนูตาม binary permission โดยใช้ role_code โดยตรง
         $menuGroups = $this->getMenuByPermission($roleCode);
+        
+        // ดึง roles ทั้งหมดที่ user มี
+        $userRoles = $this->getUserRoles($roleCode);
 
         // ส่งข้อมูลไปยัง view
         return view('menu', [
             'displayname' => $displayname,
             'role' => $department,
+            'userRoles' => $userRoles,
             'menuGroups' => $menuGroups
         ]);
+    }
+    
+    /**
+     * ดึงรายชื่อ roles ทั้งหมดที่ user มี
+     */
+    private function getUserRoles($roleCode)
+    {
+        $roles = [];
+        
+        // เช็คแต่ละ role ด้วย bitwise AND
+        if (($roleCode & 32768) !== 0) $roles[] = ['name' => 'Admin', 'class' => 'admin'];
+        if (($roleCode & 16384) !== 0) $roles[] = ['name' => 'Coordinator', 'class' => 'coordinator'];
+        if (($roleCode & 8192) !== 0) $roles[] = ['name' => 'Lecturer', 'class' => 'lecturer'];
+        if (($roleCode & 4096) !== 0) $roles[] = ['name' => 'Staff', 'class' => 'staff'];
+        if (($roleCode & 2048) !== 0) $roles[] = ['name' => 'Student', 'class' => 'student'];
+        
+        return $roles;
     }
 
     /**

@@ -391,7 +391,7 @@
                                 </div>
                                 <div class="proposal-meta-item">
                                     <i class="bi bi-clock-history"></i>
-                                    <span>เสนอเมื่อ {{ $proposal->proposed_at->diffForHumans() }}</span>
+                                    <span>เสนอเมื่อ {{ $proposal->proposed_at->locale('th')->diffForHumans() }}</span>
                                 </div>
                             </div>
                         </div>

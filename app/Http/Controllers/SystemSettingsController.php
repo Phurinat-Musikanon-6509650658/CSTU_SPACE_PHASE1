@@ -786,4 +786,183 @@ class SystemSettingsController extends Controller
 
         return view('staff.exam-schedules.calendar', compact('schedulesByDate'));
     }
+
+    /**
+     * แสดงรายการตารางสอบทั้งหมดสำหรับ Staff (จัดการได้เต็มรูปแบบ)
+     */
+    public function staffExamScheduleIndex()
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $examSchedules = ExamSchedule::with('project')
+            ->orderBy('ex_start_time', 'desc')
+            ->paginate(20);
+
+        return view('staff.exam-schedules.manage', compact('examSchedules'));
+    }
+
+    /**
+     * แสดงตารางสอบแบบปฏิทินสำหรับ Staff (จัดการได้)
+     */
+    public function staffExamScheduleCalendar()
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $query = ExamSchedule::with('project');
+
+        if (request('status')) {
+            $query->whereHas('project', function($q) {
+                $q->where('status', request('status'));
+            });
+        }
+
+        if (request('location')) {
+            $query->where('location', 'LIKE', '%' . request('location') . '%');
+        }
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('project', function($subQ) use ($search) {
+                    $subQ->where('project_name', 'LIKE', '%' . $search . '%');
+                })
+                ->orWhere('notes', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $examSchedules = $query->orderBy('ex_start_time', 'asc')->get();
+
+        $schedulesByDate = $examSchedules->groupBy(function($schedule) {
+            return $schedule->ex_start_time->format('Y-m-d');
+        });
+
+        return view('coordinator.exam-schedules.calendar', compact('schedulesByDate'));
+    }
+
+    /**
+     * แสดงฟอร์มสร้างตารางสอบใหม่สำหรับ Staff
+     */
+    public function staffExamScheduleCreate()
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $projects = Project::whereNotNull('advisor_code')
+            ->whereIn('status', ['in_progress', 'late_submission', 'submitted'])
+            ->orderBy('project_id', 'desc')
+            ->get();
+
+        return view('coordinator.exam-schedules.create', compact('projects'));
+    }
+
+    /**
+     * บันทึกตารางสอบใหม่สำหรับ Staff
+     */
+    public function staffExamScheduleStore(Request $request)
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:project,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            ExamSchedule::create([
+                'project_id' => $request->project_id,
+                'ex_start_time' => $request->ex_start_time,
+                'ex_end_time' => $request->ex_end_time,
+                'location' => $request->location,
+                'notes' => $request->notes
+            ]);
+
+            return redirect()->route('staff.exam-schedules.index')
+                ->with('success', 'สร้างตารางสอบสำเร็จ');
+        } catch (\Exception $e) {
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * แสดงฟอร์มแก้ไขตารางสอบสำหรับ Staff
+     */
+    public function staffExamScheduleEdit($id)
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $examSchedule = ExamSchedule::with('project')->findOrFail($id);
+        
+        $projects = Project::whereNotNull('advisor_code')
+            ->whereIn('status', ['in_progress', 'late_submission', 'submitted'])
+            ->orderBy('project_id', 'desc')
+            ->get();
+
+        return view('coordinator.exam-schedules.edit', compact('examSchedule', 'projects'));
+    }
+
+    /**
+     * อัพเดทตารางสอบสำหรับ Staff
+     */
+    public function staffExamScheduleUpdate(Request $request, $id)
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:project,project_id',
+            'ex_start_time' => 'required|date',
+            'ex_end_time' => 'required|date|after:ex_start_time',
+            'location' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            $examSchedule = ExamSchedule::findOrFail($id);
+            $examSchedule->update([
+                'project_id' => $request->project_id,
+                'ex_start_time' => $request->ex_start_time,
+                'ex_end_time' => $request->ex_end_time,
+                'location' => $request->location,
+                'notes' => $request->notes
+            ]);
+
+            return redirect()->route('staff.exam-schedules.index')
+                ->with('success', 'อัพเดทตารางสอบสำเร็จ');
+        } catch (\Exception $e) {
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ลบตารางสอบสำหรับ Staff
+     */
+    public function staffExamScheduleDestroy($id)
+    {
+        if (!PermissionHelper::isStaff() && !PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        try {
+            $examSchedule = ExamSchedule::findOrFail($id);
+            $examSchedule->delete();
+
+            return redirect()->route('staff.exam-schedules.index')
+                ->with('success', 'ลบตารางสอบสำเร็จ');
+        } catch (\Exception $e) {
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
 }

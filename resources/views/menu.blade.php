@@ -16,10 +16,19 @@
                         <h2 class="welcome-title">ยินดีต้อนรับ</h2>
                         <h4 class="welcome-name">{{ $displayname }}</h4>
                         <div class="role-badge">
-                            <span class="badge role-{{ $role }}">
-                                <i class="bi bi-shield-check"></i>
-                                {{ ucfirst($role) }}
-                            </span>
+                            @if(isset($userRoles) && count($userRoles) > 0)
+                                @foreach($userRoles as $userRole)
+                                    <span class="badge role-{{ $userRole['class'] }} me-1 mb-1">
+                                        <i class="bi bi-shield-check"></i>
+                                        {{ $userRole['name'] }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="badge role-{{ $role }}">
+                                    <i class="bi bi-shield-check"></i>
+                                    {{ ucfirst($role) }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -152,7 +161,9 @@
 
     .role-admin { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
     .role-coordinator { background: linear-gradient(45deg, #4834d4, #686de0); }
+    .role-lecturer { background: linear-gradient(45deg, #0abde3, #006ba6); }
     .role-advisor { background: linear-gradient(45deg, #0abde3, #006ba6); }
+    .role-staff { background: linear-gradient(45deg, #f39c12, #e67e22); }
     .role-student { background: linear-gradient(45deg, #55a3ff, #003d82); }
 
     .welcome-decoration {

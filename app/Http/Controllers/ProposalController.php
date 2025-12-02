@@ -35,8 +35,8 @@ class ProposalController extends Controller
             return redirect()->route('student.menu')->with('error', $message);
         }
         
-        // ดึงรายชื่อ lecturers
-        $lecturers = User::where('role', 8192)->get();
+        // ดึงรายชื่อ lecturers (ใช้ bitwise check เพื่อรองรับ multi-role)
+        $lecturers = User::whereRaw('(role & 8192) != 0')->get();
         
         return view('student.proposals.create', compact('group', 'lecturers'));
     }
@@ -65,9 +65,9 @@ class ProposalController extends Controller
             'proposed_to' => 'required|exists:user,username_user'
         ]);
         
-        // ตรวจสอบว่า lecturer มี role lecturer จริงหรือไม่
+        // ตรวจสอบว่า lecturer มี role lecturer จริงหรือไม่ (ใช้ bitwise check)
         $lecturer = User::where('username_user', $request->proposed_to)
-            ->where('role', 8192)
+            ->whereRaw('(role & 8192) != 0')
             ->first();
             
         if (!$lecturer) {
