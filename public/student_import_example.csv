@@ -1,0 +1,4 @@
+username,firstname,lastname,email,password,course_code,semester,year
+6509650099,ทดสอบ,ระบบ,test.std@dome.tu.ac.th,testpass123,CS303,2,2568
+6509650098,ตัวอย่าง,นักศึกษา,example.std@dome.tu.ac.th,examplepass456,CS403,1,2568
+6509650097,สมมติ,ข้อมูล,sample.std@dome.tu.ac.th,samplepass789,CS303,2,2568
