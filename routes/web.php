@@ -16,6 +16,10 @@ use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\CoordinatorUserController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\AdminSubmissionController;
+use App\Http\Controllers\CoordinatorSubmissionController;
+use App\Http\Controllers\StaffSubmissionController;
+use App\Http\Controllers\LecturerSubmissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -173,6 +177,13 @@ Route::middleware('session.timeout')->group(function () {
             Route::post('{project}/release', [CoordinatorController::class, 'releaseGrade'])->name('release');
         });
         
+        // Submissions Management
+        Route::prefix('submissions')->name('submissions.')->group(function () {
+            Route::get('/', [CoordinatorSubmissionController::class, 'index'])->name('index');
+            Route::get('{project_id}', [CoordinatorSubmissionController::class, 'show'])->name('show');
+            Route::get('{project_id}/download', [CoordinatorSubmissionController::class, 'download'])->name('download');
+        });
+        
         Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
     });
     
@@ -206,6 +217,13 @@ Route::middleware('session.timeout')->group(function () {
             Route::post('{project}/confirm', [App\Http\Controllers\LecturerController::class, 'confirmGrade'])->name('confirm');
         });
         
+        // Submissions Management
+        Route::prefix('submissions')->name('submissions.')->group(function () {
+            Route::get('/', [LecturerSubmissionController::class, 'index'])->name('index');
+            Route::get('{project_id}', [LecturerSubmissionController::class, 'show'])->name('show');
+            Route::get('{project_id}/download', [LecturerSubmissionController::class, 'download'])->name('download');
+        });
+        
         // Grade Confirmation
         Route::get('grades/confirmation', [App\Http\Controllers\LecturerController::class, 'gradeConfirmationIndex'])->name('grades.confirmation');
     });
@@ -224,6 +242,13 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('{id}/edit', [SystemSettingsController::class, 'staffExamScheduleEdit'])->name('edit');
             Route::put('{id}', [SystemSettingsController::class, 'staffExamScheduleUpdate'])->name('update');
             Route::delete('{id}', [SystemSettingsController::class, 'staffExamScheduleDestroy'])->name('destroy');
+        });
+        
+        // Submissions Management
+        Route::prefix('submissions')->name('submissions.')->group(function () {
+            Route::get('/', [StaffSubmissionController::class, 'index'])->name('index');
+            Route::get('{project_id}', [StaffSubmissionController::class, 'show'])->name('show');
+            Route::get('{project_id}/download', [StaffSubmissionController::class, 'download'])->name('download');
         });
         
     });
@@ -282,6 +307,13 @@ Route::middleware('session.timeout')->group(function () {
     // Admin Management
     // ======================================
     Route::prefix('admin')->name('admin.')->group(function () {
+        
+        // Submissions Management
+        Route::prefix('submissions')->name('submissions.')->group(function () {
+            Route::get('/', [AdminSubmissionController::class, 'index'])->name('index');
+            Route::get('{project_id}', [AdminSubmissionController::class, 'show'])->name('show');
+            Route::get('{project_id}/download', [AdminSubmissionController::class, 'download'])->name('download');
+        });
         
         // Login Logs Management
         Route::prefix('logs')->name('logs.')->group(function () {

@@ -181,6 +181,14 @@ class MenuController extends Controller
                     'url' => route('staff.exam-schedules'),
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'เล่มโครงงาน',
+                    'description' => 'ดูเล่มโครงงานทั้งหมด',
+                    'icon' => 'bi-file-pdf-fill',
+                    'url' => route('staff.submissions.index'),
+                    'class' => 'success-card',
+                    'btn_class' => 'success-btn'
                 ]
             ]
         ];
@@ -217,6 +225,14 @@ class MenuController extends Controller
                     'url' => route('admin.logs.index'),
                     'class' => 'warning-card',
                     'btn_class' => 'warning-btn'
+                ],
+                [
+                    'title' => 'เล่มโครงงานที่ส่ง',
+                    'description' => 'ดูเล่มโครงงานทั้งหมด',
+                    'icon' => 'bi-file-pdf-fill',
+                    'url' => route('admin.submissions.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
                 ],
                 [
                     'title' => 'ตั้งค่าระบบ',
@@ -279,6 +295,14 @@ class MenuController extends Controller
                     'btn_class' => 'success-btn'
                 ],
                 [
+                    'title' => 'เล่มโครงงานที่ส่ง',
+                    'description' => 'ดูเล่มโครงงานพร้อมสถานะ',
+                    'icon' => 'bi-file-pdf-fill',
+                    'url' => route('coordinator.submissions.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ],
+                [
                     'title' => 'จัดการผู้ใช้และนักศึกษา',
                     'description' => 'นำเข้า/ส่งออกข้อมูลผู้ใช้และนักศึกษา',
                     'icon' => 'bi-person-lines-fill',
@@ -321,6 +345,14 @@ class MenuController extends Controller
                     'url' => route('lecturer.evaluations.index'),
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'เล่มโครงงานที่ส่ง',
+                    'description' => 'ดูเล่มโครงงานของนักศึกษา',
+                    'icon' => 'bi-file-pdf-fill',
+                    'url' => route('lecturer.submissions.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
                 ],
                 [
                     'title' => 'รายงานโครงงาน',
