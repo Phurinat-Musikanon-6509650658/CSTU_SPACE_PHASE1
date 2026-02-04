@@ -47,7 +47,7 @@ Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name(
 // ======================================
 // Student Routes (Protected by student auth)
 // ======================================
-Route::middleware(['auth:student'])->group(function () {
+Route::middleware(['auth:student', 'check.system.status'])->group(function () {
     
     // Student Menu/Dashboard
     Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
@@ -110,7 +110,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Coordinator Routes
     // ======================================
-    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin')->group(function () {
+    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin', 'check.system.status')->group(function () {
         Route::get('/', function() { return view('coordinator.menu'); })->name('menu');
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
@@ -179,7 +179,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Lecturer Routes
     // ======================================
-    Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin')->group(function () {
+    Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin', 'check.system.status')->group(function () {
         // Menu/Dashboard
         Route::get('/', function() { return view('lecturer.menu'); })->name('menu');
         Route::get('/dashboard', [App\Http\Controllers\LecturerController::class, 'dashboard'])->name('dashboard');
@@ -213,7 +213,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Staff Routes (Staff role - Full Exam Schedule Management)
     // ======================================
-    Route::middleware(['role:staff,coordinator,admin'])->prefix('staff')->name('staff.')->group(function () {
+    Route::middleware(['role:staff,coordinator,admin', 'check.system.status'])->prefix('staff')->name('staff.')->group(function () {
         
         // Exam Schedules (Full Management for Staff & Coordinator)
         Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
@@ -302,16 +302,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::put('settings', [SystemSettingsController::class, 'updateSettings'])->name('settings.update');
         });
 
-        // Exam Schedule Management (Admin Only)
-        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
-            Route::get('/', [SystemSettingsController::class, 'examScheduleIndex'])->name('index');
-            Route::get('calendar', [SystemSettingsController::class, 'examScheduleCalendar'])->name('calendar');
-            Route::get('create', [SystemSettingsController::class, 'examScheduleCreate'])->name('create');
-            Route::post('/', [SystemSettingsController::class, 'examScheduleStore'])->name('store');
-            Route::get('{id}/edit', [SystemSettingsController::class, 'examScheduleEdit'])->name('edit');
-            Route::put('{id}', [SystemSettingsController::class, 'examScheduleUpdate'])->name('update');
-            Route::delete('{id}', [SystemSettingsController::class, 'examScheduleDestroy'])->name('destroy');
-        });
+
         
     });
     

@@ -203,14 +203,6 @@ class MenuController extends Controller
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'จัดการตารางสอบ',
-                    'description' => 'จัดการตารางสอบโครงงาน',
-                    'icon' => 'bi-calendar-event-fill',
-                    'url' => route('admin.exam-schedules.index'),
-                    'class' => 'success-card',
-                    'btn_class' => 'success-btn'
-                ],
-                [
                     'title' => 'สถิติการใช้งาน',
                     'description' => 'ดูสถิติการใช้งานระบบ',
                     'icon' => 'bi-graph-up',
