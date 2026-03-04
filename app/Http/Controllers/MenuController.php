@@ -178,7 +178,7 @@ class MenuController extends Controller
                     'title' => 'ตารางสอบโครงงาน',
                     'description' => 'ดูตารางสอบของโครงงานทั้งหมด',
                     'icon' => 'bi-calendar-event-fill',
-                    'url' => route('staff.exam-schedules'),
+                    'url' => route('staff.exam-schedules.index'),
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
                 ],
