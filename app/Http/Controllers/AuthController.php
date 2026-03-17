@@ -38,7 +38,8 @@ class AuthController extends Controller
             $apiKey = env('TU_API_KEY');
             $response = $client->post('https://restapi.tu.ac.th/api/v1/auth/Ad/verify', [
                 'json' => [ 'UserName' => $username, 'PassWord' => $password ],
-                'headers' => [ 'Content-Type' => 'application/json', 'Application-Key' => $apiKey ]
+                'headers' => [ 'Content-Type' => 'application/json', 'Application-Key' => $apiKey ],
+                'timeout' => 5
             ]);
 
             //body http massage --> json (ในส่วน body))
@@ -84,8 +85,17 @@ class AuthController extends Controller
 
             // ถ้า API ไม่ตอบหรือไม่ผ่าน ให้ตรวจสอบจาก DB อย่างเดียว
             return $this->checkLoginInDatabase($username, $password);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            // API ไม่สามารถเชื่อมต่อได้ -> ใช้ DB-only flow
+            \Log::warning('API connection failed, using local database: ' . $e->getMessage());
+            return $this->checkLoginInDatabase($username, $password);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
-            // API ไม่ตอบ -> ใช้ DB-only flow
+            // API request error -> ใช้ DB-only flow
+            \Log::warning('API request failed, using local database: ' . $e->getMessage());
+            return $this->checkLoginInDatabase($username, $password);
+        } catch (\Exception $e) {
+            // Exception อื่นๆ -> ใช้ DB-only flow
+            \Log::warning('Unexpected error during API call, using local database: ' . $e->getMessage());
             return $this->checkLoginInDatabase($username, $password);
         }
     }

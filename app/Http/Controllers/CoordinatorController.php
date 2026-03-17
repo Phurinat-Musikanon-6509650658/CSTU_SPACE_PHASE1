@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\ProjectEvaluation;
 use App\Models\ProjectGrade;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -207,6 +208,101 @@ class CoordinatorController extends Controller
         }
     }
 
+    // หน้าตรวจสอบโครงงาน (Project Review)
+    public function projectsReview(Request $request)
+    {
+        // Allow Staff, Coordinator, and Admin
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+        
+        $query = Project::with([
+            'group.members.student',
+            'advisor',
+            'committee1',
+            'committee2',
+            'committee3',
+            'examSchedule'
+        ]);
+
+        // ฟิลเตอร์ตามสถานะ
+        if ($request->status) {
+            $query->where('status_project', $request->status);
+        }
+
+        // ฟิลเตอร์ตามปีการศึกษา
+        if ($request->year) {
+            $query->whereHas('group', function($q) use ($request) {
+                $q->where('year', $request->year);
+            });
+        }
+
+        // ฟิลเตอร์ตามเทอม
+        if ($request->semester) {
+            $query->whereHas('group', function($q) use ($request) {
+                $q->where('semester', $request->semester);
+            });
+        }
+
+        $projects = $query->orderBy('project_code', 'asc')->paginate(20);
+        $statuses = ['pending', 'in_progress', 'submitted', 'late_submission', 'approved'];
+        $years = [2566, 2567, 2568];
+        $semesters = [1, 2, 3];
+
+        return view('coordinator.projects.review', compact('projects', 'statuses', 'years', 'semesters'));
+    }
+
+    // อัพเดตสถานะโครงงาน (พร้อม logging สำหรับ staff)
+    public function updateProjectReview(Request $request, $projectId)
+    {
+        $request->validate([
+            'status_project' => 'required|in:pending,in_progress,submitted,late_submission,approved,rejected',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            $project = Project::findOrFail($projectId);
+            
+            // บันทึก log เมื่อ staff แก้ไข
+            $user = Auth::guard('web')->user();
+            if ($user && $user->isStaff()) {
+                $log = [
+                    'project_id' => $projectId,
+                    'staff_code' => $user->user_code,
+                    'staff_name' => "{$user->firstname_user} {$user->lastname_user}",
+                    'old_status' => $project->status_project,
+                    'new_status' => $request->status_project,
+                    'notes' => $request->notes,
+                    'changed_at' => now(),
+                ];
+                
+                // บันทึกลง database (activity_log table หรือ project_logs table)
+                DB::table('project_activities')->insertOrIgnore([
+                    'project_id' => $projectId,
+                    'user_code' => $user->user_code,
+                    'action' => 'status_changed',
+                    'old_value' => $project->status_project,
+                    'new_value' => $request->status_project,
+                    'notes' => $request->notes,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                \Log::info('Project status updated by staff', $log);
+            }
+
+            // อัพเดตสถานะโครงงาน
+            $project->update([
+                'status_project' => $request->status_project
+            ]);
+
+            return back()->with('success', 'อัพเดตสถานะโครงงาน: ' . $project->project_code . ' เรียบร้อยแล้ว');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
     // จัดการปีการศึกษาและเทอม
     public function settings()
     {
@@ -305,6 +401,11 @@ class CoordinatorController extends Controller
     
     public function schedulesIndex(Request $request)
     {
+        // Allow Staff, Coordinator, and Admin
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+        
         $query = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3']);
 
         // Filter by semester/year
@@ -336,6 +437,11 @@ class CoordinatorController extends Controller
 
     public function scheduleEdit($projectId)
     {
+        // Allow Staff, Coordinator, and Admin
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+        
         $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3'])
             ->findOrFail($projectId);
         
@@ -346,6 +452,11 @@ class CoordinatorController extends Controller
 
     public function scheduleUpdate(Request $request, $projectId)
     {
+        // Allow Staff, Coordinator, and Admin
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
+            return redirect()->route('menu')->with('error', 'Unauthorized access');
+        }
+        
         $request->validate([
             'exam_datetime' => 'nullable|date',
             'advisor_code' => 'nullable|exists:user,user_code',
@@ -374,6 +485,19 @@ class CoordinatorController extends Controller
             'committee2_code' => $request->committee2_code,
             'committee3_code' => $request->committee3_code,
         ]);
+
+        // Log staff activity changes
+        $user = Auth::guard('web')->user();
+        if ($user && PermissionHelper::isStaff() && ($examDateChanged || $committeeChanged)) {
+            \Log::info('Schedule updated by staff', [
+                'project_id' => $projectId,
+                'staff_code' => $user->user_code,
+                'staff_name' => "{$user->firstname_user} {$user->lastname_user}",
+                'exam_date_changed' => $examDateChanged,
+                'committee_changed' => $committeeChanged,
+                'changed_at' => now(),
+            ]);
+        }
 
         // Set flash notifications
         if ($examDateChanged) {

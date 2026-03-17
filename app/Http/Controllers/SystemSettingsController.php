@@ -310,15 +310,22 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleIndex()
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
-        $examSchedules = ExamSchedule::with('project')
-            ->orderBy('ex_start_time', 'desc')
-            ->paginate(20);
+        $examSchedules = ExamSchedule::with([
+            'project.advisor',
+            'project.committee1',
+            'project.committee2',
+            'project.committee3',
+            'project.group.members.student'
+        ])->orderBy('ex_start_time', 'desc')->paginate(20);
 
-        return view('coordinator.exam-schedules.index', compact('examSchedules'));
+        // Get all lecturers for committee assignment
+        $lecturers = User::where('role', '&', 8192)->orderBy('firstname_user')->get();
+
+        return view('coordinator.exam-schedules.index', compact('examSchedules', 'lecturers'));
     }
 
     /**
@@ -326,7 +333,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleCalendar()
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -369,7 +376,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleCreate()
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -383,7 +390,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleStore(Request $request)
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -433,7 +440,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleEdit($id)
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -448,7 +455,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleUpdate(Request $request, $id)
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
@@ -491,7 +498,7 @@ class SystemSettingsController extends Controller
      */
     public function coordinatorExamScheduleDestroy($id)
     {
-        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin()) {
+        if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return response()->json(['error' => 'Unauthorized access'], 403);
         }
 

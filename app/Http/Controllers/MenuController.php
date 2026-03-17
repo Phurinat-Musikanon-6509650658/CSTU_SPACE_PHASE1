@@ -175,16 +175,24 @@ class MenuController extends Controller
             'title' => 'แดชบอร์ดเจ้าหน้าที่',
             'items' => [
                 [
+                    'title' => 'ตรวจสอบโครงงาน',
+                    'description' => 'ดูสถานะและคณะกรรมการโครงงาน',
+                    'icon' => 'bi-clipboard-check',
+                    'url' => route('coordinator.projects.review'),
+                    'class' => 'danger-card',
+                    'btn_class' => 'danger-btn'
+                ],
+                [
                     'title' => 'ตารางสอบโครงงาน',
-                    'description' => 'ดูตารางสอบของโครงงานทั้งหมด',
+                    'description' => 'ดูและจัดการตารางสอบของโครงงาน',
                     'icon' => 'bi-calendar-event-fill',
-                    'url' => route('staff.exam-schedules.index'),
+                    'url' => route('coordinator.exam-schedules.index'),
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
                 ],
                 [
                     'title' => 'เล่มโครงงาน',
-                    'description' => 'ดูเล่มโครงงานทั้งหมด',
+                    'description' => 'ดูและดาวน์โหลดเล่มโครงงาน',
                     'icon' => 'bi-file-pdf-fill',
                     'url' => route('staff.submissions.index'),
                     'class' => 'success-card',

@@ -81,6 +81,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is staff
+     */
+    public function isStaff(): bool
+    {
+        return ($this->role & 4096) !== 0; // Staff role_code
+    }
+
+    /**
      * Check if user is student
      */
     public function isStudent(): bool
@@ -115,14 +123,6 @@ class User extends Authenticatable
     public function isLecturer(): bool
     {
         return ($this->role & 8192) === 8192;
-    }
-
-    /**
-     * Check if user is Staff (read-only)
-     */
-    public function isStaff(): bool
-    {
-        return ($this->role & 4096) === 4096;
     }
 
     /**

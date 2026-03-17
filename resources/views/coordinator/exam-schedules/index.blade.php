@@ -53,8 +53,7 @@
                                     <th>เวลาเริ่ม</th>
                                     <th>เวลาสิ้นสุด</th>
                                     <th>สถานที่</th>
-                                    <th>ระยะเวลา</th>
-                                    <th>หมายเหตุ</th>
+                                    <th>คณะกรรมการ</th>
                                     <th class="text-center">จัดการ</th>
                                 </tr>
                             </thead>
@@ -83,36 +82,112 @@
                                         </td>
                                         <td>
                                             @php
-                                                $duration = $schedule->ex_start_time->diff($schedule->ex_end_time);
-                                                $hours = $duration->h;
-                                                $minutes = $duration->i;
+                                                $committees = [
+                                                    'advisor' => $schedule->project->advisor,
+                                                    'committee1' => $schedule->project->committee1,
+                                                    'committee2' => $schedule->project->committee2,
+                                                    'committee3' => $schedule->project->committee3
+                                                ];
                                             @endphp
-                                            <span class="badge bg-info">
-                                                @if($hours > 0)
-                                                    {{ $hours }} ชม. 
+                                            <div style="font-size: 0.85rem;">
+                                                @php $count = 0; @endphp
+                                                @forelse($committees as $label => $member)
+                                                    @if($member)
+                                                        <span class="badge bg-primary">{{ $member->user_code }}</span>
+                                                        @php $count++; @endphp
+                                                    @endif
+                                                @empty
+                                                @endforelse
+                                                @if($count == 0)
+                                                    <span class="text-muted">-</span>
                                                 @endif
-                                                {{ $minutes }} นาที
-                                            </span>
+                                            </div>
                                         </td>
-                                        <td>
-                                            @if($schedule->notes)
-                                                {{ Str::limit($schedule->notes, 50) }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
+                                        <td class="text-center" style="white-space: nowrap;">
                                             <a href="{{ route('coordinator.exam-schedules.edit', $schedule->ex_id) }}" class="btn btn-sm btn-warning me-1">
-                                                <i class="bi bi-pencil"></i> แก้ไข
+                                                <i class="bi bi-pencil"></i> เวลา
                                             </a>
+                                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#committeeModal{{ $schedule->project->project_id }}">
+                                                <i class="bi bi-people"></i> คณะ
+                                            </button>
                                             <button class="btn btn-sm btn-danger" onclick="deleteSchedule({{ $schedule->ex_id }})">
                                                 <i class="bi bi-trash"></i> ลบ
                                             </button>
                                         </td>
                                     </tr>
+
+                                    <!-- Committee Edit Modal -->
+                                    <div class="modal fade" id="committeeModal{{ $schedule->project->project_id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="bi bi-people-fill me-2"></i>แก้ไขคณะกรรมการ - {{ $schedule->project->project_code }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form action="{{ route('coordinator.schedules.update', $schedule->project->project_id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><i class="bi bi-star-fill text-warning me-1"></i>อาจารย์ที่ปรึกษา</label>
+                                                            <select name="advisor_code" class="form-select">
+                                                                <option value="">-- เลือก --</option>
+                                                                @foreach($lecturers as $lecturer)
+                                                                    <option value="{{ $lecturer->user_code }}" {{ $schedule->project->advisor?->user_code === $lecturer->user_code ? 'selected' : '' }}>
+                                                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><i class="bi bi-person-fill text-primary me-1"></i>คณะกรรมการที่ 1</label>
+                                                            <select name="committee1_code" class="form-select">
+                                                                <option value="">-- เลือก --</option>
+                                                                @foreach($lecturers as $lecturer)
+                                                                    <option value="{{ $lecturer->user_code }}" {{ $schedule->project->committee1?->user_code === $lecturer->user_code ? 'selected' : '' }}>
+                                                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><i class="bi bi-person-fill text-info me-1"></i>คณะกรรมการที่ 2</label>
+                                                            <select name="committee2_code" class="form-select">
+                                                                <option value="">-- เลือก --</option>
+                                                                @foreach($lecturers as $lecturer)
+                                                                    <option value="{{ $lecturer->user_code }}" {{ $schedule->project->committee2?->user_code === $lecturer->user_code ? 'selected' : '' }}>
+                                                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><i class="bi bi-person-fill text-success me-1"></i>คณะกรรมการที่ 3</label>
+                                                            <select name="committee3_code" class="form-select">
+                                                                <option value="">-- เลือก --</option>
+                                                                @foreach($lecturers as $lecturer)
+                                                                    <option value="{{ $lecturer->user_code }}" {{ $schedule->project->committee3?->user_code === $lecturer->user_code ? 'selected' : '' }}>
+                                                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="bi bi-check-circle me-1"></i>บันทึก
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="7" class="text-center py-4">
                                             <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
                                             <p class="text-muted mt-2">ยังไม่มีตารางสอบ</p>
                                         </td>

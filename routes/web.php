@@ -114,12 +114,12 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Coordinator Routes
     // ======================================
-    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin', 'check.system.status')->group(function () {
+    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin,staff', 'check.system.status')->group(function () {
         Route::get('/', function() { return view('coordinator.menu'); })->name('menu');
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
-        // Exam Schedules Management (Full Access for Coordinator)
-        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
+        // Exam Schedules Management (Full Access for Coordinator & Staff)
+        Route::prefix('exam-schedules')->name('exam-schedules.')->middleware('role:staff,coordinator,admin')->group(function () {
             Route::get('/', [SystemSettingsController::class, 'coordinatorExamScheduleIndex'])->name('index');
             Route::get('calendar', [SystemSettingsController::class, 'coordinatorExamScheduleCalendar'])->name('calendar');
             Route::get('create', [SystemSettingsController::class, 'coordinatorExamScheduleCreate'])->name('create');
@@ -138,6 +138,8 @@ Route::middleware('session.timeout')->group(function () {
         Route::prefix('projects')->name('projects.')->group(function () {
             Route::put('{id}', [CoordinatorController::class, 'updateProject'])->name('update');
             Route::get('export/csv', [CoordinatorController::class, 'exportCsv'])->name('export.csv');
+            Route::get('review', [CoordinatorController::class, 'projectsReview'])->name('review');
+            Route::put('review/{projectId}', [CoordinatorController::class, 'updateProjectReview'])->name('update-review');
         });
         
         Route::prefix('proposals')->name('proposals.')->group(function () {
@@ -161,8 +163,8 @@ Route::middleware('session.timeout')->group(function () {
             Route::post('import', [CoordinatorUserController::class, 'importStudents'])->name('import');
         });
         
-        // Schedule & Committee Assignment
-        Route::prefix('schedules')->name('schedules.')->group(function () {
+        // Schedule & Committee Assignment (Full Access for Coordinator & Staff)
+        Route::prefix('schedules')->name('schedules.')->middleware('role:staff,coordinator,admin')->group(function () {
             Route::get('/', [CoordinatorController::class, 'schedulesIndex'])->name('index');
             Route::get('{project}/edit', [CoordinatorController::class, 'scheduleEdit'])->name('edit');
             Route::put('{project}', [CoordinatorController::class, 'scheduleUpdate'])->name('update');
@@ -229,20 +231,9 @@ Route::middleware('session.timeout')->group(function () {
     });
     
     // ======================================
-    // Staff Routes (Staff role - Full Exam Schedule Management)
+    // Staff Routes (Submissions only)
     // ======================================
     Route::middleware(['role:staff,coordinator,admin', 'check.system.status'])->prefix('staff')->name('staff.')->group(function () {
-        
-        // Exam Schedules (Full Management for Staff & Coordinator)
-        Route::prefix('exam-schedules')->name('exam-schedules.')->group(function () {
-            Route::get('/', [SystemSettingsController::class, 'staffExamScheduleIndex'])->name('index');
-            Route::get('calendar', [SystemSettingsController::class, 'staffExamScheduleCalendar'])->name('calendar');
-            Route::get('create', [SystemSettingsController::class, 'staffExamScheduleCreate'])->name('create');
-            Route::post('/', [SystemSettingsController::class, 'staffExamScheduleStore'])->name('store');
-            Route::get('{id}/edit', [SystemSettingsController::class, 'staffExamScheduleEdit'])->name('edit');
-            Route::put('{id}', [SystemSettingsController::class, 'staffExamScheduleUpdate'])->name('update');
-            Route::delete('{id}', [SystemSettingsController::class, 'staffExamScheduleDestroy'])->name('destroy');
-        });
         
         // Submissions Management
         Route::prefix('submissions')->name('submissions.')->group(function () {
