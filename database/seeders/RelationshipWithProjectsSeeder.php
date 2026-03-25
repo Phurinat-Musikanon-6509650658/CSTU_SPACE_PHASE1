@@ -12,6 +12,9 @@ class RelationshipWithProjectsSeeder extends Seeder
      */
     public function run(): void
     {
+        // Truncate table first to avoid unique constraint issues
+        DB::table('relationship_with_projects')->truncate();
+
         DB::table('relationship_with_projects')->insert([
             [
                 'id' => 1,

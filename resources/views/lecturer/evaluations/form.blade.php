@@ -104,47 +104,107 @@
             <form action="{{ route('lecturer.evaluations.submit', $project->project_id) }}" method="POST" id="evaluationForm">
                 @csrf
 
-                <div class="row">
-                    <!-- Document Score -->
-                    <div class="col-md-6 mb-4">
+                <!-- Student Selection -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
                         <label class="form-label fw-bold">
-                            <i class="bi bi-file-earmark-text text-info me-2"></i>คะแนนรูปเล่ม (เต็ม 30 คะแนน)
+                            <i class="bi bi-person-check text-primary me-2"></i>เลือกนักศึกษา
+                        </label>
+                        <select name="student_id" id="student_id" class="form-select form-select-lg" required>
+                            <option value="">-- เลือกนักศึกษา --</option>
+                            @foreach($project->group->members as $member)
+                                <option value="{{ $member->student->id }}" 
+                                    @if($selectedStudent && $selectedStudent->id == $member->student->id) selected @endif>
+                                    {{ $member->student->firstname_std }} {{ $member->student->lastname_std }}
+                                    ({{ $member->student->student_code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('student_id')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 1: Advisor Only -->
+                @if($role === 'advisor')
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>ส่วนที่ 1 | คะแนนความเข้าใจโครงงาน</strong> - เฉพาะอาจารย์ที่ปรึกษา
+                        </div>
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-book text-primary me-2"></i>คะแนนส่วนที่ 1 (เต็ม 10 คะแนน)
                         </label>
                         <input type="number" 
-                               name="document_score" 
-                               id="document_score"
+                               name="part1_score" 
+                               id="part1_score"
+                               class="form-control score-input" 
+                               min="0" 
+                               max="10" 
+                               step="0.01"
+                               value="{{ $evaluation ? $evaluation->part1_score : 0 }}"
+                               required>
+                        <div class="form-text">
+                            ให้คะแนนตามความเข้าใจโครงงาน (0-10 คะแนน)
+                        </div>
+                        @error('part1_score')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                @endif
+
+                <!-- ส่วนที่ 2-3: Advisor + Committee -->
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>ส่วนที่ 2 และ 3 | คุณภาพของงานนำเสนอ + การนำเสนอโครงงาน</strong> - ทั้ง Advisor และ Committee
+                        </div>
+                    </div>
+
+                    <!-- Part 2 Score -->
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-file-earmark-text text-info me-2"></i>ส่วนที่ 2: คุณภาพของงาน (เต็ม 30 คะแนน)
+                        </label>
+                        <input type="number" 
+                               name="part2_score" 
+                               id="part2_score"
                                class="form-control score-input" 
                                min="0" 
                                max="30" 
                                step="0.01"
-                               value="{{ $evaluation ? $evaluation->document_score : 0 }}"
+                               value="{{ $evaluation ? $evaluation->part2_score : 0 }}"
                                required>
                         <div class="form-text">
                             ให้คะแนนตามคุณภาพของรูปเล่มรายงาน (0-30 คะแนน)
                         </div>
-                        @error('document_score')
+                        @error('part2_score')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Presentation Score -->
+                    <!-- Part 3 Score -->
                     <div class="col-md-6 mb-4">
                         <label class="form-label fw-bold">
-                            <i class="bi bi-megaphone text-warning me-2"></i>คะแนนการนำเสนอ (เต็ม 70 คะแนน)
+                            <i class="bi bi-megaphone text-warning me-2"></i>ส่วนที่ 3: การนำเสนอโครงงาน (เต็ม 60 คะแนน)
                         </label>
                         <input type="number" 
-                               name="presentation_score" 
-                               id="presentation_score"
+                               name="part3_score" 
+                               id="part3_score"
                                class="form-control score-input" 
                                min="0" 
-                               max="70" 
+                               max="60" 
                                step="0.01"
-                               value="{{ $evaluation ? $evaluation->presentation_score : 0 }}"
+                               value="{{ $evaluation ? $evaluation->part3_score : 0 }}"
                                required>
                         <div class="form-text">
-                            ให้คะแนนตามการนำเสนอและการตอบคำถาม (0-70 คะแนน)
+                            ให้คะแนนตามการนำเสนอและการตอบคำถาม (0-60 คะแนน)
                         </div>
-                        @error('presentation_score')
+                        @error('part3_score')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -152,9 +212,15 @@
 
                 <!-- Total Score Display -->
                 <div class="text-center mb-4 p-4 bg-light rounded">
-                    <small class="text-muted d-block mb-2">คะแนนรวม</small>
+                    <small class="text-muted d-block mb-2">คะแนนรวมที่ให้</small>
                     <div class="total-score" id="totalScore">0.00</div>
-                    <small class="text-muted">/ 100 คะแนน</small>
+                    <small class="text-muted">
+                        @if($role === 'advisor')
+                            / 100 คะแนน (ส่วนที่ 1+2+3)
+                        @else
+                            / 90 คะแนน (ส่วนที่ 2+3)
+                        @endif
+                    </small>
                 </div>
 
                 <!-- Comments -->
@@ -185,44 +251,65 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const docScoreInput = document.getElementById('document_score');
-    const presScoreInput = document.getElementById('presentation_score');
+    const part1Input = document.getElementById('part1_score');
+    const part2Input = document.getElementById('part2_score');
+    const part3Input = document.getElementById('part3_score');
     const totalScoreDisplay = document.getElementById('totalScore');
+    const isAdvisor = {{ $role === 'advisor' ? 'true' : 'false' }};
 
     function updateTotalScore() {
-        const docScore = parseFloat(docScoreInput.value) || 0;
-        const presScore = parseFloat(presScoreInput.value) || 0;
-        const total = docScore + presScore;
+        const part1 = (part1Input && parseFloat(part1Input.value)) || 0;
+        const part2 = (part2Input && parseFloat(part2Input.value)) || 0;
+        const part3 = (part3Input && parseFloat(part3Input.value)) || 0;
         
+        const total = part1 + part2 + part3;
         totalScoreDisplay.textContent = total.toFixed(2);
         
         // Change color based on score
-        if (total >= 80) {
-            totalScoreDisplay.style.color = '#28a745'; // Green
-        } else if (total >= 60) {
-            totalScoreDisplay.style.color = '#17a2b8'; // Blue
+        if (total >= 90) {
+            totalScoreDisplay.style.color = '#28a745'; // Green (A)
+        } else if (total >= 85) {
+            totalScoreDisplay.style.color = '#17a2b8'; // Blue (B+)
+        } else if (total >= 80) {
+            totalScoreDisplay.style.color = '#17a2b8'; // Blue (B)
+        } else if (total >= 70) {
+            totalScoreDisplay.style.color = '#ffc107'; // Yellow (C+)
         } else if (total >= 50) {
-            totalScoreDisplay.style.color = '#ffc107'; // Yellow
+            totalScoreDisplay.style.color = '#fd7e14'; // Orange (C/D+/D)
         } else {
-            totalScoreDisplay.style.color = '#dc3545'; // Red
+            totalScoreDisplay.style.color = '#dc3545'; // Red (F)
         }
     }
 
-    docScoreInput.addEventListener('input', updateTotalScore);
-    presScoreInput.addEventListener('input', updateTotalScore);
+    // Add event listeners
+    if (part1Input) part1Input.addEventListener('input', updateTotalScore);
+    if (part2Input) part2Input.addEventListener('input', updateTotalScore);
+    if (part3Input) part3Input.addEventListener('input', updateTotalScore);
 
     // Validate on input
-    docScoreInput.addEventListener('input', function() {
-        const value = parseFloat(this.value);
-        if (value < 0) this.value = 0;
-        if (value > 30) this.value = 30;
-    });
+    if (part1Input) {
+        part1Input.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value < 0) this.value = 0;
+            if (value > 10) this.value = 10;
+        });
+    }
 
-    presScoreInput.addEventListener('input', function() {
-        const value = parseFloat(this.value);
-        if (value < 0) this.value = 0;
-        if (value > 70) this.value = 70;
-    });
+    if (part2Input) {
+        part2Input.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value < 0) this.value = 0;
+            if (value > 30) this.value = 30;
+        });
+    }
+
+    if (part3Input) {
+        part3Input.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value < 0) this.value = 0;
+            if (value > 60) this.value = 60;
+        });
+    }
 
     // Initial calculation
     updateTotalScore();

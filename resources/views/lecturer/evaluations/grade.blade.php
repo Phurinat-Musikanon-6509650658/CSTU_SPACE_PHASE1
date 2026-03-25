@@ -148,8 +148,9 @@
                                 <thead style="background-color: #f8f9fa;">
                                     <tr>
                                         <th>ผู้ประเมิน</th>
-                                        <th class="text-center">รูปเล่ม</th>
-                                        <th class="text-center">พรีเซนต์</th>
+                                        <th class="text-center">ส่วน 1</th>
+                                        <th class="text-center">ส่วน 2</th>
+                                        <th class="text-center">ส่วน 3</th>
                                         <th class="text-center">รวม</th>
                                     </tr>
                                 </thead>
@@ -166,8 +167,15 @@
                                                     <span class="badge bg-info text-white">คุณ</span>
                                                 @endif
                                             </td>
-                                            <td class="text-center">{{ number_format($evaluation->document_score, 2) }}</td>
-                                            <td class="text-center">{{ number_format($evaluation->presentation_score, 2) }}</td>
+                                            <td class="text-center">
+                                                @if($evalRole === 'advisor')
+                                                    {{ number_format($evaluation->part1_score, 2) }}
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">{{ number_format($evaluation->part2_score, 2) }}</td>
+                                            <td class="text-center">{{ number_format($evaluation->part3_score, 2) }}</td>
                                             <td class="text-center"><strong>{{ number_format($evaluation->total_score, 2) }}</strong></td>
                                         </tr>
                                     @endforeach
@@ -175,8 +183,16 @@
                                 <tfoot style="background-color: #f8f9fa;">
                                     <tr>
                                         <td><strong>เฉลี่ย:</strong></td>
-                                        <td class="text-center"><strong>{{ number_format($project->evaluations->avg('document_score'), 2) }}</strong></td>
-                                        <td class="text-center"><strong>{{ number_format($project->evaluations->avg('presentation_score'), 2) }}</strong></td>
+                                        <td class="text-center">
+                                            <strong>
+                                                @php
+                                                    $advisorEval = $project->evaluations->where('evaluator_role', 'advisor')->first();
+                                                    echo $advisorEval ? number_format($advisorEval->part1_score, 2) : '-';
+                                                @endphp
+                                            </strong>
+                                        </td>
+                                        <td class="text-center"><strong>{{ number_format($project->evaluations->avg('part2_score'), 2) }}</strong></td>
+                                        <td class="text-center"><strong>{{ number_format($project->evaluations->avg('part3_score'), 2) }}</strong></td>
                                         <td class="text-center"><strong class="text-success">{{ number_format($project->evaluations->avg('total_score'), 2) }}</strong></td>
                                     </tr>
                                 </tfoot>

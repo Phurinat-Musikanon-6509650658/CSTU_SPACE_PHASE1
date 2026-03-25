@@ -52,17 +52,81 @@ class ProjectGrade extends Model
         return $this->belongsTo(Project::class, 'project_id', 'project_id');
     }
 
-    // Helper: คำนวณเกรดจากคะแนน
+    // Helper: คำนวณเกรดจากคะแนน (ตามเกณฑ์ใหม่)
     public static function calculateGrade($score)
     {
-        if ($score >= 80) return 'A';
-        if ($score >= 75) return 'B+';
-        if ($score >= 70) return 'B';
-        if ($score >= 65) return 'C+';
-        if ($score >= 60) return 'C';
-        if ($score >= 55) return 'D+';
-        if ($score >= 50) return 'D';
-        return 'F';
+        if ($score >= 90) return 'A';      // 90-100
+        if ($score >= 85) return 'B+';     // 85-89
+        if ($score >= 80) return 'B';      // 80-84
+        if ($score >= 70) return 'C+';     // 70-79
+        if ($score >= 60) return 'C';      // 60-69
+        if ($score >= 55) return 'D+';     // 55-59
+        if ($score >= 50) return 'D';      // 50-54
+        return 'F';                         // 0-49
+    }
+
+    // Calculator: คำนวณ final score จาก evaluations
+    // ส่วน 1: 10 คะแนน (advisor เท่านั้น)
+    // ส่วน 2-3: 90 คะแนน (advisor + committee, หาค่าเฉลี่ย)
+    public function calculateFinalScore()
+    {
+        $project = $this->project;
+        
+        // Get all evaluations for this project
+        $evaluations = ProjectEvaluation::where('project_id', $this->project_id)
+            ->orWhere('submitted_at', '!=', null)
+            ->get();
+
+        if ($evaluations->isEmpty()) {
+            return 0;
+        }
+
+        $advisorEval = $evaluations->where('evaluator_role', 'advisor')->first();
+        $committeeEvals = $evaluations->whereIn('evaluator_role', ['committee1', 'committee2', 'committee3']);
+
+        $part1Score = 0;
+        $part23Sum = 0;
+        $part23Count = 0;
+
+        // Part 1: From advisor only (10 points)
+        if ($advisorEval) {
+            $part1Score = $advisorEval->part1_score ?? 0;
+        }
+
+        // Part 2+3: Average from advisor + all committees (90 points)
+        if ($advisorEval) {
+            $part23Sum += ($advisorEval->part2_score ?? 0) + ($advisorEval->part3_score ?? 0);
+            $part23Count++;
+        }
+
+        foreach ($committeeEvals as $eval) {
+            $part23Sum += ($eval->part2_score ?? 0) + ($eval->part3_score ?? 0);
+            $part23Count++;
+        }
+
+        $part23Average = $part23Count > 0 ? ($part23Sum / $part23Count) : 0;
+
+        // Final score = part1 + average(part2+3)
+        return $part1Score + $part23Average;
+    }
+
+    // Helper: ตรวจสอบว่า committee ให้คะแนนครบหรือยัง
+    public function allCommitteesSubmitted()
+    {
+        $project = $this->project;
+        $requiredRoles = ['advisor'];
+        
+        if ($project->committee1_code) $requiredRoles[] = 'committee1';
+        if ($project->committee2_code) $requiredRoles[] = 'committee2';
+        if ($project->committee3_code) $requiredRoles[] = 'committee3';
+        
+        // Check if all required roles have submitted evaluations
+        $submittedRoles = ProjectEvaluation::where('project_id', $this->project_id)
+            ->whereNotNull('submitted_at')
+            ->pluck('evaluator_role')
+            ->toArray();
+        
+        return count(array_intersect($requiredRoles, $submittedRoles)) === count($requiredRoles);
     }
 
     // Helper: ตรวจสอบว่ายืนยันครบหรือยัง
@@ -77,12 +141,12 @@ class ProjectGrade extends Model
         if ($project->committee3_code) $required[] = 'committee3';
         
         $confirmed = [];
-        if ($this->advisor_confirmed && in_array('advisor', $required)) $confirmed[] = 'advisor';
-        if ($this->committee1_confirmed && in_array('committee1', $required)) $confirmed[] = 'committee1';
-        if ($this->committee2_confirmed && in_array('committee2', $required)) $confirmed[] = 'committee2';
-        if ($this->committee3_confirmed && in_array('committee3', $required)) $confirmed[] = 'committee3';
+        if ($this->advisor_confirmed) $confirmed[] = 'advisor';
+        if ($this->committee1_confirmed) $confirmed[] = 'committee1';
+        if ($this->committee2_confirmed) $confirmed[] = 'committee2';
+        if ($this->committee3_confirmed) $confirmed[] = 'committee3';
         
-        return count($required) === count($confirmed);
+        return count($required) === count($confirmed) && count($required) > 0;
     }
 
     // Auto-update all_confirmed when saving

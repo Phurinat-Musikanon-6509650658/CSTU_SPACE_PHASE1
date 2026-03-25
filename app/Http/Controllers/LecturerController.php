@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\ProjectEvaluation;
 use App\Models\ProjectGrade;
+use App\Models\StudentGrade;
 use App\Models\ProjectProposal;
+use App\Models\GroupMember;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -176,7 +178,7 @@ class LecturerController extends Controller
     /**
      * แสดงฟอร์มให้คะแนน
      */
-    public function evaluateForm($projectId)
+    public function evaluateForm(Request $request, $projectId)
     {
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
@@ -201,13 +203,25 @@ class LecturerController extends Controller
                 ->with('error', 'คุณไม่มีสิทธิ์ประเมินโครงงานนี้');
         }
 
-        // ดึงคะแนนเดิม (ถ้ามี)
-        $evaluation = ProjectEvaluation::where('project_id', $projectId)
-            ->where('evaluator_code', $userCode)
-            ->where('evaluator_role', $role)
-            ->first();
+        // ดึงนักศึกษาที่เลือก
+        $selectedStudent = null;
+        if ($request->query('student_id')) {
+            $selectedStudent = \App\Models\Student::findOrFail($request->query('student_id'));
+        } elseif ($project->group->members->count() > 0) {
+            $selectedStudent = $project->group->members->first()->student;
+        }
 
-        return view('lecturer.evaluations.form', compact('project', 'role', 'evaluation'));
+        // ดึงคะแนนเดิม (ถ้ามี) สำหรับนักศึกษาที่เลือก
+        $evaluation = null;
+        if ($selectedStudent) {
+            $evaluation = ProjectEvaluation::where('project_id', $projectId)
+                ->where('student_id', $selectedStudent->student_id)
+                ->where('evaluator_code', $userCode)
+                ->where('evaluator_role', $role)
+                ->first();
+        }
+
+        return view('lecturer.evaluations.form', compact('project', 'role', 'evaluation', 'selectedStudent'));
     }
 
     /**
@@ -215,21 +229,24 @@ class LecturerController extends Controller
      */
     public function submitEvaluation(Request $request, $projectId)
     {
-        $request->validate([
-            'document_score' => 'required|numeric|min:0|max:30',
-            'presentation_score' => 'required|numeric|min:0|max:70',
+        // Advisor: part1 (0-10) + part2 (0-30) + part3 (0-60)
+        // Committee: part2 (0-30) + part3 (0-60)
+        $rules = [
+            'student_id' => 'required|integer',
+            'part2_score' => 'required|numeric|min:0|max:30',
+            'part3_score' => 'required|numeric|min:0|max:60',
             'comments' => 'nullable|string|max:1000'
-        ]);
+        ];
 
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
-
         $project = Project::findOrFail($projectId);
 
         // ตรวจสอบสิทธิ์
         $role = null;
         if ($project->advisor_code === $userCode) {
             $role = 'advisor';
+            $rules['part1_score'] = 'required|numeric|min:0|max:10'; // Advisor only
         } elseif ($project->committee1_code === $userCode) {
             $role = 'committee1';
         } elseif ($project->committee2_code === $userCode) {
@@ -243,22 +260,34 @@ class LecturerController extends Controller
                 ->with('error', 'คุณไม่มีสิทธิ์ประเมินโครงงานนี้');
         }
 
-        // บันทึกคะแนน (update or create)
+        $request->validate($rules);
+
+        $studentId = $request->student_id;
+
+        // บันทึกคะแนนต่อนักศึกษา (update or create)
+        $evalData = [
+            'part2_score' => $request->part2_score,
+            'part3_score' => $request->part3_score,
+            'comments' => $request->comments,
+            'submitted_at' => now()
+        ];
+
+        // Advisor ยังต้องส่ง part1
+        if ($role === 'advisor') {
+            $evalData['part1_score'] = $request->part1_score;
+        }
+
         ProjectEvaluation::updateOrCreate(
             [
                 'project_id' => $projectId,
+                'student_id' => $studentId,
                 'evaluator_code' => $userCode,
                 'evaluator_role' => $role
             ],
-            [
-                'document_score' => $request->document_score,
-                'presentation_score' => $request->presentation_score,
-                'comments' => $request->comments,
-                'submitted_at' => now()
-            ]
+            $evalData
         );
 
-        // คำนวณเกรด (ถ้ามีคะแนนครบ)
+        // คำนวณเกรดถ้าคนครบแล้ว
         $this->calculateGradeIfReady($project);
 
         return redirect()->route('lecturer.evaluations.index')
@@ -420,31 +449,68 @@ class LecturerController extends Controller
     }
 
     /**
-     * คำนวณเกรดถ้ามีคะแนนครบ
+     * คำนวณเกรดต่อนักศึกษา ถ้ามีคะแนนครบ
      */
     private function calculateGradeIfReady(Project $project)
     {
-        $expectedCount = 0;
-        if ($project->advisor_code) $expectedCount++;
-        if ($project->committee1_code) $expectedCount++;
-        if ($project->committee2_code) $expectedCount++;
-        if ($project->committee3_code) $expectedCount++;
+        // นับจำนวนที่ต้องให้คะแนน
+        $requiredRoles = ['advisor'];
+        if ($project->committee1_code) $requiredRoles[] = 'committee1';
+        if ($project->committee2_code) $requiredRoles[] = 'committee2';
+        if ($project->committee3_code) $requiredRoles[] = 'committee3';
 
-        $evaluationsCount = ProjectEvaluation::where('project_id', $project->project_id)->count();
+        // ได้นักศึกษาทั้งหมดในโครงงาน
+        $groupMembers = GroupMember::where('group_id', $project->group_id)->pluck('student_id');
 
-        if ($evaluationsCount >= $expectedCount && $expectedCount > 0) {
-            // คำนวณคะแนนเฉลี่ย
-            $avgScore = ProjectEvaluation::where('project_id', $project->project_id)->avg('total_score');
-            $grade = ProjectGrade::calculateGrade($avgScore);
+        // สำหรับแต่ละนักศึกษา
+        foreach ($groupMembers as $studentId) {
+            // ตรวจสอบว่าคนที่ต้องส่งครบแล้วหรือสำหรับนักศึกษาคนนี้
+            $submittedRoles = ProjectEvaluation::where('project_id', $project->project_id)
+                ->where('student_id', $studentId)
+                ->whereNotNull('submitted_at')
+                ->pluck('evaluator_role')
+                ->toArray();
 
-            // สร้างหรืออัพเดทเกรด
-            ProjectGrade::updateOrCreate(
-                ['project_id' => $project->project_id],
-                [
-                    'final_score' => $avgScore,
-                    'grade' => $grade
-                ]
-            );
+            // ถ้าครบแล้ว ให้คำนวณเกรด
+            if (count(array_intersect($requiredRoles, $submittedRoles)) === count($requiredRoles)) {
+                $studentGrade = StudentGrade::firstOrCreate([
+                    'project_id' => $project->project_id,
+                    'student_id' => $studentId
+                ]);
+
+                // คำนวณ final score
+                $advisorEval = ProjectEvaluation::where('project_id', $project->project_id)
+                    ->where('student_id', $studentId)
+                    ->where('evaluator_role', 'advisor')
+                    ->first();
+
+                $part1 = $advisorEval->part1_score ?? 0;
+
+                // หาค่าเฉลี่ยของ part2 + part3 จากทุก committee
+                $part2Scores = ProjectEvaluation::where('project_id', $project->project_id)
+                    ->where('student_id', $studentId)
+                    ->whereIn('evaluator_role', ['advisor', 'committee1', 'committee2', 'committee3'])
+                    ->pluck('part2_score')
+                    ->filter(fn($s) => $s !== null);
+
+                $part3Scores = ProjectEvaluation::where('project_id', $project->project_id)
+                    ->where('student_id', $studentId)
+                    ->whereIn('evaluator_role', ['advisor', 'committee1', 'committee2', 'committee3'])
+                    ->pluck('part3_score')
+                    ->filter(fn($s) => $s !== null);
+
+                $part2Avg = $part2Scores->count() > 0 ? $part2Scores->avg() : 0;
+                $part3Avg = $part3Scores->count() > 0 ? $part3Scores->avg() : 0;
+
+                $finalScore = $part1 + $part2Avg + $part3Avg;
+                $gradeTitle = StudentGrade::calculateGrade($finalScore);
+
+                // อัพเดตเกรด
+                $studentGrade->update([
+                    'final_score' => $finalScore,
+                    'grade' => $gradeTitle
+                ]);
+            }
         }
     }
 }
