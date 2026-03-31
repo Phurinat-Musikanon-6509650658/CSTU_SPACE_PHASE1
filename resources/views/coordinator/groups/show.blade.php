@@ -407,7 +407,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('coordinator.projects.update', $group->group_id) }}" method="POST">
+            <form action="{{ route('coordinator.projects.update', $group->project->project_id) }}" method="POST">
                 @csrf
                 @method('PUT')
 

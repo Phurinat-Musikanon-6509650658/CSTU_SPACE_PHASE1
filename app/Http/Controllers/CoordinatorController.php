@@ -442,8 +442,10 @@ class CoordinatorController extends Controller
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
         
+        // Force fresh load from database to ensure latest updates are shown
         $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3'])
-            ->findOrFail($projectId);
+            ->findOrFail($projectId)
+            ->refresh();
         
         $lecturers = User::where('role', '&', 8192)->orderBy('firstname_user')->get();
 

@@ -111,10 +111,9 @@
                             <i class="bi bi-person-check text-primary me-2"></i>เลือกนักศึกษา
                         </label>
                         <select name="student_id" id="student_id" class="form-select form-select-lg" required>
-                            <option value="">-- เลือกนักศึกษา --</option>
                             @foreach($project->group->members as $member)
-                                <option value="{{ $member->student->id }}" 
-                                    @if($selectedStudent && $selectedStudent->id == $member->student->id) selected @endif>
+                                <option value="{{ $member->student->student_id }}" 
+                                    @if($selectedStudent && $selectedStudent->student_id == $member->student->student_id) selected @endif>
                                     {{ $member->student->firstname_std }} {{ $member->student->lastname_std }}
                                     ({{ $member->student->student_code }})
                                 </option>
@@ -132,7 +131,7 @@
                     <div class="col-md-12 mb-4">
                         <div class="alert alert-info" role="alert">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>ส่วนที่ 1 | คะแนนความเข้าใจโครงงาน</strong> - เฉพาะอาจารย์ที่ปรึกษา
+                            <strong>ส่วนที่ 1 | คะแนนความก้าวหน้าของโครงงาน</strong> - เฉพาะอาจารย์ที่ปรึกษา
                         </div>
                         <label class="form-label fw-bold">
                             <i class="bi bi-book text-primary me-2"></i>คะแนนส่วนที่ 1 (เต็ม 10 คะแนน)
@@ -313,6 +312,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial calculation
     updateTotalScore();
+
+    // Add event listener for student selection change
+    const studentSelect = document.getElementById('student_id');
+    if (studentSelect) {
+        studentSelect.addEventListener('change', function() {
+            if (this.value) {
+                // Reload form with selected student_id as query parameter
+                window.location.href = `{{ route('lecturer.evaluations.form', $project->project_id) }}?student_id=${this.value}`;
+            }
+        });
+    }
 });
 </script>
 @endpush
