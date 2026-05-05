@@ -165,6 +165,13 @@
         </div>
     </div>
 
+    @if($subjectLockMessage ?? null)
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+            <i class="bi bi-lock-fill fs-5"></i>
+            <div><strong>ไม่สามารถบันทึกคะแนนได้:</strong> {{ $subjectLockMessage }}</div>
+        </div>
+    @endif
+
     <!-- Evaluation Form -->
     <div class="card">
         <div class="card-header text-white" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
@@ -315,8 +322,12 @@
                 </div>
 
                 <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-save me-2"></i>{{ $evaluation ? 'บันทึกการแก้ไข' : 'บันทึกคะแนน' }}
+                    @php
+                        $isLocked = ($subjectLockMessage ?? null) !== null;
+                    @endphp
+                    <button type="submit" class="btn btn-success btn-lg" {{ $isLocked ? 'disabled' : '' }}>
+                        <i class="bi bi-{{ $isLocked ? 'lock' : 'save' }} me-2"></i>
+                        {{ $isLocked ? 'ปิดการบันทึกคะแนน' : ($evaluation ? 'บันทึกการแก้ไข' : 'บันทึกคะแนน') }}
                     </button>
                 </div>
             </form>

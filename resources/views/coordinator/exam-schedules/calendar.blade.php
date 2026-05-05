@@ -26,24 +26,25 @@
 
 @section('content')
 <div class="container-fluid">
+    <div id="toast-container" style="position:fixed;top:1.25rem;right:1.25rem;z-index:9999;min-width:280px;"></div>
+
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="page-title">
-                        <i class="bi bi-calendar3 me-2"></i>ปฏิทินตารางสอบ
-                    </h2>
-                    <p class="text-muted">แสดงตารางสอบทั้งหมดในรูปแบบปฏิทิน</p>
-                </div>
-                <div>
-                    <a href="{{ route('coordinator.exam-schedules.create') }}" class="btn btn-primary me-2">
-                        <i class="bi bi-plus-circle me-2"></i>เพิ่มตารางสอบ
-                    </a>
-                    <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-list-ul me-2"></i>มุมมองรายการ
-                    </a>
-                </div>
+    <div class="mb-4">
+        <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-link text-decoration-none ps-0">
+            <i class="bi bi-chevron-left me-1"></i>กลับรายการตารางสอบ
+        </a>
+        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+            <div>
+                <h1 class="h2 fw-bold mb-0"><i class="bi bi-calendar3 me-2 text-success"></i>ปฏิทินตารางสอบ</h1>
+                <p class="text-muted mb-0">แสดงตารางสอบในรูปแบบ Timeline</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.exam-schedules.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>เพิ่มตารางสอบ
+                </a>
+                <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list-ul me-1"></i>มุมมองรายการ
+                </a>
             </div>
         </div>
     </div>
@@ -292,33 +293,36 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Delete exam schedule
     document.querySelectorAll('.delete-schedule').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', async function() {
             const scheduleId = this.dataset.id;
             const projectName = this.dataset.project;
-            
-            if (confirm(`คุณแน่ใจหรือไม่ที่จะลบตารางสอบของ "${projectName}"?`)) {
-                fetch(`{{ url('coordinator/exam-schedules') }}/${scheduleId}`, {
+            if (!confirm(`ลบตารางสอบของ "${projectName}" ใช่หรือไม่?`)) return;
+            try {
+                const res = await fetch(`{{ url('coordinator/exam-schedules') }}/${scheduleId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('ไม่สามารถลบตารางสอบได้');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('เกิดข้อผิดพลาดในการลบตารางสอบ');
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
+                const data = await res.json();
+                showToast(data.success ? 'success' : 'danger', data.message ?? 'เกิดข้อผิดพลาด');
+                if (data.success) setTimeout(() => location.reload(), 1200);
+            } catch {
+                showToast('danger', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
             }
         });
     });
+
+    function showToast(type, message) {
+        const icons = { success: 'check-circle-fill', danger: 'x-circle-fill' };
+        const el = document.createElement('div');
+        el.className = `toast align-items-center text-bg-${type} border-0 mb-2`;
+        el.setAttribute('role', 'alert');
+        el.style.borderRadius = '10px';
+        el.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="bi bi-${icons[type]??'info-circle'} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        document.getElementById('toast-container').appendChild(el);
+        const t = new bootstrap.Toast(el, { delay: 3000 });
+        t.show();
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+    }
 });
 </script>
 @endsection

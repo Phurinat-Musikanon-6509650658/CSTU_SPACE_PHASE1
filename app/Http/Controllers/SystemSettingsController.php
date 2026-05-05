@@ -380,7 +380,7 @@ class SystemSettingsController extends Controller
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
 
-        $projects = Project::orderBy('project_id', 'desc')->get();
+        $projects = Project::with('examSchedule')->orderBy('project_id', 'desc')->get();
 
         return view('coordinator.exam-schedules.create', compact('projects'));
     }
@@ -490,7 +490,7 @@ class SystemSettingsController extends Controller
             ->update(['exam_datetime' => $request->ex_start_time]);
 
         return redirect()->route('coordinator.exam-schedules.index')
-            ->with('success', 'Exam schedule updated successfully');
+            ->with('success', 'อัปเดตตารางสอบสำเร็จ');
     }
 
     /**
@@ -509,12 +509,6 @@ class SystemSettingsController extends Controller
             ->where('project_id', $examSchedule->project_id)
             ->update(['exam_datetime' => null]);
         
-        $examSchedule->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'ลบตารางสอบสำเร็จ'
-        ]);
         $examSchedule->delete();
 
         return response()->json([

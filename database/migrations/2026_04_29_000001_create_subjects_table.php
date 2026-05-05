@@ -24,20 +24,29 @@ return new class extends Migration
             $table->integer('year'); // เช่น 2568
             
             // สถานะ
-            $table->boolean('is_enabled')->default(true); // เปิด/ปิดใช้งาน
-            
-            // ช่วงเวลาเปิด-ปิด
-            $table->dateTime('open_date'); // วันเริ่มเปิด
-            $table->dateTime('close_date'); // วันสิ้นสุด
-            
+            $table->boolean('is_enabled')->default(true);
+
+            // ช่วงเวลาเปิด-ปิดรายวิชาโดยรวม
+            $table->dateTime('open_date')->nullable();
+            $table->dateTime('close_date')->nullable();
+
+            // ช่วงเวลาเข้าใช้งานระบบ (นักศึกษา/ผู้ใช้ นอกจาก admin ถ้าปิดจะ lock)
+            $table->dateTime('access_open_date')->nullable();
+            $table->dateTime('access_close_date')->nullable();
+
+            // ช่วงเวลาประเมินคะแนน (อาจารย์ส่งคะแนนได้ในช่วงนี้)
+            $table->dateTime('evaluation_open_date')->nullable();
+            $table->dateTime('evaluation_close_date')->nullable();
+
+            // ช่วงเวลาแก้ไขคะแนน (เมื่อเกินกำหนดจะไม่สามารถแก้ไขได้)
+            $table->dateTime('grade_edit_open_date')->nullable();
+            $table->dateTime('grade_edit_close_date')->nullable();
+
             $table->timestamps();
-            
-            // Indexes
+
             $table->index('subject_code');
             $table->index(['semester', 'year']);
             $table->index('is_enabled');
-            $table->index('open_date');
-            $table->index('close_date');
         });
     }
 

@@ -9,6 +9,8 @@ use App\Models\ProjectGrade;
 use App\Models\StudentGrade;
 use App\Models\ProjectProposal;
 use App\Models\GroupMember;
+use App\Models\Subject;
+use App\Helpers\SubjectTimingHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -209,7 +211,23 @@ class LecturerController extends Controller
             ->where('evaluator_role', $role)
             ->first();
 
-        return view('lecturer.evaluations.form', compact('project', 'role', 'evaluation'));
+        // ตรวจสอบช่วงเวลาประเมิน/แก้ไขคะแนนจาก Subject
+        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')->first();
+        $canSubmitNew = !$subject || $subject->canEvaluateNow();
+        $canEditGrade = !$subject || $subject->canEditGradeNow();
+        $subjectLockMessage = null;
+        if ($subject) {
+            if (!$evaluation && !$canSubmitNew) {
+                $subjectLockMessage = SubjectTimingHelper::getEvaluationLockMessage($subject);
+            } elseif ($evaluation && !$canEditGrade) {
+                $subjectLockMessage = SubjectTimingHelper::getGradeEditLockMessage($subject);
+            }
+        }
+
+        return view('lecturer.evaluations.form', compact(
+            'project', 'role', 'evaluation',
+            'canSubmitNew', 'canEditGrade', 'subjectLockMessage'
+        ));
     }
 
     /**
@@ -219,7 +237,7 @@ class LecturerController extends Controller
     {
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
-        $project = Project::with('group.members.student')->findOrFail($projectId);
+        $project = Project::with(['group.members.student', 'evaluations'])->findOrFail($projectId);
 
         // ตรวจสอบสิทธิ์
         $role = null;
@@ -236,6 +254,23 @@ class LecturerController extends Controller
         if (!$role) {
             return redirect()->route('lecturer.evaluations.index')
                 ->with('error', 'คุณไม่มีสิทธิ์ประเมินโครงงานนี้');
+        }
+
+        // ตรวจสอบช่วงเวลาจาก Subject
+        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')->first();
+        if ($subject) {
+            $existingEval = $project->evaluations
+                ->where('evaluator_code', $userCode)
+                ->where('evaluator_role', $role)
+                ->first();
+            if ($existingEval && !$subject->canEditGradeNow()) {
+                return redirect()->back()
+                    ->with('error', SubjectTimingHelper::getGradeEditLockMessage($subject) ?? 'ปิดการแก้ไขคะแนนแล้ว');
+            }
+            if (!$existingEval && !$subject->canEvaluateNow()) {
+                return redirect()->back()
+                    ->with('error', SubjectTimingHelper::getEvaluationLockMessage($subject) ?? 'ปิดการประเมินคะแนนแล้ว');
+            }
         }
 
         // ตรวจสอบ validation สำหรับ 2 นักศึกษา
@@ -531,6 +566,29 @@ class LecturerController extends Controller
                     'grade' => $gradeTitle
                 ]);
             }
+        }
+
+        // ถ้านักศึกษาทุกคนในกลุ่มมีเกรดแล้ว → สร้าง/อัพเดต ProjectGrade ให้ coordinator เห็น
+        $gradedCount = StudentGrade::where('project_id', $project->project_id)
+            ->whereNotNull('final_score')
+            ->whereNotNull('grade')
+            ->count();
+
+        if ($groupMembers->count() > 0 && $gradedCount >= $groupMembers->count()) {
+            $allStudentGrades = StudentGrade::where('project_id', $project->project_id)
+                ->whereNotNull('final_score')
+                ->get();
+
+            $avgScore  = round($allStudentGrades->avg('final_score'), 2);
+            $gradeTitle = ProjectGrade::calculateGrade($avgScore);
+
+            ProjectGrade::updateOrCreate(
+                ['project_id' => $project->project_id],
+                [
+                    'final_score' => $avgScore,
+                    'grade'       => $gradeTitle,
+                ]
+            );
         }
     }
 }

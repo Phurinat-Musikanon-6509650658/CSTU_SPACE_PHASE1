@@ -129,6 +129,17 @@
         if ($project->committee2_code) $activeRoles[] = 'committee2';
         if ($project->committee3_code) $activeRoles[] = 'committee3';
 
+        // ตรวจสอบว่าแต่ละนักศึกษาได้รับคะแนนครบจากทุก evaluator หรือยัง
+        $studentComplete = [];
+        foreach ($students as $idx => $student) {
+            $submitted = $project->evaluations
+                ->where('student_id', $student->student_id)
+                ->pluck('evaluator_role')->unique()->values()->toArray();
+            $studentComplete[$idx] = count($activeRoles) > 0
+                && count(array_intersect($activeRoles, $submitted)) === count($activeRoles);
+        }
+        $allComplete = count($students) > 0 && !in_array(false, $studentComplete, true);
+
         // Evaluation matrix: [student_idx][role] = evaluation record
         $evalMatrix = [];
         foreach ($students as $idx => $student) {
@@ -187,6 +198,33 @@
             <i class="bi bi-clipboard-data me-2 text-primary"></i>คะแนนประเมินโครงงาน
         </h1>
     </div>
+
+    {{-- Status banner --}}
+    @if($allComplete)
+        <div class="alert alert-success d-flex align-items-center gap-3 rounded-3 mb-4">
+            <i class="bi bi-check-circle-fill fs-4"></i>
+            <div>
+                <strong>คะแนนสมบูรณ์</strong> — ผู้ประเมินทุกคน ({{ count($activeRoles) }} คน) ส่งคะแนนครบแล้ว
+                คะแนนเฉลี่ยและเกรดด้านล่างคือคะแนนจริง
+            </div>
+        </div>
+    @elseif($project->evaluations->count() > 0)
+        @php
+            $doneCount = $project->evaluations->pluck('evaluator_role')->unique()->count();
+        @endphp
+        <div class="alert alert-warning d-flex align-items-center gap-3 rounded-3 mb-4">
+            <i class="bi bi-hourglass-split fs-4"></i>
+            <div>
+                <strong>รอคะแนนเพิ่มเติม</strong> — ส่งคะแนนแล้ว {{ $doneCount }} / {{ count($activeRoles) }} คน
+                คะแนนที่แสดงเป็นค่าประมาณเบื้องต้น
+            </div>
+        </div>
+    @else
+        <div class="alert alert-secondary d-flex align-items-center gap-3 rounded-3 mb-4">
+            <i class="bi bi-clock fs-4"></i>
+            <div><strong>ยังไม่มีคะแนน</strong> — รอให้อาจารย์และคณะกรรมการส่งคะแนน</div>
+        </div>
+    @endif
 
     <!-- Project Info -->
     <div class="card mb-4">
@@ -441,13 +479,23 @@
                 </div>
 
                 {{-- Per-student summary bar --}}
-                @php $fs = $studentSummary[$idx]['final']; @endphp
-                @php $expectedGrade = \App\Models\ProjectGrade::calculateGrade($fs); @endphp
                 @php
-                    $gradeColors = ['A'=>'success','B+'=>'info','B'=>'info','C+'=>'warning','C'=>'warning','D+'=>'danger','D'=>'danger','F'=>'danger'];
-                    $gc = $gradeColors[$expectedGrade] ?? 'secondary';
+                    $fs            = $studentSummary[$idx]['final'];
+                    $expectedGrade = \App\Models\ProjectGrade::calculateGrade($fs);
+                    $gradeColors   = ['A'=>'success','B+'=>'info','B'=>'info','C+'=>'warning','C'=>'warning','D+'=>'danger','D'=>'danger','F'=>'danger'];
+                    $gc            = $gradeColors[$expectedGrade] ?? 'secondary';
+                    $isDone        = $studentComplete[$idx] ?? false;
                 @endphp
-                <div class="card mt-2">
+                <div class="card mt-2 {{ $isDone ? 'border-success' : '' }}" style="{{ $isDone ? 'border-width:2px !important;' : '' }}">
+                    @if($isDone)
+                        <div class="card-header py-2 text-white" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); border-radius: 0 !important;">
+                            <small><i class="bi bi-check-circle-fill me-1"></i>คะแนนสมบูรณ์ — ประเมินครบ {{ count($activeRoles) }} คนแล้ว</small>
+                        </div>
+                    @else
+                        <div class="card-header py-2 bg-warning bg-opacity-25" style="border-radius: 0 !important;">
+                            <small class="text-warning-emphasis"><i class="bi bi-hourglass-split me-1"></i>คะแนนเบื้องต้น — รอผู้ประเมินบางคน</small>
+                        </div>
+                    @endif
                     <div class="card-body py-3">
                         <div class="row align-items-center text-center g-3">
                             <div class="col">
@@ -481,8 +529,13 @@
                                 <div class="text-muted" style="font-size:0.78rem">/100</div>
                             </div>
                             <div class="col">
-                                <div class="text-muted small mb-1">เกรดคาดการณ์</div>
+                                <div class="text-muted small mb-1">
+                                    {{ $isDone ? 'เกรด' : 'เกรดคาดการณ์' }}
+                                </div>
                                 <span class="badge bg-{{ $gc }} grade-badge">{{ $expectedGrade }}</span>
+                                @if(!$isDone)
+                                    <div><small class="text-muted" style="font-size:0.7rem">เบื้องต้น</small></div>
+                                @endif
                             </div>
                         </div>
                     </div>

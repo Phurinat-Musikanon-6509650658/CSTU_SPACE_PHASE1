@@ -243,10 +243,10 @@ class MenuController extends Controller
                     'btn_class' => 'info-btn'
                 ],
                 [
-                    'title' => 'ตั้งค่าระบบ',
-                    'description' => 'จัดการการตั้งค่าและสถานะระบบ',
-                    'icon' => 'bi-gear-fill',
-                    'url' => route('admin.system.index'),
+                    'title' => 'จัดการรายวิชา',
+                    'description' => 'กำหนดช่วงเวลาเปิด-ปิดรายวิชา',
+                    'icon' => 'bi-book-fill',
+                    'url' => route('admin.subjects.index'),
                     'class' => 'danger-card',
                     'btn_class' => 'danger-btn'
                 ]

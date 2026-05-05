@@ -51,7 +51,7 @@ Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name(
 // ======================================
 // Student Routes (Protected by student auth)
 // ======================================
-Route::middleware(['auth:student', 'check.system.status'])->group(function () {
+Route::middleware(['auth:student', 'check.system.status', 'check.subject.access'])->group(function () {
     
     // Student Menu/Dashboard
     Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
@@ -313,8 +313,8 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('export/csv', [AdminLogController::class, 'export'])->name('export');
         });
         
-        // Subject Management
-        Route::prefix('subjects')->name('subjects.')->group(function () {
+        // Subject Management (Admin + Staff)
+        Route::prefix('subjects')->name('subjects.')->middleware('role:admin,staff')->group(function () {
             Route::get('/', [SubjectController::class, 'index'])->name('index');
             Route::get('create', [SubjectController::class, 'create'])->name('create');
             Route::post('/', [SubjectController::class, 'store'])->name('store');

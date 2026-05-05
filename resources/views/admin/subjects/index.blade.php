@@ -125,7 +125,10 @@
 <div class="container-fluid px-4 py-4">
     <!-- Header -->
     <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center">
+        <a href="{{ route('menu') }}" class="btn btn-link text-decoration-none ps-0">
+            <i class="bi bi-chevron-left me-1"></i>กลับหน้าเมนู
+        </a>
+        <div class="d-flex justify-content-between align-items-center mt-2">
             <div>
                 <h1 class="h2 fw-bold">
                     <i class="bi bi-book-fill me-2 text-primary"></i>จัดการรายวิชา
@@ -218,29 +221,31 @@
                         <!-- Body -->
                         <div class="subject-card-body">
                             <!-- Status Badge -->
-                            <div>
-                                <span class="badge bg-{{ $statusColor }} fs-6 status-badge">
-                                    <i class="bi bi-{{ $statusColor === 'success' ? 'check-circle' : ($statusColor === 'warning' ? 'hourglass-split' : 'x-circle') }} me-1"></i>
+                            <div class="mb-2">
+                                <span class="badge bg-{{ $statusColor }} status-badge">
+                                    <i class="bi bi-{{ $statusColor === 'success' ? 'check-circle' : 'x-circle' }} me-1"></i>
                                     {{ $statusText }}
                                 </span>
                             </div>
 
-                            <!-- Dates -->
-                            <div class="date-info">
-                                <span class="date-label">
-                                    <i class="bi bi-calendar-event me-1"></i>เปิด:
+                            <!-- Period Status Pills -->
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                @php
+                                    $accessStatus = $subject->access_status;
+                                    $evalStatus = $subject->evaluation_status;
+                                    $gradeStatus = $subject->grade_edit_status;
+                                    $accessColor = $accessStatus === 'เปิดใช้งาน' ? 'success' : ($accessStatus === 'ยังไม่เปิด' ? 'warning' : 'secondary');
+                                    $evalColor   = $evalStatus === 'เปิดอยู่' ? 'success' : ($evalStatus === 'ยังไม่เปิด' ? 'warning' : 'secondary');
+                                    $gradeColor  = $gradeStatus === 'เปิดอยู่' ? 'success' : ($gradeStatus === 'ยังไม่เปิด' ? 'warning' : 'secondary');
+                                @endphp
+                                <span class="badge bg-{{ $accessColor }} bg-opacity-10 text-{{ $accessColor }} border border-{{ $accessColor }}" style="font-size:0.72rem;">
+                                    <i class="bi bi-person-lock me-1"></i>เข้าใช้: {{ $accessStatus }}
                                 </span>
-                                <span class="date-value">
-                                    {{ $subject->open_date->format('d/m/Y H:i') }}
+                                <span class="badge bg-{{ $evalColor }} bg-opacity-10 text-{{ $evalColor }} border border-{{ $evalColor }}" style="font-size:0.72rem;">
+                                    <i class="bi bi-star me-1"></i>ประเมิน: {{ $evalStatus }}
                                 </span>
-                            </div>
-
-                            <div class="date-info">
-                                <span class="date-label">
-                                    <i class="bi bi-calendar-x me-1"></i>ปิด:
-                                </span>
-                                <span class="date-value">
-                                    {{ $subject->close_date->format('d/m/Y H:i') }}
+                                <span class="badge bg-{{ $gradeColor }} bg-opacity-10 text-{{ $gradeColor }} border border-{{ $gradeColor }}" style="font-size:0.72rem;">
+                                    <i class="bi bi-pencil me-1"></i>แก้คะแนน: {{ $gradeStatus }}
                                 </span>
                             </div>
 
@@ -253,6 +258,28 @@
                                     ภาคเรียน {{ $subject->semester }} / ปี {{ $subject->year }}
                                 </span>
                             </div>
+
+                            <!-- Dates (nullable-safe) -->
+                            @if($subject->access_open_date || $subject->access_close_date)
+                            <div class="date-info">
+                                <span class="date-label"><i class="bi bi-person-lock me-1"></i>ช่วงเข้าใช้:</span>
+                                <span class="date-value">
+                                    {{ $subject->access_open_date?->format('d/m/Y') ?? '—' }}
+                                    →
+                                    {{ $subject->access_close_date?->format('d/m/Y') ?? '—' }}
+                                </span>
+                            </div>
+                            @endif
+                            @if($subject->evaluation_open_date || $subject->evaluation_close_date)
+                            <div class="date-info">
+                                <span class="date-label"><i class="bi bi-star me-1"></i>ช่วงประเมิน:</span>
+                                <span class="date-value">
+                                    {{ $subject->evaluation_open_date?->format('d/m/Y') ?? '—' }}
+                                    →
+                                    {{ $subject->evaluation_close_date?->format('d/m/Y') ?? '—' }}
+                                </span>
+                            </div>
+                            @endif
 
                             <!-- Group Count -->
                             <div class="group-count">

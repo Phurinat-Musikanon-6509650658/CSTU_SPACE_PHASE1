@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\UserRoleSeeder::class,
             \Database\Seeders\UserTableSeeder::class,
             \Database\Seeders\StudentTableSeeder::class,
+            \Database\Seeders\SubjectSeeder::class,
         ]);
     }
 }
