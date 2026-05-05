@@ -1,199 +1,294 @@
 @extends('layouts.app')
 
-@section('title', 'แก้ไขตารางสอบและคณะกรรมการ')
+@section('title', 'แก้ไขตารางสอบและคณะกรรมการ | CSTU SPACE')
 
 @push('styles')
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
-    .card {
+    .page-card {
         border: none;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0,0,0,.08);
         margin-bottom: 1.5rem;
     }
-    .card-header {
-        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    .page-card-header {
+        padding: 1.1rem 1.5rem;
+        border-radius: 12px 12px 0 0;
         color: white;
-        font-weight: 600;
-        border-radius: 12px 12px 0 0 !important;
     }
-    .form-label {
+    .section-label {
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #6c757d;
+        margin-bottom: .5rem;
+    }
+    .time-preset-btn {
+        font-size: .82rem;
+        padding: .25rem .65rem;
+        border-radius: 6px;
+        border: 1.5px solid #dee2e6;
+        background: white;
+        cursor: pointer;
+        transition: all .15s;
+    }
+    .time-preset-btn:hover, .time-preset-btn.active {
+        border-color: #0d6efd;
+        background: #e7f0ff;
+        color: #0d47a1;
         font-weight: 600;
-        color: #495057;
+    }
+    .committee-select.duplicate-error {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 .2rem rgba(220,53,69,.25) !important;
     }
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid px-4 py-4">
-    <!-- Header -->
+
+    {{-- Header --}}
     <div class="mb-4">
-        <a href="{{ route('coordinator.schedules.index') }}" class="btn btn-outline-primary mb-3">
-            <i class="bi bi-arrow-left me-2"></i>กลับรายการ
+        <a href="{{ route('coordinator.schedules.index') }}" class="btn btn-link text-decoration-none ps-0">
+            <i class="bi bi-chevron-left me-1"></i>กลับรายการ
         </a>
-        <h1 class="h2 fw-bold">
+        <h1 class="h2 fw-bold mt-2">
             <i class="bi bi-calendar-check me-2 text-primary"></i>แก้ไขตารางสอบและคณะกรรมการ
         </h1>
     </div>
 
-    <!-- Project Info Card -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0 text-white">ข้อมูลโครงงาน</h5>
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i><strong>กรุณาตรวจสอบข้อมูล:</strong>
+            <ul class="mb-0 mt-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-2"><strong>รหัสโครงงาน:</strong> <code class="text-primary">{{ $project->project_code }}</code></p>
-                    <p class="mb-2"><strong>ชื่อโครงงาน:</strong> {{ $project->project_name ?? 'ยังไม่ระบุ' }}</p>
+    @endif
+
+    <div id="duplicateWarning" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>พบการเลือกอาจารย์ซ้ำกัน!</strong> กรุณาเลือกอาจารย์ที่แตกต่างกันสำหรับแต่ละตำแหน่ง
+    </div>
+
+    <form action="{{ route('coordinator.schedules.update', $project->project_id) }}" method="POST" id="mainForm">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="exam_datetime" id="h_exam_datetime">
+
+        <div class="row g-4">
+
+            {{-- LEFT: Project Info + Time --}}
+            <div class="col-lg-5">
+
+                {{-- Project Info --}}
+                <div class="card page-card">
+                    <div class="page-card-header" style="background:linear-gradient(135deg,#4e73df,#224abe);">
+                        <h5 class="mb-0"><i class="bi bi-folder me-2"></i>ข้อมูลโครงงาน</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                            <span class="badge bg-primary">กลุ่ม {{ sprintf('%02d', $project->group_id) }}</span>
+                            <code class="text-primary fw-bold">{{ $project->project_code }}</code>
+                        </div>
+                        <div class="fw-semibold mb-2">{{ $project->project_name ?? 'ยังไม่ระบุชื่อโครงงาน' }}</div>
+                        <div class="text-muted small">
+                            <i class="bi bi-people me-1"></i>
+                            @foreach($project->group->members as $member)
+                                {{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}@if(!$loop->last), @endif
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <p class="mb-2"><strong>กลุ่ม:</strong> {{ sprintf('%02d', $project->group_id) }}</p>
-                    <p class="mb-2"><strong>สมาชิก:</strong> 
-                        @foreach($project->group->members as $member)
-                            {{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}@if(!$loop->last), @endif
-                        @endforeach
-                    </p>
+
+                {{-- Date & Time --}}
+                <div class="card page-card">
+                    <div class="page-card-header" style="background:linear-gradient(135deg,#1cc88a,#13855c);">
+                        <h5 class="mb-0"><i class="bi bi-clock me-2"></i>วันและเวลาสอบ</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="section-label">วันที่สอบ</label>
+                            <input type="date" class="form-control" id="examDate"
+                                   value="{{ $project->exam_datetime ? $project->exam_datetime->format('Y-m-d') : '' }}">
+                        </div>
+                        <div class="mb-1">
+                            <label class="section-label">เวลาเริ่มสอบ</label>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                @foreach(['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00'] as $t)
+                                    <button type="button" class="time-preset-btn" data-time="{{ $t }}">{{ $t }}</button>
+                                @endforeach
+                            </div>
+                            <input type="time" class="form-control" id="examTime" step="300"
+                                   value="{{ $project->exam_datetime ? $project->exam_datetime->format('H:i') : '' }}">
+                        </div>
+
+                        {{-- Summary --}}
+                        <div class="bg-light rounded p-3 mt-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-calendar-check fs-4 text-success"></i>
+                                <div>
+                                    <div class="fw-bold" id="summaryDate">—</div>
+                                    <div class="text-muted small" id="summaryTime">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- RIGHT: Committee --}}
+            <div class="col-lg-7">
+                <div class="card page-card">
+                    <div class="page-card-header" style="background:linear-gradient(135deg,#f6c23e,#e0a800);color:#212529;">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>คณะกรรมการสอบ</h5>
+                    </div>
+                    <div class="card-body">
+
+                        {{-- Advisor --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-badge text-primary me-1"></i>อาจารย์ที่ปรึกษา
+                            </label>
+                            <select name="advisor_code" class="form-select committee-select @error('advisor_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ $project->advisor_code == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->user_code }} — {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('advisor_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Committee 1 --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 1
+                            </label>
+                            <select name="committee1_code" class="form-select committee-select @error('committee1_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ $project->committee1_code == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->user_code }} — {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('committee1_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Committee 2 --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 2
+                            </label>
+                            <select name="committee2_code" class="form-select committee-select @error('committee2_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ $project->committee2_code == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->user_code }} — {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('committee2_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Committee 3 --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 3
+                            </label>
+                            <select name="committee3_code" class="form-select committee-select @error('committee3_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ $project->committee3_code == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->user_code }} — {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('committee3_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Submit --}}
+                <div class="d-flex gap-2">
+                    <a href="{{ route('coordinator.schedules.index') }}" class="btn btn-outline-secondary flex-fill">
+                        <i class="bi bi-x-circle me-1"></i>ยกเลิก
+                    </a>
+                    <button type="submit" class="btn btn-primary flex-fill fw-bold">
+                        <i class="bi bi-save me-1"></i>บันทึกการเปลี่ยนแปลง
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Edit Form -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0 text-white">กำหนดวันเวลาสอบและคณะกรรมการ</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('coordinator.schedules.update', $project->project_id) }}" method="POST">
-                @csrf
-                @method('PUT')
-
-                <div class="row">
-                    <!-- Exam DateTime -->
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">
-                            <i class="bi bi-calendar-event text-danger me-1"></i>วันเวลาสอบ
-                        </label>
-                        <input type="datetime-local" 
-                               name="exam_datetime" 
-                               class="form-control" 
-                               value="{{ $project->exam_datetime ? $project->exam_datetime->format('Y-m-d\TH:i') : '' }}">
-                        <small class="text-muted">กำหนดวันและเวลาที่จะสอบโครงงาน</small>
-                    </div>
-                </div>
-
-                <hr class="my-4">
-
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-people me-2 text-success"></i>คณะกรรมการสอบ
-                </h6>
-
-                <div class="row">
-                    <!-- Advisor -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-person-badge text-primary me-1"></i>อาจารย์ที่ปรึกษา (Advisor)
-                        </label>
-                        <select name="advisor_code" class="form-select">
-                            <option value="">-- ไม่มี --</option>
-                            @foreach($lecturers as $lecturer)
-                                <option value="{{ $lecturer->user_code }}" 
-                                        {{ $project->advisor_code == $lecturer->user_code ? 'selected' : '' }}>
-                                    {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Committee 1 -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 1
-                        </label>
-                        <select name="committee1_code" class="form-select">
-                            <option value="">-- ไม่มี --</option>
-                            @foreach($lecturers as $lecturer)
-                                <option value="{{ $lecturer->user_code }}" 
-                                        {{ $project->committee1_code == $lecturer->user_code ? 'selected' : '' }}>
-                                    {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Committee 2 -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 2
-                        </label>
-                        <select name="committee2_code" class="form-select">
-                            <option value="">-- ไม่มี --</option>
-                            @foreach($lecturers as $lecturer)
-                                <option value="{{ $lecturer->user_code }}" 
-                                        {{ $project->committee2_code == $lecturer->user_code ? 'selected' : '' }}>
-                                    {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Committee 3 -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 3
-                        </label>
-                        <select name="committee3_code" class="form-select">
-                            <option value="">-- ไม่มี --</option>
-                            @foreach($lecturers as $lecturer)
-                                <option value="{{ $lecturer->user_code }}" 
-                                        {{ $project->committee3_code == $lecturer->user_code ? 'selected' : '' }}>
-                                    {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    </form>
 </div>
+@endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const advisorSelect = document.querySelector('select[name="advisor_code"]');
-    const committee1Select = document.querySelector('select[name="committee1_code"]');
-    const committee2Select = document.querySelector('select[name="committee2_code"]');
-    const committee3Select = document.querySelector('select[name="committee3_code"]');
-    const form = advisorSelect.closest('form');
-    
-    // Validate on submit
-    form.addEventListener('submit', function(e) {
-        const advisor = advisorSelect.value;
-        const comm1 = committee1Select.value;
-        const comm2 = committee2Select.value;
-        const comm3 = committee3Select.value;
-        
-        const lecturers = [advisor, comm1, comm2, comm3].filter(v => v !== '');
-        const uniqueLecturers = [...new Set(lecturers)];
-        
-        if (lecturers.length !== uniqueLecturers.length) {
-            e.preventDefault();
-            alert('❌ พบการเลือกอาจารย์ซ้ำกัน!\n\nกรุณาเลือกอาจารย์ที่แตกต่างกันสำหรับแต่ละตำแหน่ง');
-            return false;
-        }
+// Time presets
+document.querySelectorAll('.time-preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('examTime').value = this.dataset.time;
+        updateSummary();
     });
 });
+
+document.getElementById('examDate').addEventListener('change', updateSummary);
+document.getElementById('examTime').addEventListener('change', updateSummary);
+
+function updateSummary() {
+    const date = document.getElementById('examDate').value;
+    const time = document.getElementById('examTime').value;
+    if (date) {
+        const d = new Date(date);
+        document.getElementById('summaryDate').textContent =
+            d.toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    } else {
+        document.getElementById('summaryDate').textContent = '—';
+    }
+    document.getElementById('summaryTime').textContent = time ? `เวลา ${time} น.` : '—';
+}
+
+// Duplicate committee check
+function checkDuplicates() {
+    const selects = document.querySelectorAll('.committee-select');
+    const values = Array.from(selects).map(s => s.value).filter(v => v !== '');
+    const hasDuplicate = values.length !== new Set(values).size;
+    document.getElementById('duplicateWarning').classList.toggle('d-none', !hasDuplicate);
+    selects.forEach(s => {
+        const isDup = s.value !== '' && values.filter(v => v === s.value).length > 1;
+        s.classList.toggle('duplicate-error', isDup);
+    });
+    return !hasDuplicate;
+}
+
+document.querySelectorAll('.committee-select').forEach(s => s.addEventListener('change', checkDuplicates));
+
+// Form submit
+document.getElementById('mainForm').addEventListener('submit', function(e) {
+    if (!checkDuplicates()) {
+        e.preventDefault();
+        document.getElementById('duplicateWarning').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+    const date = document.getElementById('examDate').value;
+    const time = document.getElementById('examTime').value;
+    if (date && time) {
+        document.getElementById('h_exam_datetime').value = `${date}T${time}`;
+    }
+});
+
+// Initial render
+updateSummary();
+checkDuplicates();
 </script>
 @endpush
-@endsection
