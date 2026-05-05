@@ -4,9 +4,7 @@
 
 @push('styles')
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
+    body { background-color: #f8f9fa; }
     .card {
         border: none;
         border-radius: 12px;
@@ -17,32 +15,169 @@
         font-weight: 600;
         border-radius: 12px 12px 0 0 !important;
     }
-    .score-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .score-display {
-        font-size: 2rem;
-        font-weight: 700;
-    }
-    .empty-state {
+
+    /* Score Table */
+    .score-table thead th {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
         text-align: center;
-        padding: 3rem 1rem;
-        color: #6c757d;
+        vertical-align: middle;
+        border-color: #3a5fc8;
+        white-space: nowrap;
     }
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
+    .score-table thead th.criteria-th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        text-align: left;
     }
+    .score-table td { vertical-align: middle; }
+    .score-table .max-col {
+        text-align: center;
+        color: #888;
+        font-size: 0.88rem;
+        white-space: nowrap;
+    }
+    .score-table .score-cell {
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .score-table .score-cell.empty { color: #bbb; font-weight: 400; }
+
+    .part3-header-row td {
+        background-color: #e8f4fd;
+        font-weight: 700;
+        color: #1a3a8a;
+        border-top: 2px solid #4e73df;
+    }
+    .sub-criteria td:first-child {
+        padding-left: 2.5rem;
+        color: #555;
+        font-size: 0.93rem;
+    }
+    .part3-subtotal-row td {
+        background-color: #dbeafe;
+        font-weight: 600;
+        border-top: 1px solid #93c5fd;
+        border-bottom: 2px solid #4e73df;
+    }
+    .grand-total-row td {
+        background: linear-gradient(135deg, #e7f3ff 0%, #d0e8ff 100%);
+        font-weight: 700;
+        border-top: 2px solid #4e73df;
+        font-size: 1.05rem;
+    }
+    .avg-col {
+        background-color: #f0f7ff !important;
+        border-left: 2px solid #93c5fd !important;
+    }
+
+    /* Evaluator status */
+    .evaluator-row {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    .evaluator-row.done    { background-color: #d1fae5; border-left: 4px solid #10b981; }
+    .evaluator-row.pending { background-color: #f3f4f6; border-left: 4px solid #d1d5db; }
+
+    /* Summary badges */
+    .summary-score {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .grade-badge {
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+    }
+    .student-tab-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px 10px 0 0;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3; }
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid px-4 py-4">
+
+    @php
+        $roleLabels = [
+            'advisor'    => 'อาจารย์ที่ปรึกษา',
+            'committee1' => 'กรรมการ 1',
+            'committee2' => 'กรรมการ 2',
+            'committee3' => 'กรรมการ 3',
+        ];
+        $roleColors = [
+            'advisor'    => 'primary',
+            'committee1' => 'success',
+            'committee2' => 'success',
+            'committee3' => 'success',
+        ];
+
+        $students    = $project->group->members->pluck('student')->take(2);
+        $activeRoles = [];
+        if ($project->advisor_code)    $activeRoles[] = 'advisor';
+        if ($project->committee1_code) $activeRoles[] = 'committee1';
+        if ($project->committee2_code) $activeRoles[] = 'committee2';
+        if ($project->committee3_code) $activeRoles[] = 'committee3';
+
+        // Evaluation matrix: [student_idx][role] = evaluation record
+        $evalMatrix = [];
+        foreach ($students as $idx => $student) {
+            foreach ($activeRoles as $role) {
+                $evalMatrix[$idx][$role] = $project->evaluations
+                    ->where('student_id', $student->student_id)
+                    ->where('evaluator_role', $role)
+                    ->first();
+            }
+        }
+
+        // Per-student summary averages
+        $studentSummary = [];
+        foreach ($students as $idx => $student) {
+            $evals       = $project->evaluations->where('student_id', $student->student_id);
+            $advisorEval = $evals->where('evaluator_role', 'advisor')->first();
+
+            $p1    = $advisorEval ? (float)($advisorEval->part1_score  ?? 0) : 0;
+            $p2avg = $evals->count() ? round($evals->avg('part2_score'),  2) : 0;
+            $p3a   = $evals->count() ? round($evals->avg('part3a_score'), 2) : 0;
+            $p3b   = $evals->count() ? round($evals->avg('part3b_score'), 2) : 0;
+            $p3c   = $evals->count() ? round($evals->avg('part3c_score'), 2) : 0;
+            $p3tot = $p3a + $p3b + $p3c;
+            $final = $p1 + $p2avg + $p3tot;
+
+            $studentSummary[$idx] = [
+                'part1'    => $p1,
+                'part2avg' => $p2avg,
+                'part3a'   => $p3a,
+                'part3b'   => $p3b,
+                'part3c'   => $p3c,
+                'part3tot' => $p3tot,
+                'final'    => $final,
+            ];
+        }
+
+        // Grade color helper
+        $gradeColor = function($score) {
+            if ($score >= 90) return 'success';
+            if ($score >= 85) return 'info';
+            if ($score >= 80) return 'info';
+            if ($score >= 75) return 'primary';
+            if ($score >= 70) return 'warning';
+            if ($score >= 60) return 'orange';
+            if ($score >= 50) return 'danger';
+            return 'dark';
+        };
+    @endphp
+
     <!-- Header -->
     <div class="mb-4">
         <a href="{{ route('coordinator.evaluations.index') }}" class="btn btn-outline-primary mb-3">
@@ -56,38 +191,34 @@
     <!-- Project Info -->
     <div class="card mb-4">
         <div class="card-header text-white" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
-            <h5 class="mb-0 text-white">ข้อมูลโครงงาน</h5>
+            <h5 class="mb-0 text-white"><i class="bi bi-folder2-open me-2"></i>ข้อมูลโครงงาน</h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <p class="mb-2"><strong>รหัสโครงงาน:</strong> <code class="text-primary fs-5">{{ $project->project_code }}</code></p>
                     <p class="mb-2"><strong>ชื่อโครงงาน:</strong> {{ $project->project_name ?? 'ยังไม่ระบุ' }}</p>
-                    <p class="mb-0"><strong>สมาชิก:</strong> 
+                    <p class="mb-0"><strong>สมาชิก:</strong>
                         @foreach($project->group->members as $member)
                             {{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}@if(!$loop->last), @endif
                         @endforeach
                     </p>
                 </div>
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>อาจารย์ที่ปรึกษา:</strong> 
+                    <p class="mb-2"><strong>อาจารย์ที่ปรึกษา:</strong>
                         @if($project->advisor)
-                            <span class="badge bg-primary">{{ $project->advisor_code }} - {{ $project->advisor->firstname_user }} {{ $project->advisor->lastname_user }}</span>
+                            <span class="badge bg-primary">{{ $project->advisor_code }} — {{ $project->advisor->firstname_user }} {{ $project->advisor->lastname_user }}</span>
                         @else
                             <span class="text-muted">ยังไม่กำหนด</span>
                         @endif
                     </p>
-                    <p class="mb-2"><strong>คณะกรรมการ:</strong></p>
+                    <p class="mb-1"><strong>คณะกรรมการ:</strong></p>
                     <div class="d-flex flex-wrap gap-1">
-                        @if($project->committee1)
-                            <span class="badge bg-success">{{ $project->committee1_code }} - {{ $project->committee1->firstname_user }}</span>
-                        @endif
-                        @if($project->committee2)
-                            <span class="badge bg-success">{{ $project->committee2_code }} - {{ $project->committee2->firstname_user }}</span>
-                        @endif
-                        @if($project->committee3)
-                            <span class="badge bg-success">{{ $project->committee3_code }} - {{ $project->committee3->firstname_user }}</span>
-                        @endif
+                        @foreach(['committee1','committee2','committee3'] as $cr)
+                            @if($project->{$cr})
+                                <span class="badge bg-success">{{ $project->{$cr.'_code'} }} — {{ $project->{$cr}->firstname_user }}</span>
+                            @endif
+                        @endforeach
                         @if(!$project->committee1 && !$project->committee2 && !$project->committee3)
                             <span class="text-muted">ยังไม่กำหนด</span>
                         @endif
@@ -97,169 +228,302 @@
         </div>
     </div>
 
-    <!-- Evaluations -->
-    <h5 class="mb-3 fw-bold">
-        <i class="bi bi-people-fill me-2 text-success"></i>คะแนนจากอาจารย์และคณะกรรมการ
-    </h5>
-
     @if($project->evaluations->count() > 0)
-        <div class="row">
-            @foreach($project->evaluations as $evaluation)
-                <div class="col-md-6 col-lg-4">
-                    <div class="score-card">
-                        <!-- Evaluator Info -->
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h6 class="fw-bold mb-1">
-                                    @if($evaluation->evaluator)
-                                        {{ $evaluation->evaluator->firstname_user }} {{ $evaluation->evaluator->lastname_user }}
-                                    @else
-                                        {{ $evaluation->evaluator_code }}
-                                    @endif
-                                </h6>
-                                @php
-                                    $roleLabels = [
-                                        'advisor' => 'อาจารย์ที่ปรึกษา',
-                                        'committee1' => 'กรรมการคนที่ 1',
-                                        'committee2' => 'กรรมการคนที่ 2',
-                                        'committee3' => 'กรรมการคนที่ 3'
-                                    ];
-                                    $roleColors = [
-                                        'advisor' => 'primary',
-                                        'committee1' => 'success',
-                                        'committee2' => 'success',
-                                        'committee3' => 'success'
-                                    ];
-                                @endphp
-                                <span class="badge bg-{{ $roleColors[$evaluation->evaluator_role] ?? 'secondary' }}">
-                                    {{ $roleLabels[$evaluation->evaluator_role] ?? $evaluation->evaluator_role }}
-                                </span>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block">รวม</small>
-                                <div class="score-display text-primary">
-                                    {{ number_format($evaluation->total_score, 2) }}
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Score Breakdown -->
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <small class="text-muted d-block">รูปเล่ม</small>
-                                    <strong class="text-info">{{ number_format($evaluation->document_score, 2) }}</strong>
-                                    <small class="text-muted">/30</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <small class="text-muted d-block">พรีเซนต์</small>
-                                    <strong class="text-warning">{{ number_format($evaluation->presentation_score, 2) }}</strong>
-                                    <small class="text-muted">/70</small>
-                                </div>
-                            </div>
-                        </div>
+        {{-- ===== Score Table Per Student ===== --}}
+        @foreach($students as $idx => $student)
+            <div class="mb-4">
+                <div class="student-tab-header">
+                    <i class="bi bi-person-circle me-2"></i>
+                    {{ $student->firstname_std }} {{ $student->lastname_std }}
+                    <small class="opacity-75 ms-2">{{ $student->student_code }}</small>
+                </div>
+                <div class="card" style="border-radius: 0 0 12px 12px; margin-bottom: 0;">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered score-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="criteria-th" style="width: 35%">เกณฑ์การประเมิน</th>
+                                        <th style="width: 7%">คะแนนเต็ม</th>
+                                        @foreach($activeRoles as $role)
+                                            <th>
+                                                {{ $roleLabels[$role] }}<br>
+                                                <small class="fw-normal opacity-80">
+                                                    @if($project->{$role})
+                                                        {{ $project->{$role}->firstname_user }}
+                                                    @else
+                                                        {{ $project->{$role.'_code'} }}
+                                                    @endif
+                                                </small>
+                                            </th>
+                                        @endforeach
+                                        <th class="avg-col">เฉลี่ย</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{-- Part 1: advisor only --}}
+                                    <tr>
+                                        <td>
+                                            <strong>ส่วนที่ 1:</strong> ความก้าวหน้าโครงงาน
+                                            <small class="text-muted">(ให้โดยอาจารย์ที่ปรึกษา)</small>
+                                        </td>
+                                        <td class="max-col">10</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell {{ ($role !== 'advisor') ? 'text-muted' : '' }}">
+                                                @if($role === 'advisor')
+                                                    @if($ev)
+                                                        <span class="text-info">{{ number_format($ev->part1_score ?? 0, 2) }}</span>
+                                                        <small class="text-muted">/10</small>
+                                                    @else
+                                                        <span class="empty">รอ</span>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted" style="font-size:1.1rem">—</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col text-info">
+                                            {{ number_format($studentSummary[$idx]['part1'], 2) }}
+                                            <small class="text-muted">/10</small>
+                                        </td>
+                                    </tr>
 
-                        <!-- Comments -->
-                        @if($evaluation->comments)
-                            <div class="border-top pt-2">
-                                <small class="text-muted d-block mb-1">ความเห็น:</small>
-                                <p class="mb-0 small">{{ $evaluation->comments }}</p>
-                            </div>
-                        @endif
+                                    {{-- Part 2 --}}
+                                    <tr>
+                                        <td><strong>ส่วนที่ 2:</strong> คุณภาพของรายงาน</td>
+                                        <td class="max-col">30</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    <span class="text-primary">{{ number_format($ev->part2_score ?? 0, 2) }}</span>
+                                                    <small class="text-muted">/30</small>
+                                                @else
+                                                    <span class="empty text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col text-primary">
+                                            {{ number_format($studentSummary[$idx]['part2avg'], 2) }}
+                                            <small class="text-muted">/30</small>
+                                        </td>
+                                    </tr>
 
-                        <!-- Submitted At -->
-                        <div class="text-end mt-2">
-                            <small class="text-muted">
-                                <i class="bi bi-clock me-1"></i>
-                                {{ $evaluation->submitted_at ? $evaluation->submitted_at->format('d/m/Y H:i') : 'ไม่ระบุเวลา' }}
-                            </small>
+                                    {{-- Part 3 section header --}}
+                                    <tr class="part3-header-row">
+                                        <td colspan="{{ 2 + count($activeRoles) + 1 }}">
+                                            <i class="bi bi-card-checklist me-1"></i>
+                                            ส่วนที่ 3: การนำเสนอโครงงาน
+                                            <span class="fw-normal ms-1">(รวม 60 คะแนน)</span>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Part 3a --}}
+                                    <tr class="sub-criteria">
+                                        <td>3.1 ความเข้าใจในงานที่ทำ</td>
+                                        <td class="max-col">20</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    <span class="text-warning">{{ number_format($ev->part3a_score ?? 0, 2) }}</span>
+                                                    <small class="text-muted">/20</small>
+                                                @else
+                                                    <span class="empty text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col text-warning">
+                                            {{ number_format($studentSummary[$idx]['part3a'], 2) }}
+                                            <small class="text-muted">/20</small>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Part 3b --}}
+                                    <tr class="sub-criteria">
+                                        <td>3.2 คุณภาพการนำเสนอและการตอบคำถาม</td>
+                                        <td class="max-col">20</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    <span class="text-warning">{{ number_format($ev->part3b_score ?? 0, 2) }}</span>
+                                                    <small class="text-muted">/20</small>
+                                                @else
+                                                    <span class="empty text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col text-warning">
+                                            {{ number_format($studentSummary[$idx]['part3b'], 2) }}
+                                            <small class="text-muted">/20</small>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Part 3c --}}
+                                    <tr class="sub-criteria">
+                                        <td>3.3 การประยุกต์ใช้ความรู้ทางวิทยาการคอมพิวเตอร์อย่างเหมาะสมในการนำเสนอโครงงาน</td>
+                                        <td class="max-col">20</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    <span class="text-warning">{{ number_format($ev->part3c_score ?? 0, 2) }}</span>
+                                                    <small class="text-muted">/20</small>
+                                                @else
+                                                    <span class="empty text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col text-warning">
+                                            {{ number_format($studentSummary[$idx]['part3c'], 2) }}
+                                            <small class="text-muted">/20</small>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Part 3 subtotal --}}
+                                    <tr class="part3-subtotal-row">
+                                        <td>รวมส่วนที่ 3</td>
+                                        <td class="text-center fw-bold">60</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    <span style="color:#224abe">{{ number_format($ev->part3_score ?? 0, 2) }}</span>
+                                                    <small class="text-muted">/60</small>
+                                                @else
+                                                    <span class="text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col" style="color:#224abe">
+                                            {{ number_format($studentSummary[$idx]['part3tot'], 2) }}
+                                            <small class="text-muted">/60</small>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Grand total --}}
+                                    <tr class="grand-total-row">
+                                        <td><strong>คะแนนรวมทั้งสิ้น</strong></td>
+                                        <td class="text-center">100</td>
+                                        @foreach($activeRoles as $role)
+                                            @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
+                                            <td class="score-cell">
+                                                @if($ev)
+                                                    @php
+                                                        $tot = $ev->total_score ?? 0;
+                                                        $maxR = ($role === 'advisor') ? 100 : 90;
+                                                    @endphp
+                                                    <span class="text-primary">{{ number_format($tot, 2) }}</span>
+                                                    <small class="text-muted">/{{ $maxR }}</small>
+                                                @else
+                                                    <span class="text-muted">รอ</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        <td class="score-cell avg-col">
+                                            @php
+                                                $fs = $studentSummary[$idx]['final'];
+                                                $fc = $gradeColor($fs);
+                                            @endphp
+                                            <span class="text-{{ $fc }}" style="font-size:1.15rem">
+                                                {{ number_format($fs, 2) }}
+                                            </span>
+                                            <small class="text-muted">/100</small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            @endforeach
-        </div>
 
-        <!-- Average Score Summary -->
-        @php
-            $avgScore = $project->evaluations->avg('total_score');
-            $avgDoc = $project->evaluations->avg('document_score');
-            $avgPres = $project->evaluations->avg('presentation_score');
-        @endphp
-        
-        <div class="card mt-4">
-            <div class="card-header text-white" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
-                <h5 class="mb-0 text-white">
-                    <i class="bi bi-calculator me-2"></i>คะแนนเฉลี่ย
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <h6 class="text-muted mb-2">รูปเล่ม</h6>
-                        <div class="score-display text-info">{{ number_format($avgDoc, 2) }}</div>
-                        <small class="text-muted">/30</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h6 class="text-muted mb-2">พรีเซนต์</h6>
-                        <div class="score-display text-warning">{{ number_format($avgPres, 2) }}</div>
-                        <small class="text-muted">/70</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h6 class="text-muted mb-2">รวม</h6>
-                        <div class="score-display text-success">{{ number_format($avgScore, 2) }}</div>
-                        <small class="text-muted">/100</small>
-                    </div>
-                    <div class="col-md-3">
-                        <h6 class="text-muted mb-2">เกรดที่คาดว่าจะได้</h6>
-                        @php
-                            $expectedGrade = \App\Models\ProjectGrade::calculateGrade($avgScore);
-                            $gradeColors = [
-                                'A' => 'success', 'B+' => 'info', 'B' => 'info',
-                                'C+' => 'warning', 'C' => 'warning',
-                                'D+' => 'danger', 'D' => 'danger', 'F' => 'danger'
-                            ];
-                            $color = $gradeColors[$expectedGrade] ?? 'secondary';
-                        @endphp
-                        <div class="score-display text-{{ $color }}">{{ $expectedGrade }}</div>
-                        <small class="text-muted">คาดการณ์</small>
+                {{-- Per-student summary bar --}}
+                @php $fs = $studentSummary[$idx]['final']; @endphp
+                @php $expectedGrade = \App\Models\ProjectGrade::calculateGrade($fs); @endphp
+                @php
+                    $gradeColors = ['A'=>'success','B+'=>'info','B'=>'info','C+'=>'warning','C'=>'warning','D+'=>'danger','D'=>'danger','F'=>'danger'];
+                    $gc = $gradeColors[$expectedGrade] ?? 'secondary';
+                @endphp
+                <div class="card mt-2">
+                    <div class="card-body py-3">
+                        <div class="row align-items-center text-center g-3">
+                            <div class="col">
+                                <div class="text-muted small mb-1">ส่วนที่ 1</div>
+                                <div class="fw-bold text-info">{{ number_format($studentSummary[$idx]['part1'], 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/10</div>
+                            </div>
+                            <div class="col">
+                                <div class="text-muted small mb-1">ส่วนที่ 2</div>
+                                <div class="fw-bold text-primary">{{ number_format($studentSummary[$idx]['part2avg'], 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/30</div>
+                            </div>
+                            <div class="col">
+                                <div class="text-muted small mb-1">3.1 ความเข้าใจ</div>
+                                <div class="fw-bold text-warning">{{ number_format($studentSummary[$idx]['part3a'], 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/20</div>
+                            </div>
+                            <div class="col">
+                                <div class="text-muted small mb-1">3.2 นำเสนอ</div>
+                                <div class="fw-bold text-warning">{{ number_format($studentSummary[$idx]['part3b'], 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/20</div>
+                            </div>
+                            <div class="col">
+                                <div class="text-muted small mb-1">3.3 ประยุกต์</div>
+                                <div class="fw-bold text-warning">{{ number_format($studentSummary[$idx]['part3c'], 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/20</div>
+                            </div>
+                            <div class="col border-start">
+                                <div class="text-muted small mb-1">คะแนนรวม</div>
+                                <div class="fw-bold text-{{ $gc }}" style="font-size:1.4rem">{{ number_format($fs, 2) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">/100</div>
+                            </div>
+                            <div class="col">
+                                <div class="text-muted small mb-1">เกรดคาดการณ์</div>
+                                <span class="badge bg-{{ $gc }} grade-badge">{{ $expectedGrade }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endforeach
 
     @else
         <div class="empty-state">
-            <i class="bi bi-clipboard-x"></i>
+            <i class="bi bi-clipboard-x d-block"></i>
             <h5 class="text-muted">ยังไม่มีการให้คะแนน</h5>
             <p class="text-muted">รอให้อาจารย์และคณะกรรมการให้คะแนนโครงงาน</p>
         </div>
     @endif
 
-    <!-- Expected Evaluators -->
-    <div class="card mt-4">
+    {{-- ===== Evaluator Status ===== --}}
+    <div class="card mt-2">
         <div class="card-header bg-light">
             <h6 class="mb-0 fw-bold">
-                <i class="bi bi-person-lines-fill me-2"></i>รายชื่อผู้ประเมิน
+                <i class="bi bi-person-lines-fill me-2"></i>สถานะผู้ประเมิน
             </h6>
         </div>
         <div class="card-body">
-            <div class="row">
+            <div class="row g-2">
                 @if($project->advisor_code)
                     @php
-                        $hasEval = $project->evaluations->where('evaluator_role', 'advisor')->where('evaluator_code', $project->advisor_code)->first();
+                        $submitted = $project->evaluations
+                            ->where('evaluator_role', 'advisor')
+                            ->where('evaluator_code', $project->advisor_code)
+                            ->isNotEmpty();
                     @endphp
-                    <div class="col-md-6 mb-2">
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded {{ $hasEval ? 'bg-success bg-opacity-10' : 'bg-light' }}">
+                    <div class="col-md-6">
+                        <div class="evaluator-row {{ $submitted ? 'done' : 'pending' }} d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="badge bg-primary me-2">Advisor</span>
+                                <span class="badge bg-primary me-2">อาจารย์ที่ปรึกษา</span>
                                 <strong>{{ $project->advisor_code }}</strong>
                                 @if($project->advisor)
-                                    - {{ $project->advisor->firstname_user }} {{ $project->advisor->lastname_user }}
+                                    — {{ $project->advisor->firstname_user }} {{ $project->advisor->lastname_user }}
                                 @endif
                             </div>
-                            @if($hasEval)
+                            @if($submitted)
                                 <i class="bi bi-check-circle-fill text-success fs-5"></i>
                             @else
                                 <i class="bi bi-clock text-warning fs-5"></i>
@@ -268,21 +532,25 @@
                     </div>
                 @endif
 
-                @foreach(['committee1', 'committee2', 'committee3'] as $role)
-                    @if($project->{$role.'_code'})
+                @foreach(['committee1','committee2','committee3'] as $cr)
+                    @if($project->{$cr.'_code'})
                         @php
-                            $hasEval = $project->evaluations->where('evaluator_role', $role)->where('evaluator_code', $project->{$role.'_code'})->first();
+                            $submitted = $project->evaluations
+                                ->where('evaluator_role', $cr)
+                                ->where('evaluator_code', $project->{$cr.'_code'})
+                                ->isNotEmpty();
+                            $label = $roleLabels[$cr];
                         @endphp
-                        <div class="col-md-6 mb-2">
-                            <div class="d-flex justify-content-between align-items-center p-2 rounded {{ $hasEval ? 'bg-success bg-opacity-10' : 'bg-light' }}">
+                        <div class="col-md-6">
+                            <div class="evaluator-row {{ $submitted ? 'done' : 'pending' }} d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="badge bg-success me-2">{{ ucfirst($role) }}</span>
-                                    <strong>{{ $project->{$role.'_code'} }}</strong>
-                                    @if($project->{$role})
-                                        - {{ $project->{$role}->firstname_user }} {{ $project->{$role}->lastname_user }}
+                                    <span class="badge bg-success me-2">{{ $label }}</span>
+                                    <strong>{{ $project->{$cr.'_code'} }}</strong>
+                                    @if($project->{$cr})
+                                        — {{ $project->{$cr}->firstname_user }} {{ $project->{$cr}->lastname_user }}
                                     @endif
                                 </div>
-                                @if($hasEval)
+                                @if($submitted)
                                     <i class="bi bi-check-circle-fill text-success fs-5"></i>
                                 @else
                                     <i class="bi bi-clock text-warning fs-5"></i>
@@ -294,5 +562,6 @@
             </div>
         </div>
     </div>
+
 </div>
 @endsection

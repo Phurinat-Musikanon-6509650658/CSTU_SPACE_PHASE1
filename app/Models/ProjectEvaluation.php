@@ -20,16 +20,22 @@ class ProjectEvaluation extends Model
         'part1_score',
         'part2_score',
         'part3_score',
+        'part3a_score',
+        'part3b_score',
+        'part3c_score',
         'total_score',
         'comments',
         'submitted_at'
     ];
 
     protected $casts = [
-        'part1_score' => 'decimal:2',
-        'part2_score' => 'decimal:2',
-        'part3_score' => 'decimal:2',
-        'total_score' => 'decimal:2',
+        'part1_score'  => 'decimal:2',
+        'part2_score'  => 'decimal:2',
+        'part3_score'  => 'decimal:2',
+        'part3a_score' => 'decimal:2',
+        'part3b_score' => 'decimal:2',
+        'part3c_score' => 'decimal:2',
+        'total_score'  => 'decimal:2',
         'submitted_at' => 'datetime'
     ];
 
@@ -55,12 +61,18 @@ class ProjectEvaluation extends Model
         parent::boot();
 
         static::saving(function ($evaluation) {
-            // Part 1 (10 points) - Advisor only
+            // part3_score = sum of sub-criteria (each 0-20)
+            $evaluation->part3_score = ($evaluation->part3a_score ?? 0)
+                + ($evaluation->part3b_score ?? 0)
+                + ($evaluation->part3c_score ?? 0);
+
             if ($evaluation->evaluator_role === 'advisor') {
-                $evaluation->total_score = ($evaluation->part1_score ?? 0) + ($evaluation->part2_score ?? 0) + ($evaluation->part3_score ?? 0);
+                $evaluation->total_score = ($evaluation->part1_score ?? 0)
+                    + ($evaluation->part2_score ?? 0)
+                    + $evaluation->part3_score;
             } else {
-                // Part 2+3 (90 points) - Committee members don't have part1
-                $evaluation->total_score = ($evaluation->part2_score ?? 0) + ($evaluation->part3_score ?? 0);
+                $evaluation->total_score = ($evaluation->part2_score ?? 0)
+                    + $evaluation->part3_score;
             }
         });
     }
@@ -68,15 +80,21 @@ class ProjectEvaluation extends Model
     // Helper: Check if scores are valid
     public function hasValidScores()
     {
+        $p2  = $this->part2_score  ?? 0;
+        $p3a = $this->part3a_score ?? 0;
+        $p3b = $this->part3b_score ?? 0;
+        $p3c = $this->part3c_score ?? 0;
+
+        $commonValid = $p2 >= 0 && $p2 <= 30
+            && $p3a >= 0 && $p3a <= 20
+            && $p3b >= 0 && $p3b <= 20
+            && $p3c >= 0 && $p3c <= 20;
+
         if ($this->evaluator_role === 'advisor') {
-            // Advisor: part1 (0-10) + part2 (0-30) + part3 (0-60) = 0-100
-            return ($this->part1_score ?? 0) >= 0 && ($this->part1_score ?? 0) <= 10
-                && ($this->part2_score ?? 0) >= 0 && ($this->part2_score ?? 0) <= 30
-                && ($this->part3_score ?? 0) >= 0 && ($this->part3_score ?? 0) <= 60;
-        } else {
-            // Committee: part2 (0-30) + part3 (0-60) = 0-90
-            return ($this->part2_score ?? 0) >= 0 && ($this->part2_score ?? 0) <= 30
-                && ($this->part3_score ?? 0) >= 0 && ($this->part3_score ?? 0) <= 60;
+            $p1 = $this->part1_score ?? 0;
+            return $commonValid && $p1 >= 0 && $p1 <= 10;
         }
+
+        return $commonValid;
     }
 }

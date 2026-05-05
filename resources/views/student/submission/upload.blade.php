@@ -4,13 +4,6 @@
 
 @section('content')
 <div class="container py-4">
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="{{ route('student.menu') }}" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left me-2"></i>กลับไปหน้าเมนู
-        </a>
-    </div>
-
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow">

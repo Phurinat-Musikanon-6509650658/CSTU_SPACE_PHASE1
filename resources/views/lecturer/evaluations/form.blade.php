@@ -4,9 +4,7 @@
 
 @push('styles')
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
+    body { background-color: #f8f9fa; }
     .card {
         border: none;
         border-radius: 12px;
@@ -18,20 +16,104 @@
         border-radius: 12px 12px 0 0 !important;
     }
     .score-input {
-        font-size: 1.2rem;
-        font-weight: 600;
+        width: 100%;
         text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        border: 2px solid #e3e6f0;
+        border-radius: 6px;
+        padding: 8px 4px;
     }
-    .total-score {
-        font-size: 3rem;
+    .score-input:focus {
+        border-color: #4e73df;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.25);
+    }
+    .eval-table thead th {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        text-align: center;
+        vertical-align: middle;
+        border-color: #3a5fc8;
+    }
+    .eval-table thead th.criteria-th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        text-align: left;
+    }
+    .eval-table td { vertical-align: middle; }
+    .eval-table .max-col { text-align: center; color: #888; font-size: 0.9rem; }
+    .part3-section-header td {
+        background-color: #e8f4fd;
+        font-weight: 700;
+        color: #1a3a8a;
+        border-top: 2px solid #4e73df;
+    }
+    .sub-criteria td:first-child {
+        padding-left: 2.5rem;
+        color: #555;
+        font-size: 0.95rem;
+    }
+    .part3-subtotal-row td {
+        background-color: #dbeafe;
+        font-weight: 600;
+        border-top: 1px solid #93c5fd;
+        border-bottom: 2px solid #4e73df;
+    }
+    .grand-total-row td {
+        background: linear-gradient(135deg, #e7f3ff 0%, #d0e8ff 100%);
+        font-weight: 700;
+        border-top: 2px solid #4e73df;
+    }
+    .total-score-display {
+        font-size: 1.4rem;
         font-weight: 700;
         color: #4e73df;
+    }
+    .part3-subtotal-display {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #224abe;
     }
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid px-4 py-4">
+
+    @php
+        $roleLabels = [
+            'advisor'    => 'อาจารย์ที่ปรึกษา',
+            'committee1' => 'กรรมการคนที่ 1',
+            'committee2' => 'กรรมการคนที่ 2',
+            'committee3' => 'กรรมการคนที่ 3',
+        ];
+        $roleColors = [
+            'advisor'    => 'primary',
+            'committee1' => 'success',
+            'committee2' => 'success',
+            'committee3' => 'success',
+        ];
+        $maxScore = $role === 'advisor' ? 100 : 90;
+        $students = $project->group->members->pluck('student')->take(2);
+
+        // Pre-compute saved scores per student
+        $scores = [];
+        foreach ($students as $idx => $student) {
+            $eval = $project->evaluations
+                ->where('student_id', $student->student_id)
+                ->where('evaluator_code', Auth::user()->user_code)
+                ->where('evaluator_role', $role)
+                ->first();
+            $scores[$idx] = [
+                'part1'  => $eval ? ($eval->part1_score  ?? 0) : 0,
+                'part2'  => $eval ? ($eval->part2_score  ?? 0) : 0,
+                'part3a' => $eval ? ($eval->part3a_score ?? 0) : 0,
+                'part3b' => $eval ? ($eval->part3b_score ?? 0) : 0,
+                'part3c' => $eval ? ($eval->part3c_score ?? 0) : 0,
+            ];
+        }
+    @endphp
+
     <!-- Header -->
     <div class="mb-4">
         <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-primary mb-3">
@@ -40,6 +122,10 @@
         <h1 class="h2 fw-bold">
             <i class="bi bi-clipboard-check me-2 text-primary"></i>ให้คะแนนโครงงาน
         </h1>
+        <small class="text-muted">
+            <span class="badge bg-{{ $roleColors[$role] ?? 'secondary' }}">{{ $roleLabels[$role] ?? $role }}</span>
+            — คะแนนเต็ม: {{ $maxScore }} คะแนน
+        </small>
     </div>
 
     <!-- Project Info -->
@@ -52,12 +138,12 @@
                 <div class="col-md-8">
                     <p class="mb-2"><strong>รหัสโครงงาน:</strong> <code class="text-primary fs-5">{{ $project->project_code }}</code></p>
                     <p class="mb-2"><strong>ชื่อโครงงาน:</strong> {{ $project->project_name ?? 'ยังไม่ระบุ' }}</p>
-                    <p class="mb-2"><strong>สมาชิก:</strong> 
+                    <p class="mb-2"><strong>สมาชิก:</strong>
                         @foreach($project->group->members as $member)
                             {{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}@if(!$loop->last), @endif
                         @endforeach
                     </p>
-                    <p class="mb-0"><strong>วันเวลาสอบ:</strong> 
+                    <p class="mb-0"><strong>วันเวลาสอบ:</strong>
                         @if($project->exam_datetime)
                             <span class="text-danger">{{ $project->exam_datetime->format('d/m/Y H:i น.') }}</span>
                         @else
@@ -68,20 +154,6 @@
                 <div class="col-md-4">
                     <div class="text-center p-3 bg-light rounded">
                         <small class="text-muted d-block mb-2">ตำแหน่งของคุณ</small>
-                        @php
-                            $roleLabels = [
-                                'advisor' => 'อาจารย์ที่ปรึกษา',
-                                'committee1' => 'กรรมการคนที่ 1',
-                                'committee2' => 'กรรมการคนที่ 2',
-                                'committee3' => 'กรรมการคนที่ 3'
-                            ];
-                            $roleColors = [
-                                'advisor' => 'primary',
-                                'committee1' => 'success',
-                                'committee2' => 'success',
-                                'committee3' => 'success'
-                            ];
-                        @endphp
                         <h5 class="mb-0">
                             <span class="badge bg-{{ $roleColors[$role] ?? 'secondary' }}">
                                 {{ $roleLabels[$role] ?? $role }}
@@ -104,142 +176,147 @@
             <form action="{{ route('lecturer.evaluations.submit', $project->project_id) }}" method="POST" id="evaluationForm">
                 @csrf
 
-                <!-- Student Selection -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-person-check text-primary me-2"></i>เลือกนักศึกษา
-                        </label>
-                        <select name="student_id" id="student_id" class="form-select form-select-lg" required>
-                            @foreach($project->group->members as $member)
-                                <option value="{{ $member->student->student_id }}" 
-                                    @if($selectedStudent && $selectedStudent->student_id == $member->student->student_id) selected @endif>
-                                    {{ $member->student->firstname_std }} {{ $member->student->lastname_std }}
-                                    ({{ $member->student->student_code }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('student_id')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered eval-table">
+                        <thead>
+                            <tr>
+                                <th class="criteria-th" style="width: 42%">เกณฑ์การประเมิน</th>
+                                <th style="width: 8%">คะแนนเต็ม</th>
+                                @foreach($students as $idx => $student)
+                                    <th>
+                                        {{ $student->firstname_std }} {{ $student->lastname_std }}<br>
+                                        <small class="fw-normal opacity-75">{{ $student->student_code }}</small>
+                                    </th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            {{-- ส่วนที่ 1: advisor เท่านั้น --}}
+                            @if($role === 'advisor')
+                            <tr>
+                                <td>
+                                    <strong>ส่วนที่ 1:</strong> ความก้าวหน้าโครงงาน
+                                    <small class="text-muted">(ให้โดยอาจารย์ที่ปรึกษา)</small>
+                                </td>
+                                <td class="max-col">10</td>
+                                @foreach($students as $idx => $student)
+                                <td>
+                                    <input type="number"
+                                           name="student_{{ $idx }}_part1_score"
+                                           class="score-input part1-score-{{ $idx }}"
+                                           min="0" max="10" step="0.01"
+                                           placeholder="0.00"
+                                           value="{{ $scores[$idx]['part1'] }}">
+                                </td>
+                                @endforeach
+                            </tr>
+                            @endif
+
+                            {{-- ส่วนที่ 2 --}}
+                            <tr>
+                                <td><strong>ส่วนที่ 2:</strong> คุณภาพของรายงาน</td>
+                                <td class="max-col">30</td>
+                                @foreach($students as $idx => $student)
+                                <td>
+                                    <input type="number"
+                                           name="student_{{ $idx }}_part2_score"
+                                           class="score-input part2-score-{{ $idx }}"
+                                           min="0" max="30" step="0.01"
+                                           placeholder="0.00"
+                                           value="{{ $scores[$idx]['part2'] }}">
+                                </td>
+                                @endforeach
+                            </tr>
+
+                            {{-- ส่วนที่ 3 header --}}
+                            <tr class="part3-section-header">
+                                <td colspan="{{ 2 + $students->count() }}">
+                                    <i class="bi bi-card-checklist me-1"></i>
+                                    ส่วนที่ 3: การนำเสนอโครงงาน
+                                    <span class="fw-normal ms-1">(รวม 60 คะแนน)</span>
+                                </td>
+                            </tr>
+
+                            {{-- 3.1 --}}
+                            <tr class="sub-criteria">
+                                <td>3.1 ความเข้าใจในงานที่ทำ</td>
+                                <td class="max-col">20</td>
+                                @foreach($students as $idx => $student)
+                                <td>
+                                    <input type="number"
+                                           name="student_{{ $idx }}_part3a_score"
+                                           class="score-input part3a-score-{{ $idx }}"
+                                           min="0" max="20" step="0.01"
+                                           placeholder="0.00"
+                                           value="{{ $scores[$idx]['part3a'] }}">
+                                </td>
+                                @endforeach
+                            </tr>
+
+                            {{-- 3.2 --}}
+                            <tr class="sub-criteria">
+                                <td>3.2 คุณภาพการนำเสนอและการตอบคำถาม</td>
+                                <td class="max-col">20</td>
+                                @foreach($students as $idx => $student)
+                                <td>
+                                    <input type="number"
+                                           name="student_{{ $idx }}_part3b_score"
+                                           class="score-input part3b-score-{{ $idx }}"
+                                           min="0" max="20" step="0.01"
+                                           placeholder="0.00"
+                                           value="{{ $scores[$idx]['part3b'] }}">
+                                </td>
+                                @endforeach
+                            </tr>
+
+                            {{-- 3.3 --}}
+                            <tr class="sub-criteria">
+                                <td>3.3 การประยุกต์ใช้ความรู้ทางวิทยาการคอมพิวเตอร์อย่างเหมาะสมในการนำเสนอโครงงาน</td>
+                                <td class="max-col">20</td>
+                                @foreach($students as $idx => $student)
+                                <td>
+                                    <input type="number"
+                                           name="student_{{ $idx }}_part3c_score"
+                                           class="score-input part3c-score-{{ $idx }}"
+                                           min="0" max="20" step="0.01"
+                                           placeholder="0.00"
+                                           value="{{ $scores[$idx]['part3c'] }}">
+                                </td>
+                                @endforeach
+                            </tr>
+
+                            {{-- รวมส่วนที่ 3 --}}
+                            <tr class="part3-subtotal-row">
+                                <td>รวมส่วนที่ 3</td>
+                                <td class="text-center">60</td>
+                                @foreach($students as $idx => $student)
+                                <td class="text-center">
+                                    <span class="part3-subtotal-display part3-sub-{{ $idx }}">0.00</span>
+                                    <span class="text-muted small"> / 60</span>
+                                </td>
+                                @endforeach
+                            </tr>
+
+                            {{-- คะแนนรวมทั้งหมด --}}
+                            <tr class="grand-total-row">
+                                <td><strong>คะแนนรวมทั้งหมด</strong></td>
+                                <td class="text-center"><strong>{{ $maxScore }}</strong></td>
+                                @foreach($students as $idx => $student)
+                                <td class="text-center">
+                                    <span class="total-score-display total-score-{{ $idx }}">0.00</span>
+                                    <span class="text-muted"> / {{ $maxScore }}</span>
+                                </td>
+                                @endforeach
+                            </tr>
+
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- ส่วนที่ 1: Advisor Only -->
-                @if($role === 'advisor')
-                <div class="row">
-                    <div class="col-md-12 mb-4">
-                        <div class="alert alert-info" role="alert">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>ส่วนที่ 1 | คะแนนความก้าวหน้าของโครงงาน</strong> - เฉพาะอาจารย์ที่ปรึกษา
-                        </div>
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-book text-primary me-2"></i>คะแนนส่วนที่ 1 (เต็ม 10 คะแนน)
-                        </label>
-                        <input type="number" 
-                               name="part1_score" 
-                               id="part1_score"
-                               class="form-control score-input" 
-                               min="0" 
-                               max="10" 
-                               step="0.01"
-                               value="{{ $evaluation ? $evaluation->part1_score : 0 }}"
-                               required>
-                        <div class="form-text">
-                            ให้คะแนนตามความเข้าใจโครงงาน (0-10 คะแนน)
-                        </div>
-                        @error('part1_score')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                @endif
-
-                <!-- ส่วนที่ 2-3: Advisor + Committee -->
-                <div class="row">
-                    <div class="col-md-12 mb-4">
-                        <div class="alert alert-success" role="alert">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>ส่วนที่ 2 และ 3 | คุณภาพของงานนำเสนอ + การนำเสนอโครงงาน</strong> - ทั้ง Advisor และ Committee
-                        </div>
-                    </div>
-
-                    <!-- Part 2 Score -->
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-file-earmark-text text-info me-2"></i>ส่วนที่ 2: คุณภาพของงาน (เต็ม 30 คะแนน)
-                        </label>
-                        <input type="number" 
-                               name="part2_score" 
-                               id="part2_score"
-                               class="form-control score-input" 
-                               min="0" 
-                               max="30" 
-                               step="0.01"
-                               value="{{ $evaluation ? $evaluation->part2_score : 0 }}"
-                               required>
-                        <div class="form-text">
-                            ให้คะแนนตามคุณภาพของรูปเล่มรายงาน (0-30 คะแนน)
-                        </div>
-                        @error('part2_score')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Part 3 Score -->
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-megaphone text-warning me-2"></i>ส่วนที่ 3: การนำเสนอโครงงาน (เต็ม 60 คะแนน)
-                        </label>
-                        <input type="number" 
-                               name="part3_score" 
-                               id="part3_score"
-                               class="form-control score-input" 
-                               min="0" 
-                               max="60" 
-                               step="0.01"
-                               value="{{ $evaluation ? $evaluation->part3_score : 0 }}"
-                               required>
-                        <div class="form-text">
-                            ให้คะแนนตามการนำเสนอและการตอบคำถาม (0-60 คะแนน)
-                        </div>
-                        @error('part3_score')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Total Score Display -->
-                <div class="text-center mb-4 p-4 bg-light rounded">
-                    <small class="text-muted d-block mb-2">คะแนนรวมที่ให้</small>
-                    <div class="total-score" id="totalScore">0.00</div>
-                    <small class="text-muted">
-                        @if($role === 'advisor')
-                            / 100 คะแนน (ส่วนที่ 1+2+3)
-                        @else
-                            / 90 คะแนน (ส่วนที่ 2+3)
-                        @endif
-                    </small>
-                </div>
-
-                <!-- Comments -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-chat-left-text text-secondary me-2"></i>ความเห็นเพิ่มเติม (ถ้ามี)
-                    </label>
-                    <textarea name="comments" 
-                              class="form-control" 
-                              rows="4" 
-                              placeholder="แสดงความคิดเห็นหรือข้อเสนอแนะเพิ่มเติม (ไม่บังคับ)">{{ $evaluation ? $evaluation->comments : '' }}</textarea>
-                    @error('comments')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-grid gap-2">
+                <div class="d-grid gap-2 mt-4">
                     <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-save me-2"></i>{{ $evaluation ? 'บันทึกการแก้ไข' : 'ส่งคะแนน' }}
+                        <i class="bi bi-save me-2"></i>{{ $evaluation ? 'บันทึกการแก้ไข' : 'บันทึกคะแนน' }}
                     </button>
                 </div>
             </form>
@@ -249,80 +326,67 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const part1Input = document.getElementById('part1_score');
-    const part2Input = document.getElementById('part2_score');
-    const part3Input = document.getElementById('part3_score');
-    const totalScoreDisplay = document.getElementById('totalScore');
+document.addEventListener('DOMContentLoaded', function () {
     const isAdvisor = {{ $role === 'advisor' ? 'true' : 'false' }};
+    const studentCount = {{ $students->count() }};
 
-    function updateTotalScore() {
-        const part1 = (part1Input && parseFloat(part1Input.value)) || 0;
-        const part2 = (part2Input && parseFloat(part2Input.value)) || 0;
-        const part3 = (part3Input && parseFloat(part3Input.value)) || 0;
-        
-        const total = part1 + part2 + part3;
-        totalScoreDisplay.textContent = total.toFixed(2);
-        
-        // Change color based on score
-        if (total >= 90) {
-            totalScoreDisplay.style.color = '#28a745'; // Green (A)
-        } else if (total >= 85) {
-            totalScoreDisplay.style.color = '#17a2b8'; // Blue (B+)
-        } else if (total >= 80) {
-            totalScoreDisplay.style.color = '#17a2b8'; // Blue (B)
-        } else if (total >= 70) {
-            totalScoreDisplay.style.color = '#ffc107'; // Yellow (C+)
-        } else if (total >= 50) {
-            totalScoreDisplay.style.color = '#fd7e14'; // Orange (C/D+/D)
-        } else {
-            totalScoreDisplay.style.color = '#dc3545'; // Red (F)
+    function updateTotals() {
+        for (let i = 0; i < studentCount; i++) {
+            const part1  = isAdvisor ? (parseFloat(document.querySelector(`.part1-score-${i}`)?.value)  || 0) : 0;
+            const part2  = parseFloat(document.querySelector(`.part2-score-${i}`)?.value)  || 0;
+            const part3a = parseFloat(document.querySelector(`.part3a-score-${i}`)?.value) || 0;
+            const part3b = parseFloat(document.querySelector(`.part3b-score-${i}`)?.value) || 0;
+            const part3c = parseFloat(document.querySelector(`.part3c-score-${i}`)?.value) || 0;
+
+            const part3Total = part3a + part3b + part3c;
+            const grandTotal = part1 + part2 + part3Total;
+
+            const sub = document.querySelector(`.part3-sub-${i}`);
+            const tot = document.querySelector(`.total-score-${i}`);
+
+            if (sub) sub.textContent = part3Total.toFixed(2);
+            if (tot) {
+                tot.textContent = grandTotal.toFixed(2);
+                if      (grandTotal >= 90) tot.style.color = '#28a745';
+                else if (grandTotal >= 80) tot.style.color = '#17a2b8';
+                else if (grandTotal >= 70) tot.style.color = '#ffc107';
+                else if (grandTotal >= 50) tot.style.color = '#fd7e14';
+                else                       tot.style.color = '#dc3545';
+            }
         }
     }
 
-    // Add event listeners
-    if (part1Input) part1Input.addEventListener('input', updateTotalScore);
-    if (part2Input) part2Input.addEventListener('input', updateTotalScore);
-    if (part3Input) part3Input.addEventListener('input', updateTotalScore);
-
-    // Validate on input
-    if (part1Input) {
-        part1Input.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            if (value < 0) this.value = 0;
-            if (value > 10) this.value = 10;
+    document.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('input', function () {
+            const max = parseFloat(this.getAttribute('max'));
+            if (parseFloat(this.value) < 0)   this.value = 0;
+            if (parseFloat(this.value) > max)  this.value = max;
+            updateTotals();
         });
-    }
+    });
 
-    if (part2Input) {
-        part2Input.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            if (value < 0) this.value = 0;
-            if (value > 30) this.value = 30;
-        });
-    }
+    document.getElementById('evaluationForm').addEventListener('submit', function (e) {
+        for (let i = 0; i < studentCount; i++) {
+            const part2  = parseFloat(document.querySelector(`.part2-score-${i}`)?.value)  || 0;
+            const part3a = parseFloat(document.querySelector(`.part3a-score-${i}`)?.value) || 0;
+            const part3b = parseFloat(document.querySelector(`.part3b-score-${i}`)?.value) || 0;
+            const part3c = parseFloat(document.querySelector(`.part3c-score-${i}`)?.value) || 0;
+            const part1  = isAdvisor ? (parseFloat(document.querySelector(`.part1-score-${i}`)?.value) || 0) : 1;
 
-    if (part3Input) {
-        part3Input.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            if (value < 0) this.value = 0;
-            if (value > 60) this.value = 60;
-        });
-    }
-
-    // Initial calculation
-    updateTotalScore();
-
-    // Add event listener for student selection change
-    const studentSelect = document.getElementById('student_id');
-    if (studentSelect) {
-        studentSelect.addEventListener('change', function() {
-            if (this.value) {
-                // Reload form with selected student_id as query parameter
-                window.location.href = `{{ route('lecturer.evaluations.form', $project->project_id) }}?student_id=${this.value}`;
+            if (!isAdvisor && part2 === 0 && part3a === 0 && part3b === 0 && part3c === 0) {
+                e.preventDefault();
+                alert('กรุณากรอกคะแนนสำหรับนักศึกษาทุกคน');
+                return;
             }
-        });
-    }
+            if (isAdvisor && part1 === 0 && part2 === 0 && part3a === 0 && part3b === 0 && part3c === 0) {
+                e.preventDefault();
+                alert('กรุณากรอกคะแนนสำหรับนักศึกษาทุกคน');
+                return;
+            }
+        }
+    });
+
+    updateTotals();
 });
 </script>
 @endpush

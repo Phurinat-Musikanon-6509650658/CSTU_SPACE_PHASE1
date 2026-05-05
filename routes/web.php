@@ -7,7 +7,6 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\StudentManagementController;
 use App\Http\Controllers\AdminLogController;
 use App\Http\Controllers\StatisticsController;
-use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\PermissionTestController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\GroupController;
@@ -19,6 +18,7 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\AdminSubmissionController;
 use App\Http\Controllers\CoordinatorSubmissionController;
 use App\Http\Controllers\StaffSubmissionController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\LecturerSubmissionController;
 
 /*
@@ -313,19 +313,16 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('export/csv', [AdminLogController::class, 'export'])->name('export');
         });
         
-        // System Settings Management (Admin Only)
-        Route::prefix('system')->name('system.')->group(function () {
-            Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
-            Route::post('clear-cache', [SystemSettingsController::class, 'clearCache'])->name('clear-cache');
-            Route::post('optimize', [SystemSettingsController::class, 'optimize'])->name('optimize');
-            Route::get('config', [SystemSettingsController::class, 'showConfig'])->name('config');
-            Route::post('migrate', [SystemSettingsController::class, 'runMigrations'])->name('migrate');
-            Route::get('logs', [SystemSettingsController::class, 'showLogs'])->name('logs');
-            Route::post('toggle-status', [SystemSettingsController::class, 'toggleSystemStatus'])->name('toggle-status');
-            Route::put('settings', [SystemSettingsController::class, 'updateSettings'])->name('settings.update');
+        // Subject Management
+        Route::prefix('subjects')->name('subjects.')->group(function () {
+            Route::get('/', [SubjectController::class, 'index'])->name('index');
+            Route::get('create', [SubjectController::class, 'create'])->name('create');
+            Route::post('/', [SubjectController::class, 'store'])->name('store');
+            Route::get('{subject}/edit', [SubjectController::class, 'edit'])->name('edit');
+            Route::put('{subject}', [SubjectController::class, 'update'])->name('update');
+            Route::post('{subject}/toggle', [SubjectController::class, 'toggle'])->name('toggle');
+            Route::delete('{subject}', [SubjectController::class, 'destroy'])->name('destroy');
         });
-
-
         
     });
     
