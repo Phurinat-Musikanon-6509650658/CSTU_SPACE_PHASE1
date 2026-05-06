@@ -68,11 +68,6 @@ class Project extends Model
         return $this->hasMany(ProjectEvaluation::class, 'project_id', 'project_id');
     }
 
-    public function grade()
-    {
-        return $this->hasOne(ProjectGrade::class, 'project_id', 'project_id');
-    }
-
     public function latestProposal()
     {
         return $this->hasOneThrough(

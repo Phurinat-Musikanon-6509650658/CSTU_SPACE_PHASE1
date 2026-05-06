@@ -161,11 +161,6 @@
                               + (int)($project->committee2_code) + (int)($project->committee3_code);
             $isComplete  = $expectedCount > 0 && $evaluationsCount >= $expectedCount;
             $percentage  = $expectedCount > 0 ? ($evaluationsCount / $expectedCount) * 100 : 0;
-            $grade       = $project->grade;
-            $allConfirmed = $grade && $grade->all_confirmed;
-
-            $gradeColors = ['A'=>'success','B+'=>'info','B'=>'info','C+'=>'warning','C'=>'warning','D+'=>'danger','D'=>'danger','F'=>'danger'];
-            $gc = isset($grade->grade) ? ($gradeColors[$grade->grade] ?? 'secondary') : 'secondary';
         @endphp
 
         <div class="project-card d-flex">
@@ -178,12 +173,7 @@
                     <div class="col-md-4">
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <span class="project-code">{{ $project->project_code }}</span>
-                            @if($allConfirmed)
-                                <span class="badge bg-success" style="font-size:0.7rem">
-                                    <i class="bi bi-patch-check-fill me-1"></i>ยืนยันแล้ว
-                                </span>
-                            @endif
-                        </div>
+                            </div>
                         <div class="project-title">{{ $project->project_name ?? 'ยังไม่ระบุชื่อ' }}</div>
                         <div class="text-muted small">
                             <i class="bi bi-people-fill me-1"></i>
@@ -209,71 +199,14 @@
                         <small class="text-muted">{{ number_format($percentage, 0) }}% เสร็จสิ้น</small>
                     </div>
 
-                    <!-- Score -->
-                    <div class="col-md-2 text-center">
-                        <div class="info-label"><i class="bi bi-bar-chart-fill me-1"></i>คะแนนรวม</div>
-                        @if($grade && $grade->final_score !== null)
-                            <div class="score-pill bg-primary">
-                                {{ number_format($grade->final_score, 1) }}
-                            </div>
-                            <div class="text-muted small mt-1">/ 100</div>
-                        @else
-                            <div class="score-pill bg-secondary">—</div>
-                        @endif
-                    </div>
-
-                    <!-- Grade -->
-                    <div class="col-md-1 text-center">
-                        <div class="info-label"><i class="bi bi-award-fill me-1"></i>เกรด</div>
-                        @if($grade && $grade->grade)
-                            <div class="score-pill bg-{{ $gc }}">{{ $grade->grade }}</div>
-                        @else
-                            <div class="score-pill bg-secondary">—</div>
-                        @endif
-                    </div>
-
                     <!-- Actions -->
                     <div class="col-md-3 d-flex flex-column gap-2 align-items-end">
                         <a href="{{ route('coordinator.evaluations.scores', $project->project_id) }}"
                            class="btn btn-sm btn-primary btn-action w-100">
                             <i class="bi bi-clipboard-data me-1"></i>ดูคะแนน
                         </a>
-                        @if($grade)
-                            <a href="{{ route('coordinator.evaluations.grades', $project->project_id) }}"
-                               class="btn btn-sm btn-success btn-action w-100">
-                                <i class="bi bi-award me-1"></i>ดูเกรด
-                            </a>
-                        @endif
                     </div>
                 </div>
-
-                <!-- Confirmation status -->
-                @if($grade)
-                    <div class="border-top mt-3 pt-2 d-flex align-items-center gap-2 flex-wrap">
-                        <span class="text-muted small me-1">
-                            <i class="bi bi-patch-check me-1"></i>ยืนยันเกรด:
-                        </span>
-                        @if($project->advisor_code)
-                            <span class="confirm-chip {{ $grade->advisor_confirmed ? 'done' : 'pending' }}">
-                                <i class="bi bi-{{ $grade->advisor_confirmed ? 'check-circle-fill' : 'circle' }}"></i>
-                                ที่ปรึกษา
-                            </span>
-                        @endif
-                        @foreach(['committee1'=>'กรรมการ 1','committee2'=>'กรรมการ 2','committee3'=>'กรรมการ 3'] as $cr => $label)
-                            @if($project->{$cr.'_code'})
-                                <span class="confirm-chip {{ $grade->{$cr.'_confirmed'} ? 'done' : 'pending' }}">
-                                    <i class="bi bi-{{ $grade->{$cr.'_confirmed'} ? 'check-circle-fill' : 'circle' }}"></i>
-                                    {{ $label }}
-                                </span>
-                            @endif
-                        @endforeach
-                        @if($allConfirmed)
-                            <span class="badge bg-success ms-auto">
-                                <i class="bi bi-check-all me-1"></i>ยืนยันครบแล้ว
-                            </span>
-                        @endif
-                    </div>
-                @endif
             </div>
         </div>
 

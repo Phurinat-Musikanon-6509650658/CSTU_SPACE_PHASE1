@@ -297,22 +297,13 @@
             <p style="color: #718096; font-size: 0.9rem; margin: 0;">กำหนดตารางและมอบหมายกรรมการ</p>
         </a>
 
-        <!-- 4. การประเมินและเกรด -->
+        <!-- 4. ผลการประเมิน -->
         <a href="{{ route('coordinator.evaluations.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #667eea;">
             <div style="font-size: 2.5rem; color: #667eea; margin-bottom: 1rem;">
                 <i class="bi bi-clipboard-check-fill"></i>
             </div>
-            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">การประเมินและเกรด</h5>
-            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูผลการประเมินและคำนวณเกรด</p>
-        </a>
-
-        <!-- 5. สรุปคะแนนทั้งหมด -->
-        <a href="{{ route('coordinator.evaluations.summary') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #f6ad55;">
-            <div style="font-size: 2.5rem; color: #f6ad55; margin-bottom: 1rem;">
-                <i class="bi bi-award-fill"></i>
-            </div>
-            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">สรุปคะแนนทั้งหมด</h5>
-            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูสรุปคะแนนและผลการประเมิน</p>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">ผลการประเมิน</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูผลการประเมินและคะแนนโครงงาน</p>
         </a>
 
         <!-- 6. จัดการผู้ใช้ -->

@@ -285,17 +285,6 @@
         </div>
     @endif
 
-    @if(session('pending_grade_confirmation'))
-        <div class="notification-alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>⚠️ มีเกรดรอยืนยัน!</strong> 
-            คุณมีเกรดโครงงานที่รอการยืนยัน {{ session('pending_grade_confirmation') }} รายการ
-            <a href="{{ route('lecturer.grades.confirmation') }}" class="text-white text-decoration-underline ms-2">
-                ยืนยันเกรดเลย
-            </a>
-        </div>
-    @endif
-
     <!-- Statistics Cards -->
     <div class="stats-grid">
         <div class="stat-card warning">
@@ -402,16 +391,6 @@
             </div>
         </a>
 
-        <!-- 6. ยืนยันเกรด -->
-        <a href="{{ route('lecturer.grades.confirmation') }}" class="menu-card">
-            <div class="menu-card-icon">
-                <i class="bi bi-award-fill"></i>
-            </div>
-            <div class="menu-card-title">ยืนยันเกรด</div>
-            <div class="menu-card-description">
-                ยืนยันเกรดโครงงานที่คุณเป็นอาจารย์ที่ปรึกษา
-            </div>
-        </a>
     </div>
 </div>
 @endsection

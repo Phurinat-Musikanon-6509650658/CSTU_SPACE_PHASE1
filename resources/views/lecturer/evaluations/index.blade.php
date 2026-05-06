@@ -140,12 +140,6 @@
                                    class="btn btn-sm btn-outline-primary mb-1 w-100">
                                     <i class="bi bi-pencil me-1"></i>แก้ไขคะแนน
                                 </a>
-                                @if($project->grade)
-                                    <a href="{{ route('lecturer.evaluations.grade', $project->project_id) }}" 
-                                       class="btn btn-sm btn-outline-success w-100">
-                                        <i class="bi bi-award me-1"></i>ดูเกรด
-                                    </a>
-                                @endif
                             @else
                                 <a href="{{ route('lecturer.evaluations.form', $project->project_id) }}" 
                                    class="btn btn-sm btn-primary w-100">

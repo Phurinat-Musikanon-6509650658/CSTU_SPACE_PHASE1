@@ -19,7 +19,7 @@ class StudentController extends Controller
         }
 
         // ดึงข้อมูลกลุ่มของ student พร้อม proposal ล่าสุด
-        $myGroup = $student->groups()->with(['members.student', 'latestProposal.lecturer', 'project.grade'])->first();
+        $myGroup = $student->groups()->with(['members.student', 'latestProposal.lecturer'])->first();
         
         // ดึงคำเชิญที่ค้างอยู่
         $pendingInvitations = $student->pendingInvitations()
@@ -62,19 +62,6 @@ class StudentController extends Controller
                     session()->flash('exam_scheduled', [
                         'project_name' => $myGroup->project->project_name_th,
                         'exam_datetime' => $examDate->locale('th')->translatedFormat('d F Y เวลา H:i น.')
-                    ]);
-                }
-            }
-            
-            // Check for grade released notification
-            if ($myGroup->project && $myGroup->project->grade && $myGroup->project->grade->grade_released) {
-                $releasedAt = \Carbon\Carbon::parse($myGroup->project->grade->grade_released_at);
-                
-                // Show notification if grade was released within last 30 minutes
-                if ($releasedAt && $releasedAt->greaterThan(now()->subMinutes(30))) {
-                    session()->flash('grade_released', [
-                        'final_grade' => $myGroup->project->grade->final_grade,
-                        'final_score' => $myGroup->project->grade->final_score
                     ]);
                 }
             }
@@ -124,36 +111,4 @@ class StudentController extends Controller
         return $this->menu(); // redirect to menu as requested
     }
 
-    public function viewGrades()
-    {
-        $student = Auth::guard('student')->user();
-        
-        if (!$student) {
-            return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบ');
-        }
-
-        // ดึงข้อมูลกลุ่มพร้อมโครงงาน
-        $myGroup = $student->groups()
-            ->with([
-                'project.grade',
-                'project.evaluations.evaluator',
-                'project.advisor',
-                'project.committee1',
-                'project.committee2',
-                'project.committee3',
-                'members.student'
-            ])
-            ->first();
-
-        if (!$myGroup || !$myGroup->project) {
-            return redirect()->route('student.menu')
-                ->with('error', 'ยังไม่มีข้อมูลโครงงาน');
-        }
-
-        $project = $myGroup->project;
-        $grade = $project->grade;
-        $evaluations = $project->evaluations;
-
-        return view('student.grades.index', compact('myGroup', 'project', 'grade', 'evaluations'));
-    }
 }

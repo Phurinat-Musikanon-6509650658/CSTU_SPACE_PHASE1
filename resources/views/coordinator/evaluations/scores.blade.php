@@ -480,11 +480,9 @@
 
                 {{-- Per-student summary bar --}}
                 @php
-                    $fs            = $studentSummary[$idx]['final'];
-                    $expectedGrade = \App\Models\ProjectGrade::calculateGrade($fs);
-                    $gradeColors   = ['A'=>'success','B+'=>'info','B'=>'info','C+'=>'warning','C'=>'warning','D+'=>'danger','D'=>'danger','F'=>'danger'];
-                    $gc            = $gradeColors[$expectedGrade] ?? 'secondary';
-                    $isDone        = $studentComplete[$idx] ?? false;
+                    $fs   = $studentSummary[$idx]['final'];
+                    $isDone = $studentComplete[$idx] ?? false;
+                    $gc   = 'primary';
                 @endphp
                 <div class="card mt-2 {{ $isDone ? 'border-success' : '' }}" style="{{ $isDone ? 'border-width:2px !important;' : '' }}">
                     @if($isDone)
@@ -527,15 +525,6 @@
                                 <div class="text-muted small mb-1">คะแนนรวม</div>
                                 <div class="fw-bold text-{{ $gc }}" style="font-size:1.4rem">{{ number_format($fs, 2) }}</div>
                                 <div class="text-muted" style="font-size:0.78rem">/100</div>
-                            </div>
-                            <div class="col">
-                                <div class="text-muted small mb-1">
-                                    {{ $isDone ? 'เกรด' : 'เกรดคาดการณ์' }}
-                                </div>
-                                <span class="badge bg-{{ $gc }} grade-badge">{{ $expectedGrade }}</span>
-                                @if(!$isDone)
-                                    <div><small class="text-muted" style="font-size:0.7rem">เบื้องต้น</small></div>
-                                @endif
                             </div>
                         </div>
                     </div>

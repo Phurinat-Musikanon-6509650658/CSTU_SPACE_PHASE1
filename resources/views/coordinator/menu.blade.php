@@ -260,29 +260,18 @@
             </div>
         </a>
 
-        <!-- 5. การประเมินและเกรด -->
+        <!-- 5. การประเมิน -->
         <a href="{{ route('coordinator.evaluations.index') }}" class="menu-card primary">
             <div class="menu-card-icon">
                 <i class="bi bi-clipboard-check-fill"></i>
             </div>
-            <div class="menu-card-title">การประเมินและเกรด</div>
+            <div class="menu-card-title">ผลการประเมิน</div>
             <div class="menu-card-description">
-                ดูผลการประเมิน คำนวณเกรด และจัดการเกรดโครงงาน
+                ดูผลการประเมินและคะแนนโครงงาน
             </div>
         </a>
 
-        <!-- 6. สรุปคะแนน -->
-        <a href="{{ route('coordinator.evaluations.summary') }}" class="menu-card warning">
-            <div class="menu-card-icon">
-                <i class="bi bi-award-fill"></i>
-            </div>
-            <div class="menu-card-title">สรุปคะแนนทั้งหมด</div>
-            <div class="menu-card-description">
-                ดูสรุปคะแนนและผลการประเมินโครงงานทั้งหมด
-            </div>
-        </a>
-
-        <!-- 7. จัดการผู้ใช้ -->
+        <!-- 6. จัดการผู้ใช้ -->
         <a href="{{ route('coordinator.users.index') }}" class="menu-card info">
             <div class="menu-card-icon">
                 <i class="bi bi-person-gear"></i>

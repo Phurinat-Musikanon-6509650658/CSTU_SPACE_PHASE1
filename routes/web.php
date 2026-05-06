@@ -99,9 +99,7 @@ Route::middleware(['auth:student', 'check.system.status', 'check.subject.access'
         Route::get('/{project}/download', [SubmissionController::class, 'download'])->name('download');
     });
     
-    // Student Grades View
-    Route::get('grades', [StudentController::class, 'viewGrades'])->name('student.grades');
-    
+
 });
 
 // ======================================
@@ -170,13 +168,10 @@ Route::middleware('session.timeout')->group(function () {
             Route::put('{project}', [CoordinatorController::class, 'scheduleUpdate'])->name('update');
         });
         
-        // Evaluation & Grading
+        // Evaluation
         Route::prefix('evaluations')->name('evaluations.')->group(function () {
             Route::get('/', [CoordinatorController::class, 'evaluationsIndex'])->name('index');
             Route::get('{project}/scores', [CoordinatorController::class, 'viewScores'])->name('scores');
-            Route::get('{project}/grades', [CoordinatorController::class, 'viewGrades'])->name('grades');
-            Route::get('summary', [CoordinatorController::class, 'scoreSummary'])->name('summary');
-            Route::post('{project}/release', [CoordinatorController::class, 'releaseGrade'])->name('release');
         });
         
         // Submissions Management
@@ -210,24 +205,19 @@ Route::middleware('session.timeout')->group(function () {
         // Submission Download for Lecturer
         Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
         
-        // Evaluation & Grading
+        // Evaluation
         Route::prefix('evaluations')->name('evaluations.')->group(function () {
             Route::get('/', [App\Http\Controllers\LecturerController::class, 'evaluationsIndex'])->name('index');
             Route::get('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'evaluateForm'])->name('form');
             Route::post('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'submitEvaluation'])->name('submit');
-            Route::get('{project}/grades', [App\Http\Controllers\LecturerController::class, 'viewGrade'])->name('grade');
-            Route::post('{project}/confirm', [App\Http\Controllers\LecturerController::class, 'confirmGrade'])->name('confirm');
         });
-        
+
         // Submissions Management
         Route::prefix('submissions')->name('submissions.')->group(function () {
             Route::get('/', [LecturerSubmissionController::class, 'index'])->name('index');
             Route::get('{project_id}', [LecturerSubmissionController::class, 'show'])->name('show');
             Route::get('{project_id}/download', [LecturerSubmissionController::class, 'download'])->name('download');
         });
-        
-        // Grade Confirmation
-        Route::get('grades/confirmation', [App\Http\Controllers\LecturerController::class, 'gradeConfirmationIndex'])->name('grades.confirmation');
     });
     
     // ======================================

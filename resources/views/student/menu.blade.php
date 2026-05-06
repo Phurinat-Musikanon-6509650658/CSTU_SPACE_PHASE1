@@ -540,22 +540,6 @@
             </div>
         @endif
 
-        @if(session('grade_released'))
-            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-award-fill me-2"></i>🎓 เกรดของคุณได้รับการประกาศแล้ว!
-                </h5>
-                <hr>
-                <p class="mb-0">
-                    อาจารย์ได้ประกาศเกรดโครงงานของคุณแล้ว
-                </p>
-                <small class="d-block mt-2 text-muted">
-                    <i class="bi bi-info-circle me-1"></i>คุณสามารถดูรายละเอียดเกรดและคะแนนได้จากการ์ด "ดูเกรด"
-                </small>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
         <!-- Pending Invitations -->
         @if($pendingInvitations->count() > 0)
         <div class="row mb-4">
@@ -897,27 +881,6 @@
             </div>
             @endif
             
-            <!-- 8. ดูคะแนนและผลการประเมิน -->
-            @if(isset($myGroup) && $myGroup && $myGroup->project && $myGroup->project->submission_file)
-            <div class="col-lg-4 col-md-6">
-                <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid #9333ea;">
-                    <div class="card-icon mb-3" style="color: #9333ea;">
-                        <i class="bi bi-award-fill"></i>
-                    </div>
-                    <div class="card-content">
-                        <h5 class="card-title">คะแนนและผลประเมิน</h5>
-                        <p class="card-description">
-                            <span class="badge" style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white;">ดูคะแนน</span><br>
-                            <small class="text-muted mt-2 d-block">ตรวจสอบคะแนนและผลการประเมินโครงงาน</small>
-                        </p>
-                        <a href="{{ route('student.grades') }}" class="btn btn-sm mt-2" style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white; border: none;">
-                            <span>ดูคะแนน</span>
-                            <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Logout Section -->
