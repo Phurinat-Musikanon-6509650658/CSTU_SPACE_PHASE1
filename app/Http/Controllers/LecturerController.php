@@ -192,6 +192,49 @@ class LecturerController extends Controller
     }
 
     /**
+     * Export ใบประเมินสำหรับลงลายเซ็น
+     */
+    public function exportEvaluation(Request $request, $projectId)
+    {
+        $user = Auth::guard('web')->user();
+        $userCode = $user->user_code;
+
+        $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3', 'evaluations'])
+            ->findOrFail($projectId);
+
+        $role = null;
+        if ($project->advisor_code === $userCode)         $role = 'advisor';
+        elseif ($project->committee1_code === $userCode)  $role = 'committee1';
+        elseif ($project->committee2_code === $userCode)  $role = 'committee2';
+        elseif ($project->committee3_code === $userCode)  $role = 'committee3';
+
+        if (!$role) {
+            return redirect()->route('lecturer.evaluations.index')
+                ->with('error', 'คุณไม่มีสิทธิ์ประเมินโครงงานนี้');
+        }
+
+        $students = $project->group->members->pluck('student')->take(2);
+
+        $scores = [];
+        foreach ($students as $idx => $student) {
+            $eval = $project->evaluations
+                ->where('student_id', $student->student_id)
+                ->where('evaluator_code', $userCode)
+                ->where('evaluator_role', $role)
+                ->first();
+            $scores[$idx] = [
+                'part1'  => $eval ? ($eval->part1_score  ?? '-') : '-',
+                'part2'  => $eval ? ($eval->part2_score  ?? '-') : '-',
+                'part3a' => $eval ? ($eval->part3a_score ?? '-') : '-',
+                'part3b' => $eval ? ($eval->part3b_score ?? '-') : '-',
+                'part3c' => $eval ? ($eval->part3c_score ?? '-') : '-',
+            ];
+        }
+
+        return view('lecturer.evaluations.export', compact('project', 'role', 'students', 'scores', 'user'));
+    }
+
+    /**
      * บันทึกคะแนน (สำหรับ 2 นักศึกษา)
      */
     public function submitEvaluation(Request $request, $projectId)

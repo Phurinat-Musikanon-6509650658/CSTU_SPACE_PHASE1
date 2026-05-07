@@ -44,8 +44,8 @@
 
     {{-- Header --}}
     <div class="mb-4">
-        <a href="{{ route('coordinator.menu') }}" class="btn btn-link text-decoration-none ps-0">
-            <i class="bi bi-chevron-left me-1"></i>กลับหน้าเมนู
+        <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0">
+            <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
         </a>
         <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
             <div>

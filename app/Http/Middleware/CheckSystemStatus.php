@@ -23,10 +23,13 @@ class CheckSystemStatus
             return $next($request);
         }
 
-        // ตรวจสอบสถานะระบบ
-        if (!SystemSetting::isSystemOpen()) {
-            // ระบบปิด และ user ไม่ใช่ admin
-            return response()->view('errors.system_closed', [], 503);
+        // ตรวจสอบสถานะระบบ (ถ้า table ยังไม่มีให้ถือว่าระบบเปิด)
+        try {
+            if (!SystemSetting::isSystemOpen()) {
+                return response()->view('errors.system_closed', [], 503);
+            }
+        } catch (\Exception $e) {
+            // system_settings table ยังไม่ถูกสร้าง → ถือว่าระบบเปิดปกติ
         }
 
         return $next($request);

@@ -116,9 +116,15 @@
 
     <!-- Header -->
     <div class="mb-4">
-        <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-primary mb-3">
-            <i class="bi bi-arrow-left me-2"></i>กลับรายการ
-        </a>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>กลับรายการ
+            </a>
+            <a href="{{ route('lecturer.evaluations.export', $project->project_id) }}" target="_blank"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-printer me-2"></i>Export ใบประเมิน (ลายเซ็น)
+            </a>
+        </div>
         <h1 class="h2 fw-bold">
             <i class="bi bi-clipboard-check me-2 text-primary"></i>ให้คะแนนโครงงาน
         </h1>

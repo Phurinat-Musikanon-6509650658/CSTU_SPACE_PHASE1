@@ -20,6 +20,7 @@ use App\Http\Controllers\CoordinatorSubmissionController;
 use App\Http\Controllers\StaffSubmissionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\LecturerSubmissionController;
+use App\Http\Controllers\SystemSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -113,7 +114,7 @@ Route::middleware('session.timeout')->group(function () {
     // Coordinator Routes
     // ======================================
     Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin,staff', 'check.system.status')->group(function () {
-        Route::get('/', function() { return view('coordinator.menu'); })->name('menu');
+        Route::get('/', function() { return redirect()->route('coordinator.dashboard'); })->name('menu');
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
         // Exam Schedules Management (Full Access for Coordinator & Staff)
@@ -210,6 +211,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('/', [App\Http\Controllers\LecturerController::class, 'evaluationsIndex'])->name('index');
             Route::get('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'evaluateForm'])->name('form');
             Route::post('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'submitEvaluation'])->name('submit');
+            Route::get('{project}/export', [App\Http\Controllers\LecturerController::class, 'exportEvaluation'])->name('export');
         });
 
         // Submissions Management

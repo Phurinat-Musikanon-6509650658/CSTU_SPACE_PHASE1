@@ -4,48 +4,58 @@
 
 @section('content')
 <div class="container">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                    Import ผู้ใช้จาก CSV
+                </h2>
+                <p class="mb-0 opacity-75">นำเข้าข้อมูลผู้ใช้งานระบบจากไฟล์ CSV</p>
+            </div>
+            <a href="{{ route('users.index') }}" class="btn modern-btn btn-light">
+                <i class="bi bi-arrow-left"></i>
+                <span>กลับ</span>
+            </a>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Import ผู้ใช้จาก CSV</h4>
-                </div>
-                <div class="card-body">
-                    <!-- คำแนะนำ -->
-                    <div class="alert alert-info">
-                        <h5><i class="bi bi-info-circle"></i> คำแนะนำการใช้งาน:</h5>
+            <div class="modern-card form-card">
+                <div class="form-card-body">
+                    <div class="alert alert-info alert-modern mb-4">
+                        <h5 class="mb-2"><i class="bi bi-info-circle me-1"></i> คำแนะนำการใช้งาน</h5>
                         <ol class="mb-2">
                             <li>ไฟล์ CSV ต้องมี header แถวแรก</li>
                             <li>คอลัมน์ต้องเรียงตามลำดับ: <strong>username, firstname, lastname, email, password, role, user_code</strong></li>
                             <li>Role ที่รองรับ: admin, coordinator, advisor (default: advisor)</li>
                             <li>Password จะถูก hash อัตโนมัติ</li>
                         </ol>
-                        <p class="mb-0">
-                            <a href="{{ route('users.downloadTemplate') }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download"></i> ดาวน์โหลดไฟล์ตัวอย่าง
-                            </a>
-                        </p>
+                        <a href="{{ route('users.downloadTemplate') }}" class="btn btn-sm modern-btn btn-primary-modern">
+                            <i class="bi bi-download"></i>
+                            <span>ดาวน์โหลดไฟล์ตัวอย่าง</span>
+                        </a>
                     </div>
 
-                    <!-- ตัวอย่าง CSV -->
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <strong>ตัวอย่างไฟล์ CSV:</strong>
+                    <div class="csv-preview mb-4">
+                        <div class="csv-preview-header">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            <strong>ตัวอย่างไฟล์ CSV</strong>
                         </div>
-                        <div class="card-body">
-                            <pre class="mb-0" style="font-size: 12px;">username,firstname,lastname,email,password,role,user_code
+                        <div class="csv-preview-body">
+                            <pre class="mb-0">username,firstname,lastname,email,password,role,user_code
 teacher01,สมชาย,ใจดี,somchai@cstu.ac.th,pass1234,advisor,SCH
 teacher02,สมหญิง,รักเรียน,somying@cstu.ac.th,pass5678,coordinator,SMY</pre>
                         </div>
                     </div>
 
-                    <!-- Form Upload -->
                     <form action="{{ route('users.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        
-                        <div class="mb-3">
-                            <label for="csv_file" class="form-label">เลือกไฟล์ CSV <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control @error('csv_file') is-invalid @enderror" 
+
+                        <div class="mb-4">
+                            <label for="csv_file" class="form-label fw-semibold">เลือกไฟล์ CSV <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control @error('csv_file') is-invalid @enderror"
                                    id="csv_file" name="csv_file" accept=".csv,.txt" required>
                             @error('csv_file')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -54,11 +64,13 @@ teacher02,สมหญิง,รักเรียน,somying@cstu.ac.th,pass567
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('users.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> ยกเลิก
+                            <a href="{{ route('users.index') }}" class="btn modern-btn btn-light">
+                                <i class="bi bi-arrow-left"></i>
+                                <span>ยกเลิก</span>
                             </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-upload"></i> Import ข้อมูล
+                            <button type="submit" class="btn modern-btn btn-success-modern">
+                                <i class="bi bi-upload"></i>
+                                <span>Import ข้อมูล</span>
                             </button>
                         </div>
                     </form>
@@ -70,5 +82,32 @@ teacher02,สมหญิง,รักเรียน,somying@cstu.ac.th,pass567
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+    .form-card-body { padding: 2rem; }
+    .form-card:hover { transform: none; }
+
+    .csv-preview {
+        border-radius: 15px;
+        overflow: hidden;
+        border: 2px solid #e9ecef;
+    }
+
+    .csv-preview-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .csv-preview-body {
+        padding: 1rem;
+        background: #fdfdfd;
+    }
+
+    .csv-preview-body pre {
+        font-size: 12px;
+        color: #495057;
+        margin: 0;
+    }
+</style>
 @endpush
