@@ -15,8 +15,7 @@ echo "==========================================================================
 $tables = [
     'project_proposals',
     'projects', 
-    'project_evaluations',
-    'project_grades'
+    'project_evaluations'
 ];
 
 foreach ($tables as $table) {

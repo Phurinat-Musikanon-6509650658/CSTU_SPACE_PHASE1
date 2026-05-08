@@ -33,7 +33,7 @@ class LecturerController extends Controller
             ->count();
 
         // 2. รายงานที่ส่งมาใหม่ (โครงงานที่ตนเองเป็น advisor)
-        $newReports = Project::where('advisor_code', $userCode)
+        $newReports = Project::whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))
             ->whereNotNull('submission_file')
             ->where('submitted_at', '>=', $timeThreshold)
             ->count();
@@ -42,23 +42,18 @@ class LecturerController extends Controller
         $recentGroups = ProjectProposal::where('proposed_to', $username)
             ->where('proposed_at', '>=', $timeThreshold)
             ->count();
-        
+
         // 4. Check for exam schedule assignments (within last 30 minutes)
-        $examScheduled = Project::where(function($q) use ($userCode) {
-                $q->where('advisor_code', $userCode)
-                  ->orWhere('committee1_code', $userCode)
-                  ->orWhere('committee2_code', $userCode)
-                  ->orWhere('committee3_code', $userCode);
-            })
+        $examScheduled = Project::whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))
             ->whereNotNull('exam_datetime')
             ->where('updated_at', '>=', now()->subMinutes(30))
-            ->with('group')
+            ->with(['group', 'advisorLecturer'])
             ->get();
-        
+
         if ($examScheduled->isNotEmpty()) {
             $schedules = $examScheduled->map(function($project) use ($userCode) {
                 $role = 'กรรมการ';
-                if ($project->advisor_code == $userCode) $role = 'อาจารย์ที่ปรึกษา';
+                if ($project->advisorLecturer?->user_code == $userCode) $role = 'อาจารย์ที่ปรึกษา';
                 
                 return [
                     'project_name' => $project->project_name_th,
@@ -78,13 +73,8 @@ class LecturerController extends Controller
             'approved_proposals' => ProjectProposal::where('proposed_to', $username)
                 ->where('status', 'approved')
                 ->count(),
-            'my_projects' => Project::where('advisor_code', $userCode)->count(),
-            'pending_evaluations' => Project::where(function($q) use ($userCode) {
-                    $q->where('advisor_code', $userCode)
-                      ->orWhere('committee1_code', $userCode)
-                      ->orWhere('committee2_code', $userCode)
-                      ->orWhere('committee3_code', $userCode);
-                })
+            'my_projects' => Project::whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))->count(),
+            'pending_evaluations' => Project::whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))
                 ->whereNotNull('exam_datetime')
                 ->whereDoesntHave('evaluations', function($q) use ($userCode) {
                     $q->where('evaluator_code', $userCode);
@@ -105,8 +95,8 @@ class LecturerController extends Controller
         $userCode = $user->user_code;
 
         // ดึงโครงงานที่เป็น advisor
-        $projects = Project::with(['group.members.student', 'advisor', 'group.latestProposal'])
-            ->where('advisor_code', $userCode)
+        $projects = Project::with(['group.members.student', 'advisorLecturer.user', 'group.latestProposal'])
+            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -122,15 +112,13 @@ class LecturerController extends Controller
         $userCode = $user->user_code;
 
         // ดึงโครงงานที่อาจารย์เป็น advisor หรือ committee
-        $projects = Project::with(['group.members.student', 'evaluations' => function($q) use ($userCode) {
-                $q->where('evaluator_code', $userCode);
-            }])
-            ->where(function($query) use ($userCode) {
-                $query->where('advisor_code', $userCode)
-                      ->orWhere('committee1_code', $userCode)
-                      ->orWhere('committee2_code', $userCode)
-                      ->orWhere('committee3_code', $userCode);
-            })
+        $projects = Project::with([
+                'group.members.student',
+                'advisorLecturer.user',
+                'committeeLecturers.user',
+                'evaluations' => fn($q) => $q->where('evaluator_code', $userCode),
+            ])
+            ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))
             ->whereNotNull('exam_datetime') // มีตารางสอบแล้ว
             ->orderBy('exam_datetime', 'asc')
             ->paginate(20);
@@ -146,20 +134,10 @@ class LecturerController extends Controller
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
 
-        $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3', 'evaluations'])
+        $project = Project::with(['group.members.student', 'advisorLecturer.user', 'committeeLecturers.user', 'projectLecturers', 'evaluations'])
             ->findOrFail($projectId);
 
-        // ตรวจสอบว่าอาจารย์คนนี้มีสิทธิ์ประเมินหรือไม่
-        $role = null;
-        if ($project->advisor_code === $userCode) {
-            $role = 'advisor';
-        } elseif ($project->committee1_code === $userCode) {
-            $role = 'committee1';
-        } elseif ($project->committee2_code === $userCode) {
-            $role = 'committee2';
-        } elseif ($project->committee3_code === $userCode) {
-            $role = 'committee3';
-        }
+        $role = $project->getEvaluatorRole($userCode);
 
         if (!$role) {
             return redirect()->route('lecturer.evaluations.index')
@@ -199,14 +177,10 @@ class LecturerController extends Controller
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
 
-        $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3', 'evaluations'])
+        $project = Project::with(['group.members.student', 'advisorLecturer.user', 'committeeLecturers.user', 'projectLecturers', 'evaluations'])
             ->findOrFail($projectId);
 
-        $role = null;
-        if ($project->advisor_code === $userCode)         $role = 'advisor';
-        elseif ($project->committee1_code === $userCode)  $role = 'committee1';
-        elseif ($project->committee2_code === $userCode)  $role = 'committee2';
-        elseif ($project->committee3_code === $userCode)  $role = 'committee3';
+        $role = $project->getEvaluatorRole($userCode);
 
         if (!$role) {
             return redirect()->route('lecturer.evaluations.index')
@@ -241,19 +215,9 @@ class LecturerController extends Controller
     {
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
-        $project = Project::with(['group.members.student', 'evaluations'])->findOrFail($projectId);
+        $project = Project::with(['group.members.student', 'projectLecturers', 'evaluations'])->findOrFail($projectId);
 
-        // ตรวจสอบสิทธิ์
-        $role = null;
-        if ($project->advisor_code === $userCode) {
-            $role = 'advisor';
-        } elseif ($project->committee1_code === $userCode) {
-            $role = 'committee1';
-        } elseif ($project->committee2_code === $userCode) {
-            $role = 'committee2';
-        } elseif ($project->committee3_code === $userCode) {
-            $role = 'committee3';
-        }
+        $role = $project->getEvaluatorRole($userCode);
 
         if (!$role) {
             return redirect()->route('lecturer.evaluations.index')

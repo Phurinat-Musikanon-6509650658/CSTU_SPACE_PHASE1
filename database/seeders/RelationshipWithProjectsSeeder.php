@@ -12,8 +12,9 @@ class RelationshipWithProjectsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Truncate table first to avoid unique constraint issues
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         DB::table('relationship_with_projects')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         DB::table('relationship_with_projects')->insert([
             [

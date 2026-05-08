@@ -20,7 +20,7 @@ use App\Http\Controllers\CoordinatorSubmissionController;
 use App\Http\Controllers\StaffSubmissionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\LecturerSubmissionController;
-use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\ExamScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,7 +52,7 @@ Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name(
 // ======================================
 // Student Routes (Protected by student auth)
 // ======================================
-Route::middleware(['auth:student', 'check.system.status', 'check.subject.access'])->group(function () {
+Route::middleware(['auth:student', 'check.subject.access'])->group(function () {
     
     // Student Menu/Dashboard
     Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
@@ -113,19 +113,19 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Coordinator Routes
     // ======================================
-    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin,staff', 'check.system.status')->group(function () {
+    Route::prefix('coordinator')->name('coordinator.')->middleware('role:coordinator,admin,staff')->group(function () {
         Route::get('/', function() { return redirect()->route('coordinator.dashboard'); })->name('menu');
         Route::get('dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
         
         // Exam Schedules Management (Full Access for Coordinator & Staff)
         Route::prefix('exam-schedules')->name('exam-schedules.')->middleware('role:staff,coordinator,admin')->group(function () {
-            Route::get('/', [SystemSettingsController::class, 'coordinatorExamScheduleIndex'])->name('index');
-            Route::get('calendar', [SystemSettingsController::class, 'coordinatorExamScheduleCalendar'])->name('calendar');
-            Route::get('create', [SystemSettingsController::class, 'coordinatorExamScheduleCreate'])->name('create');
-            Route::post('/', [SystemSettingsController::class, 'coordinatorExamScheduleStore'])->name('store');
-            Route::get('{id}/edit', [SystemSettingsController::class, 'coordinatorExamScheduleEdit'])->name('edit');
-            Route::put('{id}', [SystemSettingsController::class, 'coordinatorExamScheduleUpdate'])->name('update');
-            Route::delete('{id}', [SystemSettingsController::class, 'coordinatorExamScheduleDestroy'])->name('destroy');
+            Route::get('/', [ExamScheduleController::class, 'coordinatorExamScheduleIndex'])->name('index');
+            Route::get('calendar', [ExamScheduleController::class, 'coordinatorExamScheduleCalendar'])->name('calendar');
+            Route::get('create', [ExamScheduleController::class, 'coordinatorExamScheduleCreate'])->name('create');
+            Route::post('/', [ExamScheduleController::class, 'coordinatorExamScheduleStore'])->name('store');
+            Route::get('{id}/edit', [ExamScheduleController::class, 'coordinatorExamScheduleEdit'])->name('edit');
+            Route::put('{id}', [ExamScheduleController::class, 'coordinatorExamScheduleUpdate'])->name('update');
+            Route::delete('{id}', [ExamScheduleController::class, 'coordinatorExamScheduleDestroy'])->name('destroy');
         });
         
         Route::prefix('groups')->name('groups.')->group(function () {
@@ -192,7 +192,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Lecturer Routes
     // ======================================
-    Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin', 'check.system.status')->group(function () {
+    Route::prefix('lecturer')->name('lecturer.')->middleware('role:lecturer,admin')->group(function () {
         // Menu/Dashboard
         Route::get('/', function() { return view('lecturer.menu'); })->name('menu');
         Route::get('/dashboard', [App\Http\Controllers\LecturerController::class, 'dashboard'])->name('dashboard');
@@ -229,7 +229,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // Staff Routes (Submissions only)
     // ======================================
-    Route::middleware(['role:staff,coordinator,admin', 'check.system.status'])->prefix('staff')->name('staff.')->group(function () {
+    Route::middleware(['role:staff,coordinator,admin'])->prefix('staff')->name('staff.')->group(function () {
         
         // Submissions Management
         Route::prefix('submissions')->name('submissions.')->group(function () {

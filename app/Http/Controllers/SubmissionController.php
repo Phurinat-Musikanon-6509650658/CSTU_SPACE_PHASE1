@@ -136,13 +136,8 @@ class SubmissionController extends Controller
         } elseif ($user) {
             // Lecturer ดาวน์โหลดได้เฉพาะโครงงานที่ตัวเองเกี่ยวข้อง (อาจารย์ที่ปรึกษา, กรรมการ)
             if ($user->isLecturer() && !$user->isCoordinator() && !$user->isAdmin()) {
-                $isRelated = (
-                    $project->advisor_code === $user->user_code ||
-                    $project->committee1_code === $user->user_code ||
-                    $project->committee2_code === $user->user_code ||
-                    $project->committee3_code === $user->user_code
-                );
-                
+                $isRelated = $project->projectLecturers()->where('user_code', $user->user_code)->exists();
+
                 if (!$isRelated) {
                     return back()->with('error', 'คุณไม่มีสิทธิ์ดาวน์โหลดไฟล์นี้');
                 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Group;
 use App\Models\Project;
+use App\Models\ProjectLecturer;
 use App\Models\User;
 use App\Models\ProjectEvaluation;
 use App\Helpers\PermissionHelper;
@@ -14,20 +15,17 @@ use Illuminate\Support\Facades\Response;
 
 class CoordinatorController extends Controller
 {
-    // หน้าแดชบอร์ดหลัก
     public function dashboard()
     {
         $user = Auth::guard('web')->user();
-        
-        // สถิติรวม
+
         $stats = [
-            'total_groups' => Group::count(),
-            'pending_groups' => Group::where('status_group', 'pending')->count(),
+            'total_groups'    => Group::count(),
+            'pending_groups'  => Group::where('status_group', 'pending')->count(),
             'approved_groups' => Group::where('status_group', 'approved')->count(),
-            'total_projects' => Project::count(),
+            'total_projects'  => Project::count(),
         ];
 
-        // กลุ่มที่รอการอนุมัติ
         $pendingGroups = Group::with(['members.student', 'project'])
             ->where('status_group', 'pending')
             ->orderBy('created_at', 'desc')
@@ -37,44 +35,28 @@ class CoordinatorController extends Controller
         return view('coordinator.dashboard', compact('stats', 'pendingGroups'));
     }
 
-    // หน้าจัดการกลุ่มทั้งหมด
     public function groups(Request $request)
     {
         $query = Group::with(['members.student', 'project', 'latestProposal.lecturer']);
 
-        // ฟิลเตอร์ตามสถานะ
-        if ($request->status) {
-            $query->where('status_group', $request->status);
-        }
-
-        // ฟิลเตอร์ตามรหัสวิชา
-        if ($request->subject) {
-            $query->where('subject_code', $request->subject);
-        }
-
-        // ฟิลเตอร์ตามเทอม
-        if ($request->semester) {
-            $query->where('semester', $request->semester);
-        }
+        if ($request->status)   $query->where('status_group', $request->status);
+        if ($request->subject)  $query->where('subject_code', $request->subject);
+        if ($request->semester) $query->where('semester', $request->semester);
 
         $groups = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return view('coordinator.groups.index', compact('groups'));
     }
 
-    // หน้ารายละเอียดกลุ่ม
     public function groupShow($id)
     {
         $group = Group::with([
-            'members.student', 
-            'project.advisor', 
-            'project.committee1', 
-            'project.committee2', 
-            'project.committee3',
-            'latestProposal.lecturer'
+            'members.student',
+            'project.advisorLecturer.user',
+            'project.committeeLecturers.user',
+            'latestProposal.lecturer',
         ])->findOrFail($id);
 
-        // ดึงรายชื่ออาจารย์ทั้งหมด (Lecturer role = 8192)
         $lecturers = User::whereRaw('role & 8192 != 0')
             ->orderBy('firstname_user', 'asc')
             ->get();
@@ -82,12 +64,10 @@ class CoordinatorController extends Controller
         return view('coordinator.groups.show', compact('group', 'lecturers'));
     }
 
-    // อนุมัติกลุ่มและสร้าง Project
     public function approveGroup(Request $request, $id)
     {
         $user = Auth::guard('web')->user();
-        
-        // ป้องกัน Staff แก้ไขข้อมูล
+
         if (!$user->canEdit()) {
             return redirect()->route('coordinator.groups.show', $id)
                 ->with('error', 'คุณไม่มีสิทธิ์อนุมัติกลุ่ม (Staff read-only)');
@@ -103,18 +83,15 @@ class CoordinatorController extends Controller
 
         DB::beginTransaction();
         try {
-            // อัพเดทสถานะกลุ่ม
             $group->update(['status_group' => 'approved']);
 
-            // สร้าง Project
-            $memberCount = $group->members->count();
-            $advisorCode = $request->advisor_code;
-            $studentType = $request->student_type;
+            $memberCount  = $group->members->count();
+            $advisorCode  = $request->advisor_code;
+            $studentType  = $request->student_type;
 
-            // สร้าง project_code: 68-1-01_kdc-r1
             $projectCode = sprintf(
                 '%02d-%d-%02d_%s-%s%d',
-                $group->year % 100, // 2568 -> 68
+                $group->year % 100,
                 $group->semester,
                 $group->group_id,
                 $advisorCode,
@@ -122,13 +99,18 @@ class CoordinatorController extends Controller
                 $memberCount
             );
 
-            Project::create([
-                'group_id' => $group->group_id,
-                'project_name' => $request->project_name,
-                'project_code' => $projectCode,
-                'advisor_code' => $request->advisor_code,
-                'student_type' => $studentType,
+            $project = Project::create([
+                'group_id'       => $group->group_id,
+                'project_name'   => $request->project_name,
+                'project_code'   => $projectCode,
+                'student_type'   => $studentType,
                 'status_project' => 'in_progress',
+            ]);
+
+            $project->projectLecturers()->create([
+                'user_code'       => $advisorCode,
+                'relationship_id' => 1,
+                'sort_order'      => 1,
             ]);
 
             DB::commit();
@@ -141,35 +123,32 @@ class CoordinatorController extends Controller
         }
     }
 
-    // อัพเดทข้อมูล Project
     public function updateProject(Request $request, $id)
     {
         $user = Auth::guard('web')->user();
-        
-        // ป้องกัน Staff แก้ไขข้อมูล
+
         if (!$user->canEdit()) {
             return back()->with('error', 'คุณไม่มีสิทธิ์แก้ไขข้อมูล (Staff read-only)');
         }
 
         $request->validate([
-            'project_name' => 'nullable|string|max:255',
-            'advisor_code' => 'nullable|string|exists:user,user_code',
+            'project_name'    => 'nullable|string|max:255',
+            'advisor_code'    => 'nullable|string|exists:user,user_code',
             'committee1_code' => 'nullable|string|exists:user,user_code',
             'committee2_code' => 'nullable|string|exists:user,user_code',
             'committee3_code' => 'nullable|string|exists:user,user_code',
-            'exam_datetime' => 'nullable|date',
-            'project_type' => 'nullable|string',
-            'status_project' => 'nullable|string',
+            'exam_datetime'   => 'nullable|date',
+            'project_type'    => 'nullable|string',
+            'status_project'  => 'nullable|string',
         ]);
 
-        // ตรวจสอบว่าอาจารย์ไม่ซ้ำกัน
         $lecturers = array_filter([
             $request->advisor_code,
             $request->committee1_code,
             $request->committee2_code,
-            $request->committee3_code
+            $request->committee3_code,
         ]);
-        
+
         if (count($lecturers) !== count(array_unique($lecturers))) {
             return back()->with('error', 'ไม่สามารถเลือกอาจารย์คนเดียวกันในหลายตำแหน่งได้');
         }
@@ -182,24 +161,19 @@ class CoordinatorController extends Controller
 
         DB::beginTransaction();
         try {
-            // อัพเดต projects table (ไม่ต้อง set relationship IDs)
             $group->project->update($request->only([
-                'project_name',
-                'advisor_code',
-                'committee1_code',
-                'committee2_code',
-                'committee3_code',
-                'exam_datetime',
-                'project_type',
-                'status_project'
+                'project_name', 'exam_datetime', 'project_type', 'status_project',
             ]));
 
-            // หมายเหตุ: ไม่อัพเดต group status เพราะ groups.status_group มี ENUM แยกต่างหาก
-            // status_group ใช้สำหรับสถานะการจัดกลุ่ม (not_created, created, member_left, member_added, disbanded)
-            // ส่วนสถานะการอนุมัติอยู่ใน projects.status_project แล้ว
+            $group->project->syncLecturers(
+                $request->advisor_code,
+                $request->committee1_code,
+                $request->committee2_code,
+                $request->committee3_code,
+            );
 
             DB::commit();
-            return back()->with('success', 'อัพเดทข้อมูลโครงงานและกลุ่มเรียบร้อยแล้ว');
+            return back()->with('success', 'อัพเดทข้อมูลโครงงานเรียบร้อยแล้ว');
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -207,93 +181,68 @@ class CoordinatorController extends Controller
         }
     }
 
-    // หน้าตรวจสอบโครงงาน (Project Review)
     public function projectsReview(Request $request)
     {
-        // Allow Staff, Coordinator, and Admin
         if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
-        
+
         $query = Project::with([
             'group.members.student',
-            'advisor',
-            'committee1',
-            'committee2',
-            'committee3',
-            'examSchedule'
+            'advisorLecturer.user',
+            'committeeLecturers.user',
+            'examSchedule',
         ]);
 
-        // ฟิลเตอร์ตามสถานะ
         if ($request->status) {
             $query->where('status_project', $request->status);
         }
-
-        // ฟิลเตอร์ตามปีการศึกษา
         if ($request->year) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('year', $request->year);
-            });
+            $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         }
-
-        // ฟิลเตอร์ตามเทอม
         if ($request->semester) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('semester', $request->semester);
-            });
+            $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
 
-        $projects = $query->orderBy('project_code', 'asc')->paginate(20);
-        $statuses = ['pending', 'in_progress', 'submitted', 'late_submission', 'approved'];
-        $years = [2566, 2567, 2568];
+        $projects  = $query->orderBy('project_code', 'asc')->paginate(20);
+        $statuses  = ['pending', 'in_progress', 'submitted', 'late_submission', 'approved'];
+        $years     = [2566, 2567, 2568];
         $semesters = [1, 2, 3];
 
         return view('coordinator.projects.review', compact('projects', 'statuses', 'years', 'semesters'));
     }
 
-    // อัพเดตสถานะโครงงาน (พร้อม logging สำหรับ staff)
     public function updateProjectReview(Request $request, $projectId)
     {
         $request->validate([
             'status_project' => 'required|in:pending,in_progress,submitted,late_submission,approved,rejected',
-            'notes' => 'nullable|string|max:500'
+            'notes'          => 'nullable|string|max:500',
         ]);
 
         try {
             $project = Project::findOrFail($projectId);
-            
-            // บันทึก log เมื่อ staff แก้ไข
+
             $user = Auth::guard('web')->user();
             if ($user && $user->isStaff()) {
-                $log = [
-                    'project_id' => $projectId,
-                    'staff_code' => $user->user_code,
-                    'staff_name' => "{$user->firstname_user} {$user->lastname_user}",
-                    'old_status' => $project->status_project,
-                    'new_status' => $request->status_project,
-                    'notes' => $request->notes,
-                    'changed_at' => now(),
-                ];
-                
-                // บันทึกลง database (activity_log table หรือ project_logs table)
                 DB::table('project_activities')->insertOrIgnore([
                     'project_id' => $projectId,
-                    'user_code' => $user->user_code,
-                    'action' => 'status_changed',
-                    'old_value' => $project->status_project,
-                    'new_value' => $request->status_project,
-                    'notes' => $request->notes,
+                    'user_code'  => $user->user_code,
+                    'action'     => 'status_changed',
+                    'old_value'  => $project->status_project,
+                    'new_value'  => $request->status_project,
+                    'notes'      => $request->notes,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
-                \Log::info('Project status updated by staff', $log);
+                \Log::info('Project status updated by staff', [
+                    'project_id' => $projectId,
+                    'staff_code' => $user->user_code,
+                    'old_status' => $project->status_project,
+                    'new_status' => $request->status_project,
+                ]);
             }
 
-            // อัพเดตสถานะโครงงาน
-            $project->update([
-                'status_project' => $request->status_project
-            ]);
+            $project->update(['status_project' => $request->status_project]);
 
             return back()->with('success', 'อัพเดตสถานะโครงงาน: ' . $project->project_code . ' เรียบร้อยแล้ว');
 
@@ -302,78 +251,56 @@ class CoordinatorController extends Controller
         }
     }
 
-    // จัดการปีการศึกษาและเทอม
     public function settings()
     {
-        // ดึงค่าปัจจุบันจากฐานข้อมูล (อาจจะสร้างตาราง settings แยก)
-        $currentYear = 2568;
+        $currentYear     = 2568;
         $currentSemester = 1;
-
         return view('coordinator.settings', compact('currentYear', 'currentSemester'));
     }
 
-    // Export CSV - ยึด project table เป็นหลัก
     public function exportCsv(Request $request)
     {
-        // ดึงข้อมูลจาก projects table
         $query = Project::with([
             'group.members.student',
-            'advisor',
-            'committee1',
-            'committee2',
-            'committee3'
+            'advisorLecturer.user',
+            'committeeLecturers.user',
         ]);
 
-        // ฟิลเตอร์ตามเงื่อนไข
         if ($request->status) {
             $query->where('status_project', $request->status);
         }
         if ($request->year) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('year', $request->year);
-            });
+            $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         }
         if ($request->semester) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('semester', $request->semester);
-            });
+            $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
 
         $projects = $query->orderBy('project_code', 'asc')->get();
 
-        // สร้าง CSV
         $filename = 'projects_' . date('Y-m-d_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+        $headers  = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($projects) {
+        $callback = function () use ($projects) {
             $file = fopen('php://output', 'w');
-            
-            // BOM for UTF-8
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // Header row
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             fputcsv($file, [
-                'project_id',
-                'project_code',
-                'project_name',
-                'student1',
-                'student2',
-                'advisor_code',
-                'committee1_code',
-                'committee2_code',
-                'committee3_code',
-                'exam_datetime'
+                'project_id', 'project_code', 'project_name',
+                'student1', 'student2',
+                'advisor_code', 'committee1_code', 'committee2_code', 'committee3_code',
+                'exam_datetime',
             ]);
 
-            // Data rows
             foreach ($projects as $index => $project) {
-                $members = $project->group->members ?? collect();
-                $member1 = $members->get(0);
-                $member2 = $members->get(1);
-                
+                $members  = $project->group->members ?? collect();
+                $member1  = $members->get(0);
+                $member2  = $members->get(1);
+                $coms     = $project->committeeLecturers;
+
                 fputcsv($file, [
                     $index + 1,
                     $project->project_code ?? '-',
@@ -381,10 +308,10 @@ class CoordinatorController extends Controller
                     $member1 ? "{$member1->student->firstname_std} {$member1->student->lastname_std}" : '-',
                     $member2 ? "{$member2->student->firstname_std} {$member2->student->lastname_std}" : '-',
                     $project->advisor_code ?? '-',
-                    $project->committee1_code ?? '-',
-                    $project->committee2_code ?? '-',
-                    $project->committee3_code ?? '-',
-                    $project->exam_datetime ? $project->exam_datetime->format('d.m.y, H:i - ') : '-',
+                    $coms->get(0)?->user_code ?? '-',
+                    $coms->get(1)?->user_code ?? '-',
+                    $coms->get(2)?->user_code ?? '-',
+                    $project->exam_datetime ? $project->exam_datetime->format('d.m.y, H:i') : '-',
                 ]);
             }
 
@@ -394,39 +321,32 @@ class CoordinatorController extends Controller
         return Response::stream($callback, 200, $headers);
     }
 
-    // ====================================
-    // Schedule & Committee Management
-    // ====================================
-    
+    // ──────────────────────────────────────────
+    // Schedule & Committee
+    // ──────────────────────────────────────────
+
     public function schedulesIndex(Request $request)
     {
-        // Allow Staff, Coordinator, and Admin
         if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
-        
-        $query = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3']);
 
-        // Filter by semester/year
+        $query = Project::with([
+            'group.members.student',
+            'advisorLecturer.user',
+            'committeeLecturers.user',
+        ]);
+
         if ($request->semester) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('semester', $request->semester);
-            });
+            $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
-
         if ($request->year) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('year', $request->year);
-            });
+            $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         }
-
-        // Filter by exam status
-        if ($request->has_exam) {
-            if ($request->has_exam === '1') {
-                $query->whereNotNull('exam_datetime');
-            } else {
-                $query->whereNull('exam_datetime');
-            }
+        if ($request->has('has_exam')) {
+            $request->has_exam === '1'
+                ? $query->whereNotNull('exam_datetime')
+                : $query->whereNull('exam_datetime');
         }
 
         $projects = $query->orderBy('exam_datetime', 'asc')->paginate(20);
@@ -436,16 +356,16 @@ class CoordinatorController extends Controller
 
     public function scheduleEdit($projectId)
     {
-        // Allow Staff, Coordinator, and Admin
         if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
-        
-        // Force fresh load from database to ensure latest updates are shown
-        $project = Project::with(['group.members.student', 'advisor', 'committee1', 'committee2', 'committee3'])
-            ->findOrFail($projectId)
-            ->refresh();
-        
+
+        $project = Project::with([
+            'group.members.student',
+            'advisorLecturer.user',
+            'committeeLecturers.user',
+        ])->findOrFail($projectId)->refresh();
+
         $lecturers = User::where('role', '&', 8192)->orderBy('firstname_user')->get();
 
         return view('coordinator.schedules.edit', compact('project', 'lecturers'));
@@ -453,64 +373,51 @@ class CoordinatorController extends Controller
 
     public function scheduleUpdate(Request $request, $projectId)
     {
-        // Allow Staff, Coordinator, and Admin
         if (!PermissionHelper::isCoordinator() && !PermissionHelper::isAdmin() && !PermissionHelper::isStaff()) {
             return redirect()->route('menu')->with('error', 'Unauthorized access');
         }
-        
+
         $request->validate([
-            'exam_datetime' => 'nullable|date',
-            'advisor_code' => 'nullable|exists:user,user_code',
+            'exam_datetime'   => 'nullable|date',
+            'advisor_code'    => 'nullable|exists:user,user_code',
             'committee1_code' => 'nullable|exists:user,user_code',
             'committee2_code' => 'nullable|exists:user,user_code',
             'committee3_code' => 'nullable|exists:user,user_code',
         ]);
 
-        $project = Project::findOrFail($projectId);
-        
-        // Check if exam_datetime changed (for notification)
-        $examDateChanged = $project->exam_datetime != $request->exam_datetime && $request->exam_datetime != null;
-        
-        // Check if committee changed
+        $project = Project::with(['advisorLecturer', 'committeeLecturers'])->findOrFail($projectId);
+
+        $examDateChanged = $project->exam_datetime != $request->exam_datetime && $request->exam_datetime;
         $committeeChanged = (
-            $project->advisor_code != $request->advisor_code ||
+            $project->advisor_code   != $request->advisor_code    ||
             $project->committee1_code != $request->committee1_code ||
             $project->committee2_code != $request->committee2_code ||
             $project->committee3_code != $request->committee3_code
         );
 
-        $project->update([
-            'exam_datetime' => $request->exam_datetime,
-            'advisor_code' => $request->advisor_code,
-            'committee1_code' => $request->committee1_code,
-            'committee2_code' => $request->committee2_code,
-            'committee3_code' => $request->committee3_code,
-        ]);
+        $project->update(['exam_datetime' => $request->exam_datetime]);
 
-        // Log staff activity changes
+        $project->syncLecturers(
+            $request->advisor_code,
+            $request->committee1_code,
+            $request->committee2_code,
+            $request->committee3_code,
+        );
+
         $user = Auth::guard('web')->user();
         if ($user && PermissionHelper::isStaff() && ($examDateChanged || $committeeChanged)) {
             \Log::info('Schedule updated by staff', [
-                'project_id' => $projectId,
-                'staff_code' => $user->user_code,
-                'staff_name' => "{$user->firstname_user} {$user->lastname_user}",
+                'project_id'       => $projectId,
+                'staff_code'       => $user->user_code,
                 'exam_date_changed' => $examDateChanged,
                 'committee_changed' => $committeeChanged,
-                'changed_at' => now(),
             ]);
         }
 
-        // Set flash notifications
         if ($examDateChanged) {
             session()->flash('exam_schedule_updated', [
-                'project_id' => $project->project_id,
+                'project_id'    => $project->project_id,
                 'exam_datetime' => $request->exam_datetime,
-            ]);
-        }
-        
-        if ($committeeChanged) {
-            session()->flash('committee_updated', [
-                'project_id' => $project->project_id,
             ]);
         }
 
@@ -532,7 +439,7 @@ class CoordinatorController extends Controller
     public function scheduleImportTemplate()
     {
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="schedule_import_template.csv"',
         ];
 
@@ -552,11 +459,9 @@ class CoordinatorController extends Controller
     {
         $request->validate(['file' => 'required|mimes:csv,txt|max:2048']);
 
-        $path = $request->file('file')->getRealPath();
-        $rows = array_map(fn($line) => str_getcsv($line), file($path));
+        $path   = $request->file('file')->getRealPath();
+        $rows   = array_map(fn($line) => str_getcsv($line), file($path));
         $header = array_shift($rows);
-
-        // Normalize header keys
         $header = array_map(fn($h) => strtolower(trim($h)), $header);
 
         $validCodes = DB::table('user')
@@ -566,9 +471,7 @@ class CoordinatorController extends Controller
             ->flip()
             ->toArray();
 
-        $projectMap = Project::with(['group.members.student'])
-            ->get()
-            ->keyBy('project_code');
+        $projectMap = Project::with(['group.members.student'])->get()->keyBy('project_code');
 
         $preview = [];
 
@@ -580,7 +483,6 @@ class CoordinatorController extends Controller
                 $data[$key] = trim($row[$col] ?? '');
             }
 
-            $lineNo   = $i + 2;
             $projCode = $data['project_code'] ?? '';
             $examDt   = $data['exam_datetime'] ?? '';
             $advisor  = $data['advisor_code'] ?? '';
@@ -588,15 +490,13 @@ class CoordinatorController extends Controller
             $comm2    = $data['committee2_code'] ?? '';
             $comm3    = $data['committee3_code'] ?? '';
 
-            $errors = [];
-
-            // Validate project_code
+            $errors  = [];
             $project = $projectMap->get($projCode);
+
             if (!$project) {
                 $errors[] = "ไม่พบโครงงาน '{$projCode}' ในระบบ";
             }
 
-            // Validate exam_datetime
             $parsedDt = null;
             if ($examDt) {
                 try {
@@ -606,13 +506,7 @@ class CoordinatorController extends Controller
                 }
             }
 
-            // Validate user_codes
-            foreach ([
-                'advisor_code'     => $advisor,
-                'committee1_code'  => $comm1,
-                'committee2_code'  => $comm2,
-                'committee3_code'  => $comm3,
-            ] as $field => $code) {
+            foreach (['advisor_code' => $advisor, 'committee1_code' => $comm1, 'committee2_code' => $comm2, 'committee3_code' => $comm3] as $field => $code) {
                 if ($code && !isset($validCodes[strtolower($code)])) {
                     $errors[] = "ไม่พบ user_code '{$code}' ในระบบ";
                 }
@@ -623,17 +517,17 @@ class CoordinatorController extends Controller
                 : '-';
 
             $preview[] = [
-                'line'          => $lineNo,
-                'project_code'  => $projCode,
-                'project_name'  => $project?->project_name ?? '-',
-                'members'       => $members,
-                'exam_datetime' => $examDt,
-                'advisor_code'  => $advisor,
+                'line'            => $i + 2,
+                'project_code'    => $projCode,
+                'project_name'    => $project?->project_name ?? '-',
+                'members'         => $members,
+                'exam_datetime'   => $examDt,
+                'advisor_code'    => $advisor,
                 'committee1_code' => $comm1,
                 'committee2_code' => $comm2,
                 'committee3_code' => $comm3,
-                'errors'        => $errors,
-                'valid'         => empty($errors),
+                'errors'          => $errors,
+                'valid'           => empty($errors),
             ];
         }
 
@@ -655,30 +549,25 @@ class CoordinatorController extends Controller
         $skipped  = 0;
 
         foreach ($preview as $row) {
-            if (!$row['valid']) {
-                $skipped++;
-                continue;
-            }
+            if (!$row['valid']) { $skipped++; continue; }
 
             $project = Project::where('project_code', $row['project_code'])->first();
-            if (!$project) {
-                $skipped++;
-                continue;
-            }
+            if (!$project) { $skipped++; continue; }
 
-            $update = [];
             if ($row['exam_datetime']) {
-                $update['exam_datetime'] = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $row['exam_datetime']);
+                $project->update([
+                    'exam_datetime' => \Carbon\Carbon::createFromFormat('Y-m-d H:i', $row['exam_datetime']),
+                ]);
             }
-            if ($row['advisor_code'])    $update['advisor_code']    = $row['advisor_code'];
-            if ($row['committee1_code']) $update['committee1_code'] = $row['committee1_code'];
-            if ($row['committee2_code']) $update['committee2_code'] = $row['committee2_code'];
-            if ($row['committee3_code']) $update['committee3_code'] = $row['committee3_code'];
 
-            if (!empty($update)) {
-                $project->update($update);
-                $imported++;
-            }
+            $project->syncLecturers(
+                $row['advisor_code']    ?: null,
+                $row['committee1_code'] ?: null,
+                $row['committee2_code'] ?: null,
+                $row['committee3_code'] ?: null,
+            );
+
+            $imported++;
         }
 
         session()->forget('schedule_import_preview');
@@ -687,19 +576,16 @@ class CoordinatorController extends Controller
             ->with('success', "Import สำเร็จ {$imported} โครงงาน" . ($skipped ? ", ข้าม {$skipped} แถว (มีข้อผิดพลาด)" : ''));
     }
 
-    // ====================================
+    // ──────────────────────────────────────────
     // Evaluation & Grading
-    // ====================================
-    
+    // ──────────────────────────────────────────
+
     public function evaluationsIndex(Request $request)
     {
         $query = Project::with(['group.members.student', 'evaluations.evaluator']);
 
-        // Filter
         if ($request->semester) {
-            $query->whereHas('group', function($q) use ($request) {
-                $q->where('semester', $request->semester);
-            });
+            $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
 
         $projects = $query->orderBy('project_id', 'desc')->paginate(20);
@@ -709,10 +595,13 @@ class CoordinatorController extends Controller
 
     public function viewScores($projectId)
     {
-        $project = Project::with(['group.members.student', 'evaluations.evaluator', 'advisor', 'committee1', 'committee2', 'committee3'])
-            ->findOrFail($projectId);
+        $project = Project::with([
+            'group.members.student',
+            'evaluations.evaluator',
+            'advisorLecturer.user',
+            'committeeLecturers.user',
+        ])->findOrFail($projectId);
 
         return view('coordinator.evaluations.scores', compact('project'));
     }
-
 }

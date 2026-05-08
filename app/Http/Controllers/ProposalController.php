@@ -167,8 +167,15 @@ class ProposalController extends Controller
                 
                 $project->update([
                     'status_project' => 'approved',
-                    'advisor_code' => $user->user_code, // บันทึก lecturer ที่อนุมัติเป็นที่ปรึกษา (ใช้ user_code)
-                    'project_code' => $newProjectCode // อัปเดต project_code เปลี่ยน TBD เป็นรหัสอาจารย์
+                    'project_code'   => $newProjectCode,
+                ]);
+
+                // Set this lecturer as advisor (replace any existing advisor)
+                $project->projectLecturers()->where('relationship_id', 1)->delete();
+                $project->projectLecturers()->create([
+                    'user_code'       => $user->user_code,
+                    'relationship_id' => 1,
+                    'sort_order'      => 1,
                 ]);
             }
             

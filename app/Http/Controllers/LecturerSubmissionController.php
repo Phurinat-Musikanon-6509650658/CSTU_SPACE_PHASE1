@@ -14,14 +14,8 @@ class LecturerSubmissionController extends Controller
 
         // Get submitted projects where user is the advisor
         $submissions = Project::whereNotNull('submission_file')
-            ->where('advisor_code', $user->user_code)
-            ->with([
-                'group',
-                'advisor',
-                'committee1',
-                'committee2',
-                'committee3'
-            ])
+            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $user->user_code))
+            ->with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
             ->get();
 
         // Group by year and semester
@@ -43,15 +37,9 @@ class LecturerSubmissionController extends Controller
     {
         $user = Auth::user();
         
-        $project = Project::with([
-            'group',
-            'advisor',
-            'committee1',
-            'committee2',
-            'committee3'
-        ])->findOrFail($project_id);
+        $project = Project::with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
+            ->findOrFail($project_id);
 
-        // Check if user is the advisor
         if ($project->advisor_code !== $user->user_code) {
             abort(403, 'Unauthorized');
         }

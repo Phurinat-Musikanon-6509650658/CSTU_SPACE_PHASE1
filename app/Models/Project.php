@@ -8,15 +8,11 @@ class Project extends Model
 {
     protected $table = 'projects';
     protected $primaryKey = 'project_id';
-    
+
     protected $fillable = [
         'group_id',
         'project_name',
         'project_code',
-        'advisor_code',
-        'committee1_code',
-        'committee2_code',
-        'committee3_code',
         'exam_datetime',
         'student_type',
         'status_project',
@@ -24,38 +20,21 @@ class Project extends Model
         'submission_file',
         'submission_original_name',
         'submitted_at',
-        'submitted_by'
+        'submitted_by',
     ];
 
     protected $casts = [
         'exam_datetime' => 'datetime',
-        'submitted_at' => 'datetime',
+        'submitted_at'  => 'datetime',
     ];
 
-    // Relationships
+    // ──────────────────────────────────────────
+    // Core relationships
+    // ──────────────────────────────────────────
+
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id', 'group_id');
-    }
-
-    public function advisor()
-    {
-        return $this->belongsTo(User::class, 'advisor_code', 'user_code');
-    }
-
-    public function committee1()
-    {
-        return $this->belongsTo(User::class, 'committee1_code', 'user_code');
-    }
-
-    public function committee2()
-    {
-        return $this->belongsTo(User::class, 'committee2_code', 'user_code');
-    }
-
-    public function committee3()
-    {
-        return $this->belongsTo(User::class, 'committee3_code', 'user_code');
     }
 
     public function examSchedule()
@@ -73,32 +52,147 @@ class Project extends Model
         return $this->hasOneThrough(
             ProjectProposal::class,
             Group::class,
-            'group_id', // Foreign key on groups table
-            'group_id', // Foreign key on project_proposals table
-            'group_id', // Local key on projects table
-            'group_id'  // Local key on groups table
+            'group_id',
+            'group_id',
+            'group_id',
+            'group_id'
         )->latest('proposed_at');
     }
 
-    // Accessor สำหรับ ID ที่ coordinator เห็น (format: 01-01 คือ semester-group_id)
+    // ──────────────────────────────────────────
+    // Lecturer relationships (new)
+    // ──────────────────────────────────────────
+
+    public function projectLecturers()
+    {
+        return $this->hasMany(ProjectLecturer::class, 'project_id', 'project_id');
+    }
+
+    public function advisorLecturer()
+    {
+        return $this->hasOne(ProjectLecturer::class, 'project_id', 'project_id')
+            ->where('relationship_id', 1);
+    }
+
+    public function committeeLecturers()
+    {
+        return $this->hasMany(ProjectLecturer::class, 'project_id', 'project_id')
+            ->where('relationship_id', 2)
+            ->orderBy('sort_order');
+    }
+
+    public function coAdvisors()
+    {
+        return $this->hasMany(ProjectLecturer::class, 'project_id', 'project_id')
+            ->whereIn('relationship_id', [3, 4])
+            ->orderBy('relationship_id')->orderBy('sort_order');
+    }
+
+    // ──────────────────────────────────────────
+    // Backward-compat accessors (views unchanged)
+    // ──────────────────────────────────────────
+
+    public function getAdvisorAttribute()
+    {
+        return $this->advisorLecturer?->user;
+    }
+
+    public function getAdvisorCodeAttribute()
+    {
+        return $this->advisorLecturer?->user_code;
+    }
+
+    public function getCommittee1Attribute()
+    {
+        return $this->committeeLecturers->get(0)?->user;
+    }
+
+    public function getCommittee1CodeAttribute()
+    {
+        return $this->committeeLecturers->get(0)?->user_code;
+    }
+
+    public function getCommittee2Attribute()
+    {
+        return $this->committeeLecturers->get(1)?->user;
+    }
+
+    public function getCommittee2CodeAttribute()
+    {
+        return $this->committeeLecturers->get(1)?->user_code;
+    }
+
+    public function getCommittee3Attribute()
+    {
+        return $this->committeeLecturers->get(2)?->user;
+    }
+
+    public function getCommittee3CodeAttribute()
+    {
+        return $this->committeeLecturers->get(2)?->user_code;
+    }
+
+    // ──────────────────────────────────────────
+    // Helper: map user_code → evaluator_role
+    // ──────────────────────────────────────────
+
+    public function getEvaluatorRole(string $userCode): ?string
+    {
+        $pl = $this->projectLecturers->firstWhere('user_code', $userCode);
+        if (!$pl) return null;
+
+        if ($pl->relationship_id === 1) return 'advisor';
+        if ($pl->relationship_id === 2) return 'committee' . $pl->sort_order;
+
+        return null;
+    }
+
+    // ──────────────────────────────────────────
+    // Sync helper for controllers
+    // ──────────────────────────────────────────
+
+    public function syncLecturers(
+        ?string $advisorCode,
+        ?string $c1 = null,
+        ?string $c2 = null,
+        ?string $c3 = null
+    ): void {
+        $this->projectLecturers()->whereIn('relationship_id', [1, 2])->delete();
+
+        if ($advisorCode) {
+            $this->projectLecturers()->create([
+                'user_code'       => $advisorCode,
+                'relationship_id' => 1,
+                'sort_order'      => 1,
+            ]);
+        }
+
+        foreach (array_filter([$c1, $c2, $c3]) as $i => $code) {
+            $this->projectLecturers()->create([
+                'user_code'       => $code,
+                'relationship_id' => 2,
+                'sort_order'      => $i + 1,
+            ]);
+        }
+    }
+
+    // ──────────────────────────────────────────
+    // Other helpers
+    // ──────────────────────────────────────────
+
     public function getDisplayIdAttribute()
     {
         return sprintf('%02d-%02d', $this->group->semester, $this->group->group_id);
     }
 
-    // Accessor สำหรับ project_code แบบเต็ม (format: 68-1-01_kdc-r1)
     public function getFullProjectCodeAttribute()
     {
-        if (!$this->advisor_code) {
-            return $this->project_code;
-        }
-
+        $advisorCode = $this->advisorLecturer?->user_code ?? 'xxx';
         $memberCount = $this->group->getMemberCount();
-        $advisorCode = $this->advisor_code ?? 'xxx';
 
         return sprintf(
             '%02d-%d-%02d_%s-%s%d',
-            $this->group->year,
+            $this->group->year % 100,
             $this->group->semester,
             $this->group->group_id,
             $advisorCode,
@@ -107,24 +201,19 @@ class Project extends Model
         );
     }
 
-    // ดึงสมาชิกคนที่ 1 (คนสร้างกลุ่ม)
     public function getFirstMemberAttribute()
     {
         return $this->group->first_member;
     }
 
-    // ดึงสมาชิกคนที่ 2 (คนที่กดรับคำเชิญ)
     public function getSecondMemberAttribute()
     {
         return $this->group->second_member;
     }
 
-    // Helper methods สำหรับ project_type
     public function getProjectTypesAttribute()
     {
-        if (!$this->project_type) {
-            return [];
-        }
+        if (!$this->project_type) return [];
         return array_map('trim', explode(',', $this->project_type));
     }
 
@@ -135,10 +224,8 @@ class Project extends Model
 
     public function setProjectTypesAttribute($types)
     {
-        if (is_array($types)) {
-            $this->attributes['project_type'] = implode(',', $types);
-        } else {
-            $this->attributes['project_type'] = $types;
-        }
+        $this->attributes['project_type'] = is_array($types)
+            ? implode(',', $types)
+            : $types;
     }
 }

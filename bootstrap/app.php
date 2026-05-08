@@ -14,7 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
             'role' => \App\Http\Middleware\CheckRole::class,
-            'check.system.status' => \App\Http\Middleware\CheckSystemStatus::class,
             'check.subject.access' => \App\Http\Middleware\CheckSubjectAccess::class,
         ]);
     })
