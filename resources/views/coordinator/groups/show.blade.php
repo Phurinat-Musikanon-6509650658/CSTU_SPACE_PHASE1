@@ -1,710 +1,569 @@
 @extends('layouts.app')
 
-@section('title', 'รายละเอียดกลุ่มและโครงงาน')
+@section('title', 'กลุ่มที่ ' . sprintf('%02d', $group->group_id) . ' | CSTU SPACE')
 
 @push('styles')
 <style>
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f8f9fa;
-    }
-    .card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-        margin-bottom: 1.5rem;
-    }
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    }
-    .card-header {
-        font-weight: 600;
-        font-size: 1.1rem;
-        background-color: #fff;
-        border-bottom: 2px solid #e9ecef;
-        padding: 1rem 1.25rem;
-    }
-    .card-header h5 {
-        color: inherit;
-    }
-    .card-header.text-white h5 {
-        color: #ffffff !important;
-    }
-    .table {
-        font-size: 0.95rem;
-        margin-bottom: 0;
-    }
-    .table th {
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
-        padding: 1rem 0.75rem;
-        white-space: nowrap;
-        font-size: 0.9rem;
-    }
-    .table td {
-        vertical-align: middle;
-        padding: 1rem 0.75rem;
-        line-height: 1.6;
-    }
-    .table td code {
-        font-size: 0.9rem;
-        padding: 0.25rem 0.5rem;
-        background-color: #e9ecef;
-        border-radius: 4px;
-    }
-    .badge {
-        font-weight: 500;
-        padding: 0.45em 0.85em;
-        font-size: 0.85rem;
-        white-space: nowrap;
-    }
-    .form-label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.5rem;
-        font-size: 0.95rem;
-    }
-    .form-control, .form-select {
-        font-size: 0.95rem;
-        padding: 0.6rem 0.75rem;
-    }
-    h1, h2, h3, h4, h5 {
-        font-weight: 700;
-        color: #212529;
-    }
-    .bg-light {
-        background-color: #f8f9fa !important;
-    }
-    .text-muted {
-        color: #6c757d !important;
-    }
+/* ── Hero ─────────────────────────────── */
+.group-hero {
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, #ffffff 0%, #f4f6ff 100%);
+    border-top: 5px solid #667eea;
+    box-shadow: 0 4px 20px rgba(102,126,234,.12);
+}
+.group-avatar {
+    width: 60px; height: 60px; border-radius: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(102,126,234,.4);
+}
+/* ── Info rows ────────────────────────── */
+.info-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 20px;
+    border-bottom: 1px solid #f4f5f7;
+    transition: background .12s;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row:hover { background: #fafbff; }
+.info-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .88rem; flex-shrink: 0;
+}
+.info-label {
+    font-size: .7rem; color: #9ca3af; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;
+}
+.info-value { font-size: .88rem; font-weight: 500; color: #1f2937; line-height: 1.4; }
+/* ── Committee rows ───────────────────── */
+.committee-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid #f4f5f7;
+    transition: background .12s;
+}
+.committee-row:last-child { border-bottom: none; }
+.committee-row:hover { background: #fafbff; }
+.person-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+/* ── Member rows ──────────────────────── */
+.member-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-bottom: 1px solid #f4f5f7;
+    transition: background .12s;
+}
+.member-row:last-child { border-bottom: none; }
+.member-row:hover { background: #fafbff; }
+.member-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+/* ── Card headers ─────────────────────── */
+.section-card { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden; }
+.section-card .card-header {
+    background: #fff; border-bottom: 1px solid #f0f1f5;
+    padding: 14px 20px; font-size: .88rem;
+}
+/* ── Edit form ────────────────────────── */
+.form-section { font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: #9ca3af; margin-bottom: .6rem;
+    padding-bottom: .4rem; border-bottom: 1px solid #f0f1f5; }
+.edit-toggle { cursor: pointer; user-select: none; }
+.edit-toggle:hover { background: #fafbff !important; }
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid px-4 py-4">
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="{{ route('coordinator.groups.index') }}" class="btn btn-outline-primary btn-lg">
-            <i class="bi bi-arrow-left me-2"></i>กลับไปรายการกลุ่ม
-        </a>
-    </div>
 
-    <!-- Header with Project Info -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <div class="d-flex align-items-center">
-                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
-                     style="width: 60px; height: 60px;">
-                    <h2 class="mb-0 fw-bold">{{ sprintf('%02d', $group->group_id) }}</h2>
+    <!-- Back -->
+    <a href="{{ route('coordinator.groups.index') }}" class="btn btn-link text-decoration-none ps-0 text-muted mb-3 d-inline-flex align-items-center">
+        <i class="bi bi-chevron-left me-1"></i><span class="small">กลับรายการกลุ่ม</span>
+    </a>
+
+    @php
+        $gsBadge = [
+            'not_created'  => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',       'ยังไม่สร้าง'],
+            'created'      => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle', 'สร้างแล้ว'],
+            'member_left'  => ['bg-warning-subtle  text-warning  border-warning-subtle',     'person-dash',  'สมาชิกออก'],
+            'member_added' => ['bg-info-subtle     text-info     border-info-subtle',        'person-plus',  'เพิ่มสมาชิก'],
+            'disbanded'    => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',     'ยุบกลุ่ม'],
+        ][$group->status_group] ?? ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle', $group->status_group];
+
+        $psBadge = [
+            'not_proposed'    => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',               'ยังไม่เสนอ'],
+            'pending'         => ['bg-warning-subtle  text-warning  border-warning-subtle',     'clock',                'รออนุมัติ'],
+            'approved'        => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle',         'อนุมัติแล้ว'],
+            'rejected'        => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',             'ปฏิเสธ'],
+            'in_progress'     => ['bg-info-subtle     text-info     border-info-subtle',        'gear-fill',            'กำลังดำเนินการ'],
+            'submitted'       => ['bg-primary-subtle  text-primary  border-primary-subtle',     'check-circle-fill',    'ส่งแล้ว'],
+            'late_submission' => ['bg-danger-subtle   text-danger   border-danger-subtle',      'exclamation-triangle', 'ส่งล่าช้า'],
+        ][$group->project->status_project ?? ''] ?? ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle', '—'];
+
+        $getLec  = fn($code) => $code ? ($lecturers->firstWhere('user_code', $code) ?? null) : null;
+        $advLec  = $getLec($group->project->advisor_code    ?? null);
+        $c1Lec   = $getLec($group->project->committee1_code ?? null);
+        $c2Lec   = $getLec($group->project->committee2_code ?? null);
+        $c3Lec   = $getLec($group->project->committee3_code ?? null);
+    @endphp
+
+    <!-- Hero Card -->
+    <div class="group-hero card mb-4">
+        <div class="card-body px-4 py-4">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="group-avatar">
+                    <span class="text-white fw-bold" style="font-size:1.35rem;">{{ sprintf('%02d', $group->group_id) }}</span>
                 </div>
-                <div>
-                    <h1 class="mb-1 fw-bold">
-                        กลุ่มที่ {{ $group->group_id }}
+                <div class="flex-fill" style="min-width:0;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h1 class="h5 fw-bold mb-0 text-dark">กลุ่มที่ {{ sprintf('%02d', $group->group_id) }}</h1>
+                        <span class="badge {{ $gsBadge[0] }} border" style="font-size:.7rem;">
+                            <i class="bi bi-{{ $gsBadge[1] }} me-1"></i>{{ $gsBadge[2] }}
+                        </span>
                         @if($group->project)
-                            <span class="badge bg-success ms-2">มีโครงงาน</span>
-                        @else
-                            <span class="badge bg-warning ms-2">ยังไม่มีโครงงาน</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem;">
+                            <i class="bi bi-folder-check me-1"></i>มีโครงงาน
+                        </span>
                         @endif
-                    </h1>
+                    </div>
                     @if($group->project)
-                        <p class="mb-0 text-muted">
-                            <i class="bi bi-code-square me-1"></i>
-                            <code class="fs-5 text-primary">{{ $group->project->project_code }}</code>
-                        </p>
+                    <div class="mb-2">
+                        <code class="text-primary fw-bold" style="font-size:.82rem;">{{ $group->project->project_code }}</code>
+                        <span class="text-muted ms-2 small">{{ $group->project->project_name ?? '' }}</span>
+                    </div>
                     @else
-                        <p class="mb-0 text-muted">
-                            <i class="bi bi-calendar3 me-1"></i>
-                            ภาคเรียนที่ {{ $group->semester }}/{{ $group->year }} • วิชา {{ $group->subject_code }}
-                        </p>
+                    <div class="text-muted small mb-2">ยังไม่มีโครงงาน</div>
                     @endif
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:.72rem;">{{ $group->subject_code }}</span>
+                        <span class="text-muted small">ปีการศึกษา {{ $group->year }} ภาค {{ $group->semester }}</span>
+                        <span class="text-muted">·</span>
+                        <span class="text-muted small"><i class="bi bi-people me-1"></i>{{ $group->members->count() }} สมาชิก</span>
+                        <span class="text-muted">·</span>
+                        <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ $group->created_at->format('d/m/Y') }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="text-end">
-            <small class="text-muted d-block">สร้างเมื่อ</small>
-            <strong>{{ $group->created_at->format('d/m/Y H:i') }}</strong>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm">
             <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show">
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm">
             <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <!-- ข้อมูลภาพรวม -->
-    <div class="row mb-4 g-3">
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
-                         style="width: 50px; height: 50px; background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
-                        <i class="bi bi-hash text-white fs-4"></i>
+    @if($group->project)
+    <!-- Project Info + Committee -->
+    <div class="row g-4 mb-4">
+
+        <!-- Project Details -->
+        <div class="col-lg-7">
+            <div class="section-card card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <div class="info-icon bg-primary-subtle text-primary" style="width:28px;height:28px;border-radius:7px;font-size:.75rem;">
+                        <i class="bi bi-folder2-open"></i>
                     </div>
-                    <h6 class="text-muted mb-1 small">กลุ่มที่</h6>
-                    <h3 class="mb-0 fw-bold text-primary">{{ sprintf('%02d', $group->group_id) }}</h3>
+                    <span class="fw-semibold">ข้อมูลโครงงาน</span>
+                </div>
+                <div class="card-body p-0">
+
+                    <div class="info-row">
+                        <div class="info-icon bg-primary-subtle text-primary"><i class="bi bi-code-square"></i></div>
+                        <div>
+                            <div class="info-label">รหัสโครงงาน</div>
+                            <div class="info-value"><code class="text-primary fw-bold">{{ $group->project->project_code }}</code></div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon bg-info-subtle text-info"><i class="bi bi-card-text"></i></div>
+                        <div style="min-width:0; flex:1;">
+                            <div class="info-label">ชื่อโครงงาน</div>
+                            <div class="info-value">{{ $group->project->project_name ?? '—' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon bg-success-subtle text-success"><i class="bi bi-flag-fill"></i></div>
+                        <div>
+                            <div class="info-label">สถานะโครงงาน</div>
+                            <div class="info-value">
+                                <span class="badge {{ $psBadge[0] }} border" style="font-size:.73rem;">
+                                    <i class="bi bi-{{ $psBadge[1] }} me-1"></i>{{ $psBadge[2] }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon bg-warning-subtle text-warning"><i class="bi bi-person-badge"></i></div>
+                        <div>
+                            <div class="info-label">ประเภทนักศึกษา</div>
+                            <div class="info-value">
+                                <span class="badge {{ $group->project->student_type == 'r' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }}" style="font-size:.73rem;">
+                                    {{ $group->project->student_type == 'r' ? 'ภาคปกติ (Regular)' : 'ภาคพิเศษ (Special)' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon bg-secondary-subtle text-secondary"><i class="bi bi-tag-fill"></i></div>
+                        <div>
+                            <div class="info-label">ประเภทโครงงาน</div>
+                            <div class="info-value">{{ $group->project->project_type ?: '—' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon {{ $group->project->exam_datetime ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                            <i class="bi bi-{{ $group->project->exam_datetime ? 'calendar-check-fill' : 'calendar-x-fill' }}"></i>
+                        </div>
+                        <div>
+                            <div class="info-label">วันเวลาสอบ</div>
+                            <div class="info-value">
+                                @if($group->project->exam_datetime)
+                                    <span class="text-success fw-semibold">
+                                        {{ \Carbon\Carbon::parse($group->project->exam_datetime)->format('d/m/Y') }}
+                                    </span>
+                                    <span class="text-muted small ms-1">{{ \Carbon\Carbon::parse($group->project->exam_datetime)->format('H:i น.') }}</span>
+                                @else
+                                    <span class="text-danger small">ยังไม่กำหนด</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
-                         style="width: 50px; height: 50px; background-color: #17a2b8;">
-                        <i class="bi bi-people-fill text-white fs-4"></i>
+
+        <!-- Committee -->
+        <div class="col-lg-5">
+            <div class="section-card card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <div class="info-icon bg-success-subtle text-success" style="width:28px;height:28px;border-radius:7px;font-size:.75rem;">
+                        <i class="bi bi-person-workspace"></i>
                     </div>
-                    <h6 class="text-muted mb-1 small">สมาชิก</h6>
-                    <h3 class="mb-0 fw-bold text-info">{{ $group->members->count() }}</h3>
-                    <small class="text-muted">คน</small>
+                    <span class="fw-semibold">คณะกรรมการ</span>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
-                         style="width: 50px; height: 50px; background-color: #f6c23e;">
-                        <i class="bi bi-calendar3 text-white fs-4"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">ภาคเรียน</h6>
-                    <h3 class="mb-0 fw-bold text-warning">{{ $group->semester }}/{{ substr($group->year, -2) }}</h3>
-                    <small class="text-muted">{{ $group->subject_code }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center">
+                <div class="card-body p-0">
                     @php
-                        $statusColors = [
-                            'created' => ['bg' => 'success', 'icon' => 'check-circle-fill', 'text' => 'สร้างแล้ว'],
-                            'not_created' => ['bg' => 'secondary', 'icon' => 'x-circle-fill', 'text' => 'ยังไม่สร้าง'],
-                            'member_left' => ['bg' => 'warning', 'icon' => 'exclamation-triangle-fill', 'text' => 'สมาชิกออก'],
-                            'member_added' => ['bg' => 'info', 'icon' => 'person-plus-fill', 'text' => 'เพิ่มสมาชิก'],
-                            'disbanded' => ['bg' => 'danger', 'icon' => 'trash-fill', 'text' => 'ยุบกลุ่ม']
+                        $roles = [
+                            ['ที่ปรึกษา', 'linear-gradient(135deg,#4e73df,#2e59d9)', $group->project->advisor_code    ?? null, $advLec],
+                            ['กรรมการ 1', 'linear-gradient(135deg,#1cc88a,#13855c)', $group->project->committee1_code ?? null, $c1Lec],
+                            ['กรรมการ 2', 'linear-gradient(135deg,#36b9cc,#1a7486)', $group->project->committee2_code ?? null, $c2Lec],
+                            ['กรรมการ 3', 'linear-gradient(135deg,#858796,#5a5c69)', $group->project->committee3_code ?? null, $c3Lec],
                         ];
-                        $status = $statusColors[$group->status_group] ?? ['bg' => 'secondary', 'icon' => 'question-circle', 'text' => $group->status_group];
                     @endphp
-                    @php
-                        $bgColors = [
-                            'success' => '#28a745',
-                            'secondary' => '#6c757d',
-                            'warning' => '#f6c23e',
-                            'info' => '#17a2b8',
-                            'danger' => '#dc3545'
-                        ];
-                        $bgColor = $bgColors[$status['bg']] ?? '#6c757d';
-                    @endphp
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
-                         style="width: 50px; height: 50px; background-color: {{ $bgColor }};">
-                        <i class="bi bi-{{ $status['icon'] }} text-white fs-4"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">สถานะกลุ่ม</h6>
-                    <h6 class="mb-0 fw-bold">
-                        <span class="badge bg-{{ $status['bg'] }} fs-6">{{ $status['text'] }}</span>
-                    </h6>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ตารางข้อมูลหลัก -->
-    <div class="card mb-4 border-0 shadow">
-        <div class="card-header text-white border-0" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
-            <div class="d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 text-white">
-                    <i class="bi bi-table me-2"></i>ข้อมูลโครงงานและอาจารย์
-                </h5>
-                @if($group->project)
-                    <span class="badge bg-white text-primary">
-                        <i class="bi bi-check-circle-fill me-1"></i>มีข้อมูลแล้ว
-                    </span>
-                @endif
-            </div>
-        </div>
-        <div class="card-body p-0">
-            @if($group->project)
-            <!-- มีโครงงานแล้ว - แสดงแบบตาราง -->
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead style="background-color: #000000ff;">
-                        <tr>
-                            <th width="5%" class="text-center text-white">ID</th>
-                            <th width="10%" class="text-center text-white">ProjCode</th>
-                            <th width="25%" class="text-white">ProjNameTH</th>
-                            <th width="30%" class="text-white">สมาชิกในโครงงาน</th>
-                            <th width="7%" class="text-center text-white">AdvId</th>
-                            <th width="7%" class="text-center text-white">Comm1</th>
-                            <th width="7%" class="text-center text-white">Comm2</th>
-                            <th width="7%" class="text-center text-white">Comm3</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center">
-                                <div class="badge bg-primary rounded-circle p-2" style="width: 35px; height: 35px; line-height: 20px;">
-                                    <strong>{{ $group->group_id }}</strong>
+                    @foreach($roles as [$role, $gradient, $code, $lec])
+                    <div class="committee-row">
+                        <div class="person-avatar" style="background:{{ $gradient }};">
+                            {{ $lec ? strtoupper(mb_substr($lec->firstname_user ?? '?', 0, 1)) : ($code ? strtoupper(substr($code, 0, 1)) : '—') }}
+                        </div>
+                        <div class="flex-fill" style="min-width:0;">
+                            <div class="info-label mb-1">{{ $role }}</div>
+                            @if($code)
+                                <div class="fw-semibold small text-dark">
+                                    {{ $lec ? $lec->firstname_user . ' ' . $lec->lastname_user : $code }}
                                 </div>
-                            </td>
-                            <td class="text-center">
-                                <code class="bg-light px-2 py-1 rounded text-primary fw-bold">{{ $group->project->project_code }}</code>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-folder-fill text-warning me-2 fs-5"></i>
-                                    <strong>{{ $group->project->project_name ?? '-' }}</strong>
-                                </div>
-                            </td>
-                            <td>
-                                @foreach($group->members as $index => $member)
-                                    <div class="mb-1">
-                                        <span class="badge rounded-pill bg-info me-1">{{ $index + 1 }}</span>
-                                        <strong>{{ $member->student->firstname_std ?? 'N/A' }} {{ $member->student->lastname_std ?? '' }}</strong>
-                                        <small class="text-muted">({{ $member->username_std }})</small>
-                                    </div>
-                                @endforeach
-                            </td>
-                            <td class="text-center">
-                                @if($group->project->advisor_code)
-                                    <span class="badge text-white" style="background: linear-gradient(135deg, #5a67d8 0%, #6610f2 100%);" 
-                                          title="Advisor">
-                                        {{ $group->project->advisor_code }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                @if($group->project->committee1_code)
-                                    <span class="badge bg-success" title="Committee">
-                                        {{ $group->project->committee1_code }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                @if($group->project->committee2_code)
-                                    <span class="badge bg-success" title="Committee">
-                                        {{ $group->project->committee2_code }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                @if($group->project->committee3_code)
-                                    <span class="badge bg-success" title="Committee">
-                                        {{ $group->project->committee3_code }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- ข้อมูลเพิ่มเติม -->
-            <div class="p-4 bg-gradient" style="background: linear-gradient(135deg, #e2e6ea 0%, #adb5bd 100%);">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px; background-color: #dc3545;">
-                                <i class="bi bi-calendar-event text-white fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-muted d-block">วันเวลาสอบ</small>
-                                <strong class="text-danger fs-5">
-                                    {{ $group->project->exam_datetime ? \Carbon\Carbon::parse($group->project->exam_datetime)->format('d/m/Y H:i น.') : 'ยังไม่กำหนด' }}
-                                </strong>
-                            </div>
+                                <code class="text-muted" style="font-size:.7rem;">{{ $code }}</code>
+                            @else
+                                <span class="text-muted small fst-italic">ยังไม่กำหนด</span>
+                            @endif
                         </div>
+                        @if($code)
+                        <i class="bi bi-check-circle-fill text-success" style="font-size:.8rem; opacity:.7;"></i>
+                        @else
+                        <i class="bi bi-circle text-muted" style="font-size:.8rem; opacity:.4;"></i>
+                        @endif
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px; background-color: #17a2b8;">
-                                <i class="bi bi-tag text-white fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-muted d-block">ประเภทโครงงาน</small>
-                                <strong class="text-dark fs-5">{{ $group->project->project_type ?? 'ยังไม่ระบุ' }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px; background-color: #f6c23e;">
-                                <i class="bi bi-flag text-white fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-muted d-block">สถานะโครงงาน</small>
-                                @php
-                                    $projectStatusMap = [
-                                        'not_proposed' => ['label' => 'ยังไม่เสนอ', 'color' => 'secondary'],
-                                        'pending' => ['label' => 'รออนุมัติ', 'color' => 'warning'],
-                                        'approved' => ['label' => 'อนุมัติแล้ว', 'color' => 'success'],
-                                        'rejected' => ['label' => 'ปฏิเสธ', 'color' => 'danger'],
-                                        'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info'],
-                                        'late_submission' => ['label' => 'ส่งช้า', 'color' => 'danger'],
-                                        'submitted' => ['label' => 'ส่งแล้ว', 'color' => 'primary']
-                                    ];
-                                    $status = $projectStatusMap[$group->project->status_project] ?? ['label' => $group->project->status_project, 'color' => 'secondary'];
-                                @endphp
-                                <span class="badge bg-{{ $status['color'] }} fs-6">{{ $status['label'] }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px; background-color: #28a745;">
-                                <i class="bi bi-person-badge text-white fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-muted d-block">ประเภทนักศึกษา</small>
-                                <strong class="text-dark fs-5">
-                                    {{ $group->project->student_type == 'r' ? '🎓 ปกติ (Regular)' : '⭐ พิเศษ (Special)' }}
-                                </strong>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
-
-            @else
-            <!-- ยังไม่มีโครงงาน -->
-            <div class="p-4 text-center">
-                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
-                <h4 class="mt-3 text-muted">ยังไม่มีโครงงาน</h4>
-                <p class="text-muted">กรุณาสร้างโครงงานด้านล่าง</p>
-            </div>
-            @endif
         </div>
+
     </div>
 
-    <!-- ฟอร์มแก้ไขข้อมูล (Coordinator/Admin only) -->
-    @if($group->project && Auth::guard('web')->user()->canEdit())
-    <div class="card border-0 shadow">
-        <div class="card-header text-white border-0" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
-            <h5 class="mb-0 text-white">
-                <i class="bi bi-pencil-square me-2"></i>แก้ไขข้อมูลโครงงาน
-            </h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('coordinator.projects.update', $group->project->project_id) }}" method="POST">
-                @csrf
-                @method('PUT')
-
-                <div class="row">
-                    <!-- Column 1 -->
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-card-text text-primary me-1"></i>ชื่อโครงงาน
-                            </label>
-                            <input type="text" name="project_name" class="form-control" 
-                                   value="{{ $group->project->project_name }}" 
-                                   placeholder="ระบุชื่อโครงงาน">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-person-badge text-primary me-1"></i>อาจารย์ที่ปรึกษา (Advisor)
-                            </label>
-                            <select name="advisor_code" class="form-select">
-                                <option value="">-- ไม่มี --</option>
-                                @foreach($lecturers as $lecturer)
-                                    <option value="{{ $lecturer->user_code }}" 
-                                            {{ $group->project->advisor_code == $lecturer->user_code ? 'selected' : '' }}>
-                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 1 (Committee 1)
-                            </label>
-                            <select name="committee1_code" class="form-select">
-                                <option value="">-- ไม่มี --</option>
-                                @foreach($lecturers as $lecturer)
-                                    <option value="{{ $lecturer->user_code }}" 
-                                            {{ $group->project->committee1_code == $lecturer->user_code ? 'selected' : '' }}>
-                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 2 (Committee 2)
-                            </label>
-                            <select name="committee2_code" class="form-select">
-                                <option value="">-- ไม่มี --</option>
-                                @foreach($lecturers as $lecturer)
-                                    <option value="{{ $lecturer->user_code }}" 
-                                            {{ $group->project->committee2_code == $lecturer->user_code ? 'selected' : '' }}>
-                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-person-check text-success me-1"></i>กรรมการคนที่ 3 (Committee 3)
-                            </label>
-                            <select name="committee3_code" class="form-select">
-                                <option value="">-- ไม่มี --</option>
-                                @foreach($lecturers as $lecturer)
-                                    <option value="{{ $lecturer->user_code }}" 
-                                            {{ $group->project->committee3_code == $lecturer->user_code ? 'selected' : '' }}>
-                                        {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Column 2 -->
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-calendar-event text-danger me-1"></i>วันเวลาสอบ
-                            </label>
-                            <input type="datetime-local" name="exam_datetime" class="form-control" 
-                                   value="{{ $group->project->exam_datetime ? \Carbon\Carbon::parse($group->project->exam_datetime)->format('Y-m-d\TH:i') : '' }}">
-                            <small class="text-muted">กำหนดวันและเวลาที่จะสอบโครงงาน</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-tag text-info me-1"></i>ประเภทโครงงาน
-                            </label>
-                            <input type="text" name="project_type" class="form-control" 
-                                   value="{{ $group->project->project_type }}" 
-                                   placeholder="เช่น soft-en, ai, network, datasci">
-                            <small class="text-muted">คั่นหลายประเภทด้วย comma</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-flag text-warning me-1"></i>สถานะโครงงาน
-                            </label>
-                            <select name="status_project" class="form-select">
-                                <option value="not_proposed" {{ $group->project->status_project == 'not_proposed' ? 'selected' : '' }}>ยังไม่เสนอ</option>
-                                <option value="pending" {{ $group->project->status_project == 'pending' ? 'selected' : '' }}>รออนุมัติ</option>
-                                <option value="approved" {{ $group->project->status_project == 'approved' ? 'selected' : '' }}>อนุมัติแล้ว</option>
-                                <option value="rejected" {{ $group->project->status_project == 'rejected' ? 'selected' : '' }}>ปฏิเสธ</option>
-                                <option value="in_progress" {{ $group->project->status_project == 'in_progress' ? 'selected' : '' }}>กำลังดำเนินการ</option>
-                                <option value="late_submission" {{ $group->project->status_project == 'late_submission' ? 'selected' : '' }}>ส่งช้า</option>
-                                <option value="submitted" {{ $group->project->status_project == 'submitted' ? 'selected' : '' }}>ส่งแล้ว</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-person-badge text-info me-1"></i>ประเภทนักศึกษา
-                            </label>
-                            <div class="form-text mb-2">{{ $group->project->student_type == 'r' ? 'ปกติ (Regular)' : 'พิเศษ (Special)' }}</div>
-                            <small class="text-muted">ไม่สามารถแก้ไขได้หลังสร้าง</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-code-square text-secondary me-1"></i>รหัสโครงงาน
-                            </label>
-                            <input type="text" class="form-control" value="{{ $group->project->project_code }}" readonly>
-                            <small class="text-muted">ไม่สามารถแก้ไขได้</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- กรณียังไม่มีโครงงาน -->
-    @elseif(!$group->project && Auth::guard('web')->user()->canEdit())
-    <div class="card">
-        <div class="card-header text-white" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
-            <h5 class="mb-0 text-white"><i class="bi bi-plus-circle me-2"></i>สร้างโครงงานใหม่</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('coordinator.groups.approve', $group->group_id) }}" method="POST">
-                @csrf
-                <div class="mb-3">
-                    <label class="form-label fw-bold">ชื่อโครงงาน *</label>
-                    <input type="text" name="project_name" class="form-control" required placeholder="ระบุชื่อโครงงาน">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">อาจารย์ที่ปรึกษา *</label>
-                    <select name="advisor_code" class="form-select" required>
-                        <option value="">-- เลือกอาจารย์ที่ปรึกษา --</option>
-                        @foreach($lecturers as $lecturer)
-                            <option value="{{ $lecturer->user_code }}">
-                                {{ $lecturer->user_code }} - {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">ประเภทนักศึกษา *</label>
-                    <select name="student_type" class="form-select" required>
-                        <option value="r">ภาคปกติ (Regular)</option>
-                        <option value="s">ภาคพิเศษ (Special)</option>
-                    </select>
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-check-circle me-2"></i>สร้างโครงงาน
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Staff - Read Only -->
-    @elseif(!$group->project)
-    <div class="card">
+    @else
+    <div class="section-card card mb-4">
         <div class="card-body text-center py-5">
-            <i class="bi bi-lock text-muted" style="font-size: 3rem;"></i>
-            <h5 class="text-muted mt-3">กลุ่มนี้ยังไม่มีโครงงาน</h5>
-            <p class="text-muted">คุณไม่มีสิทธิ์สร้างโครงงาน (Staff read-only)</p>
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle mb-3" style="width:64px;height:64px;">
+                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:1.6rem;"></i>
+            </div>
+            <h6 class="fw-semibold text-dark mb-1">ยังไม่มีโครงงาน</h6>
+            <p class="text-muted small mb-0">กลุ่มนี้ยังไม่ได้สร้างโครงงาน</p>
         </div>
     </div>
     @endif
+
+    <!-- Members -->
+    <div class="section-card card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <div class="info-icon bg-info-subtle text-info" style="width:28px;height:28px;border-radius:7px;font-size:.75rem;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <span class="fw-semibold">สมาชิกกลุ่ม</span>
+            </div>
+            <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size:.72rem;">
+                {{ $group->members->count() }} คน
+            </span>
+        </div>
+        <div class="card-body p-0">
+            @php $memberColors = ['linear-gradient(135deg,#667eea,#764ba2)','linear-gradient(135deg,#1cc88a,#13855c)','linear-gradient(135deg,#f6c23e,#d4a017)','linear-gradient(135deg,#e74a3b,#be2617)']; @endphp
+            @forelse($group->members as $i => $member)
+            <div class="member-row">
+                <div class="member-avatar" style="background:{{ $memberColors[$i % 4] }};">
+                    {{ strtoupper(mb_substr($member->student->firstname_std ?? 'N', 0, 1)) }}
+                </div>
+                <div class="flex-fill" style="min-width:0;">
+                    <div class="fw-semibold small text-dark">{{ ($member->student->firstname_std ?? 'N/A') . ' ' . ($member->student->lastname_std ?? '') }}</div>
+                    <code class="text-muted" style="font-size:.72rem;">{{ $member->username_std }}</code>
+                </div>
+                <div class="text-end" style="min-width:140px;">
+                    <div class="text-muted small text-truncate">{{ $member->student->email_std ?? '—' }}</div>
+                    <div class="text-muted" style="font-size:.72rem;">
+                        <i class="bi bi-calendar3 me-1"></i>{{ $member->created_at ? $member->created_at->format('d/m/Y') : '—' }}
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="text-center py-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle mb-2" style="width:50px;height:50px;">
+                    <i class="bi bi-person-x text-muted" style="font-size:1.2rem;"></i>
+                </div>
+                <p class="text-muted small mb-0">ไม่มีสมาชิก</p>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    <!-- Edit / Create Form -->
+    @if($group->project && Auth::guard('web')->user()->canEdit())
+    <div class="section-card card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center edit-toggle"
+             data-bs-toggle="collapse" data-bs-target="#editFormBody">
+            <div class="d-flex align-items-center gap-2">
+                <div class="info-icon bg-success-subtle text-success" style="width:28px;height:28px;border-radius:7px;font-size:.75rem;">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <span class="fw-semibold text-success">แก้ไขข้อมูลโครงงาน</span>
+            </div>
+            <i class="bi bi-chevron-down text-muted small" id="editChevron"></i>
+        </div>
+        <div class="collapse" id="editFormBody">
+            <div class="card-body px-4 py-4">
+                <form action="{{ route('coordinator.projects.update', $group->project->project_id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Section: ข้อมูลโครงงาน -->
+                    <div class="form-section">ข้อมูลโครงงาน</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold small">ชื่อโครงงาน</label>
+                            <input type="text" name="project_name" class="form-control form-control-sm"
+                                   value="{{ $group->project->project_name }}" placeholder="ระบุชื่อโครงงาน">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">สถานะโครงงาน</label>
+                            <select name="status_project" class="form-select form-select-sm">
+                                @foreach(['not_proposed'=>'ยังไม่เสนอ','pending'=>'รออนุมัติ','approved'=>'อนุมัติแล้ว','rejected'=>'ปฏิเสธ','in_progress'=>'กำลังดำเนินการ','late_submission'=>'ส่งล่าช้า','submitted'=>'ส่งแล้ว'] as $v => $l)
+                                    <option value="{{ $v }}" {{ $group->project->status_project == $v ? 'selected' : '' }}>{{ $l }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">ประเภทโครงงาน</label>
+                            <input type="text" name="project_type" class="form-control form-control-sm"
+                                   value="{{ $group->project->project_type }}" placeholder="เช่น soft-en, ai, network">
+                            <div class="form-text">คั่นหลายประเภทด้วย comma</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">รหัสโครงงาน</label>
+                            <input type="text" class="form-control form-control-sm bg-light" value="{{ $group->project->project_code }}" readonly>
+                            <div class="form-text">ไม่สามารถแก้ไขได้</div>
+                        </div>
+                    </div>
+
+                    <!-- Section: ตารางสอบและคณะกรรมการ -->
+                    <div class="form-section">ตารางสอบและคณะกรรมการ</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">อาจารย์ที่ปรึกษา</label>
+                            <select name="advisor_code" class="form-select form-select-sm">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lec)
+                                    <option value="{{ $lec->user_code }}" {{ $group->project->advisor_code == $lec->user_code ? 'selected' : '' }}>
+                                        {{ $lec->user_code }} – {{ $lec->firstname_user }} {{ $lec->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">วันเวลาสอบ</label>
+                            <input type="datetime-local" name="exam_datetime" class="form-control form-control-sm"
+                                   value="{{ $group->project->exam_datetime ? \Carbon\Carbon::parse($group->project->exam_datetime)->format('Y-m-d\TH:i') : '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">กรรมการ 1</label>
+                            <select name="committee1_code" class="form-select form-select-sm">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lec)
+                                    <option value="{{ $lec->user_code }}" {{ $group->project->committee1_code == $lec->user_code ? 'selected' : '' }}>
+                                        {{ $lec->user_code }} – {{ $lec->firstname_user }} {{ $lec->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">กรรมการ 2</label>
+                            <select name="committee2_code" class="form-select form-select-sm">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lec)
+                                    <option value="{{ $lec->user_code }}" {{ $group->project->committee2_code == $lec->user_code ? 'selected' : '' }}>
+                                        {{ $lec->user_code }} – {{ $lec->firstname_user }} {{ $lec->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">กรรมการ 3</label>
+                            <select name="committee3_code" class="form-select form-select-sm">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lec)
+                                    <option value="{{ $lec->user_code }}" {{ $group->project->committee3_code == $lec->user_code ? 'selected' : '' }}>
+                                        {{ $lec->user_code }} – {{ $lec->firstname_user }} {{ $lec->lastname_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-top d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary btn-sm px-4">
+                            <i class="bi bi-save me-1"></i>บันทึกการเปลี่ยนแปลง
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @elseif(!$group->project && Auth::guard('web')->user()->canEdit())
+    <div class="section-card card mb-4">
+        <div class="card-header d-flex align-items-center gap-2">
+            <div class="info-icon bg-warning-subtle text-warning" style="width:28px;height:28px;border-radius:7px;font-size:.75rem;">
+                <i class="bi bi-plus-circle"></i>
+            </div>
+            <span class="fw-semibold text-warning">สร้างโครงงานใหม่</span>
+        </div>
+        <div class="card-body px-4 py-4">
+            <form action="{{ route('coordinator.groups.approve', $group->group_id) }}" method="POST">
+                @csrf
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">ชื่อโครงงาน <span class="text-danger">*</span></label>
+                        <input type="text" name="project_name" class="form-control form-control-sm" required placeholder="ระบุชื่อโครงงาน">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">อาจารย์ที่ปรึกษา <span class="text-danger">*</span></label>
+                        <select name="advisor_code" class="form-select form-select-sm" required>
+                            <option value="">— เลือกอาจารย์ —</option>
+                            @foreach($lecturers as $lec)
+                                <option value="{{ $lec->user_code }}">{{ $lec->user_code }} – {{ $lec->firstname_user }} {{ $lec->lastname_user }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small">ประเภทนักศึกษา <span class="text-danger">*</span></label>
+                        <select name="student_type" class="form-select form-select-sm" required>
+                            <option value="r">ภาคปกติ</option>
+                            <option value="s">ภาคพิเศษ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 pt-2 border-top d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-sm px-4">
+                        <i class="bi bi-check-circle me-1"></i>สร้างโครงงาน
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @elseif(!$group->project)
+    <div class="section-card card mb-4">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-lock text-muted d-block mb-2" style="font-size:1.5rem; opacity:.3;"></i>
+            <p class="text-muted small mb-0">ไม่มีสิทธิ์สร้างโครงงาน</p>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const advisorSelect = document.querySelector('select[name="advisor_code"]');
-    const committee1Select = document.querySelector('select[name="committee1_code"]');
-    const committee2Select = document.querySelector('select[name="committee2_code"]');
-    const committee3Select = document.querySelector('select[name="committee3_code"]');
-    
-    if (!advisorSelect || !committee1Select || !committee2Select || !committee3Select) {
-        return; // ถ้าไม่มี form อย่าทำอะไร
+    // Chevron toggle animation
+    const target = document.getElementById('editFormBody');
+    const chevron = document.getElementById('editChevron');
+    if (target && chevron) {
+        target.addEventListener('show.bs.collapse', () => chevron.style.transform = 'rotate(180deg)');
+        target.addEventListener('hide.bs.collapse', () => chevron.style.transform = 'rotate(0deg)');
+        chevron.style.transition = 'transform .2s';
     }
-    
-    function validateCommitteeSelection() {
-        const advisor = advisorSelect.value;
-        const comm1 = committee1Select.value;
-        const comm2 = committee2Select.value;
-        const comm3 = committee3Select.value;
-        
-        const selectedLecturers = [];
+
+    // Committee duplicate validation
+    const selectors = ['advisor_code','committee1_code','committee2_code','committee3_code']
+        .map(n => document.querySelector(`select[name="${n}"]`));
+    const [adv] = selectors;
+    if (!adv) return;
+
+    function validate() {
+        const vals = selectors.map(s => s.value);
         const warnings = [];
-        
-        // ตรวจสอบ Advisor
-        if (advisor) {
-            selectedLecturers.push({type: 'Advisor', code: advisor});
+        const names = ['ที่ปรึกษา','กรรมการ 1','กรรมการ 2','กรรมการ 3'];
+        for (let i = 1; i < vals.length; i++) {
+            for (let j = 0; j < i; j++) {
+                if (vals[i] && vals[i] === vals[j])
+                    warnings.push(`${names[i]} ซ้ำกับ ${names[j]}`);
+            }
         }
-        
-        // ตรวจสอบ Committee 1
-        if (comm1) {
-            if (comm1 === advisor) {
-                warnings.push('⚠️ Committee 1 ไม่สามารถเป็นคนเดียวกับ Advisor ได้');
-            }
-            selectedLecturers.push({type: 'Committee 1', code: comm1});
-        }
-        
-        // ตรวจสอบ Committee 2
-        if (comm2) {
-            if (comm2 === advisor) {
-                warnings.push('⚠️ Committee 2 ไม่สามารถเป็นคนเดียวกับ Advisor ได้');
-            }
-            if (comm2 === comm1) {
-                warnings.push('⚠️ Committee 2 ไม่สามารถเป็นคนเดียวกับ Committee 1 ได้');
-            }
-            selectedLecturers.push({type: 'Committee 2', code: comm2});
-        }
-        
-        // ตรวจสอบ Committee 3
-        if (comm3) {
-            if (comm3 === advisor) {
-                warnings.push('⚠️ Committee 3 ไม่สามารถเป็นคนเดียวกับ Advisor ได้');
-            }
-            if (comm3 === comm1) {
-                warnings.push('⚠️ Committee 3 ไม่สามารถเป็นคนเดียวกับ Committee 1 ได้');
-            }
-            if (comm3 === comm2) {
-                warnings.push('⚠️ Committee 3 ไม่สามารถเป็นคนเดียวกับ Committee 2 ได้');
-            }
-            selectedLecturers.push({type: 'Committee 3', code: comm3});
-        }
-        
-        // แสดง warning
-        const existingAlert = document.querySelector('.lecturer-validation-alert');
-        if (existingAlert) {
-            existingAlert.remove();
-        }
-        
+        document.querySelector('.lecturer-validation-alert')?.remove();
         if (warnings.length > 0) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-warning alert-dismissible fade show lecturer-validation-alert';
-            alertDiv.innerHTML = `
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>พบปัญหาการเลือกอาจารย์:</strong>
-                <ul class="mb-0 mt-2">
-                    ${warnings.map(w => `<li>${w}</li>`).join('')}
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            advisorSelect.closest('form').insertBefore(alertDiv, advisorSelect.closest('form').firstChild);
+            const el = document.createElement('div');
+            el.className = 'alert alert-warning alert-dismissible fade show lecturer-validation-alert mb-3 border-0 shadow-sm';
+            el.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i><strong>พบการเลือกซ้ำ:</strong>
+                <ul class="mb-0 mt-1 small">${warnings.map(w => `<li>${w}</li>`).join('')}</ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            adv.closest('form').insertBefore(el, adv.closest('form').firstChild);
         }
     }
-    
-    // ฟังการเปลี่ยนแปลงของทุก select
-    advisorSelect.addEventListener('change', validateCommitteeSelection);
-    committee1Select.addEventListener('change', validateCommitteeSelection);
-    committee2Select.addEventListener('change', validateCommitteeSelection);
-    committee3Select.addEventListener('change', validateCommitteeSelection);
-    
-    // ตรวจสอบตอน submit form
-    const form = advisorSelect.closest('form');
-    form.addEventListener('submit', function(e) {
-        const advisor = advisorSelect.value;
-        const comm1 = committee1Select.value;
-        const comm2 = committee2Select.value;
-        const comm3 = committee3Select.value;
-        
-        // ตรวจสอบการซ้ำกัน
-        const lecturers = [advisor, comm1, comm2, comm3].filter(v => v !== '');
-        const uniqueLecturers = [...new Set(lecturers)];
-        
-        if (lecturers.length !== uniqueLecturers.length) {
+
+    selectors.forEach(s => s?.addEventListener('change', validate));
+    adv.closest('form')?.addEventListener('submit', function(e) {
+        const vals = selectors.map(s => s.value).filter(v => v !== '');
+        if (vals.length !== new Set(vals).size) {
             e.preventDefault();
-            alert('❌ พบการเลือกอาจารย์ซ้ำกัน!\n\nกรุณาเลือกอาจารย์ที่แตกต่างกันสำหรับแต่ละตำแหน่ง');
-            return false;
+            alert('พบการเลือกอาจารย์ซ้ำกัน\nกรุณาเลือกอาจารย์ที่แตกต่างกันสำหรับแต่ละตำแหน่ง');
         }
     });
 });

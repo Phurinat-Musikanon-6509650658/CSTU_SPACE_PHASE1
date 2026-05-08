@@ -518,6 +518,175 @@ class CoordinatorController extends Controller
             ->with('success', 'อัพเดทตารางสอบและคณะกรรมการเรียบร้อยแล้ว');
     }
 
+    public function scheduleImportForm()
+    {
+        $lecturers = DB::table('user')
+            ->whereRaw('(role & ?) != 0', [8192 | 16384 | 32768])
+            ->select('user_code', 'firstname_user', 'lastname_user')
+            ->orderBy('user_code')
+            ->get();
+
+        return view('coordinator.schedules.import', compact('lecturers'));
+    }
+
+    public function scheduleImportTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="schedule_import_template.csv"',
+        ];
+
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($file, ['project_code', 'exam_datetime', 'advisor_code', 'committee1_code', 'committee2_code', 'committee3_code']);
+            fputcsv($file, ['68-1-01_kdc-r1', '2025-05-20 09:00', 'SCH', 'JDO', 'SMY', '']);
+            fputcsv($file, ['68-1-02_abc-r2', '2025-05-20 10:00', 'SCH', 'KWT', 'JDO', '']);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function scheduleImportPreview(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:csv,txt|max:2048']);
+
+        $path = $request->file('file')->getRealPath();
+        $rows = array_map(fn($line) => str_getcsv($line), file($path));
+        $header = array_shift($rows);
+
+        // Normalize header keys
+        $header = array_map(fn($h) => strtolower(trim($h)), $header);
+
+        $validCodes = DB::table('user')
+            ->whereNotNull('user_code')
+            ->pluck('user_code')
+            ->map(fn($c) => strtolower(trim($c)))
+            ->flip()
+            ->toArray();
+
+        $projectMap = Project::with(['group.members.student'])
+            ->get()
+            ->keyBy('project_code');
+
+        $preview = [];
+
+        foreach ($rows as $i => $row) {
+            if (count(array_filter($row)) === 0) continue;
+
+            $data = [];
+            foreach ($header as $col => $key) {
+                $data[$key] = trim($row[$col] ?? '');
+            }
+
+            $lineNo   = $i + 2;
+            $projCode = $data['project_code'] ?? '';
+            $examDt   = $data['exam_datetime'] ?? '';
+            $advisor  = $data['advisor_code'] ?? '';
+            $comm1    = $data['committee1_code'] ?? '';
+            $comm2    = $data['committee2_code'] ?? '';
+            $comm3    = $data['committee3_code'] ?? '';
+
+            $errors = [];
+
+            // Validate project_code
+            $project = $projectMap->get($projCode);
+            if (!$project) {
+                $errors[] = "ไม่พบโครงงาน '{$projCode}' ในระบบ";
+            }
+
+            // Validate exam_datetime
+            $parsedDt = null;
+            if ($examDt) {
+                try {
+                    $parsedDt = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $examDt);
+                } catch (\Exception $e) {
+                    $errors[] = "รูปแบบวันเวลาไม่ถูกต้อง '{$examDt}' (ใช้ YYYY-MM-DD HH:MM)";
+                }
+            }
+
+            // Validate user_codes
+            foreach ([
+                'advisor_code'     => $advisor,
+                'committee1_code'  => $comm1,
+                'committee2_code'  => $comm2,
+                'committee3_code'  => $comm3,
+            ] as $field => $code) {
+                if ($code && !isset($validCodes[strtolower($code)])) {
+                    $errors[] = "ไม่พบ user_code '{$code}' ในระบบ";
+                }
+            }
+
+            $members = $project
+                ? $project->group->members->map(fn($m) => trim(($m->student->firstname_std ?? '') . ' ' . ($m->student->lastname_std ?? '')))->join(', ')
+                : '-';
+
+            $preview[] = [
+                'line'          => $lineNo,
+                'project_code'  => $projCode,
+                'project_name'  => $project?->project_name ?? '-',
+                'members'       => $members,
+                'exam_datetime' => $examDt,
+                'advisor_code'  => $advisor,
+                'committee1_code' => $comm1,
+                'committee2_code' => $comm2,
+                'committee3_code' => $comm3,
+                'errors'        => $errors,
+                'valid'         => empty($errors),
+            ];
+        }
+
+        session(['schedule_import_preview' => $preview]);
+
+        return view('coordinator.schedules.import', compact('preview'));
+    }
+
+    public function scheduleImportConfirm(Request $request)
+    {
+        $preview = session('schedule_import_preview', []);
+
+        if (empty($preview)) {
+            return redirect()->route('coordinator.schedules.import.form')
+                ->with('error', 'ไม่พบข้อมูล Preview กรุณาอัปโหลดไฟล์ใหม่');
+        }
+
+        $imported = 0;
+        $skipped  = 0;
+
+        foreach ($preview as $row) {
+            if (!$row['valid']) {
+                $skipped++;
+                continue;
+            }
+
+            $project = Project::where('project_code', $row['project_code'])->first();
+            if (!$project) {
+                $skipped++;
+                continue;
+            }
+
+            $update = [];
+            if ($row['exam_datetime']) {
+                $update['exam_datetime'] = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $row['exam_datetime']);
+            }
+            if ($row['advisor_code'])    $update['advisor_code']    = $row['advisor_code'];
+            if ($row['committee1_code']) $update['committee1_code'] = $row['committee1_code'];
+            if ($row['committee2_code']) $update['committee2_code'] = $row['committee2_code'];
+            if ($row['committee3_code']) $update['committee3_code'] = $row['committee3_code'];
+
+            if (!empty($update)) {
+                $project->update($update);
+                $imported++;
+            }
+        }
+
+        session()->forget('schedule_import_preview');
+
+        return redirect()->route('coordinator.schedules.index')
+            ->with('success', "Import สำเร็จ {$imported} โครงงาน" . ($skipped ? ", ข้าม {$skipped} แถว (มีข้อผิดพลาด)" : ''));
+    }
+
     // ====================================
     // Evaluation & Grading
     // ====================================

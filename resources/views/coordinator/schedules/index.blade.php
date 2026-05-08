@@ -49,9 +49,14 @@
                 </h1>
                 <p class="text-muted mb-0">กำหนดวันเวลาสอบและมอบหมายคณะกรรมการสอบโครงงาน</p>
             </div>
-            <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-success">
-                <i class="bi bi-calendar-week me-1"></i>ดูตารางสอบ
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.schedules.import.form') }}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Import CSV
+                </a>
+                <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-success">
+                    <i class="bi bi-calendar-week me-1"></i>ดูตารางสอบ
+                </a>
+            </div>
         </div>
     </div>
 

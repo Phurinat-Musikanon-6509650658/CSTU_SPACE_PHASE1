@@ -165,6 +165,10 @@ Route::middleware('session.timeout')->group(function () {
         // Schedule & Committee Assignment (Full Access for Coordinator & Staff)
         Route::prefix('schedules')->name('schedules.')->middleware('role:staff,coordinator,admin')->group(function () {
             Route::get('/', [CoordinatorController::class, 'schedulesIndex'])->name('index');
+            Route::get('import', [CoordinatorController::class, 'scheduleImportForm'])->name('import.form');
+            Route::post('import', [CoordinatorController::class, 'scheduleImportPreview'])->name('import.preview');
+            Route::post('import/confirm', [CoordinatorController::class, 'scheduleImportConfirm'])->name('import.confirm');
+            Route::get('import/template', [CoordinatorController::class, 'scheduleImportTemplate'])->name('import.template');
             Route::get('{project}/edit', [CoordinatorController::class, 'scheduleEdit'])->name('edit');
             Route::put('{project}', [CoordinatorController::class, 'scheduleUpdate'])->name('update');
         });
