@@ -35,7 +35,14 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="prefix_user" class="form-label fw-semibold">คำนำหน้า</label>
+                                <input type="text" class="form-control"
+                                       id="prefix_user" name="prefix_user"
+                                       value="{{ old('prefix_user', $user->prefix_user ?? '') }}"
+                                       placeholder="อ., ดร., อ.ดร.">
+                            </div>
+                            <div class="col-md-5 mb-3">
                                 <label for="firstname_user" class="form-label fw-semibold">ชื่อ <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('firstname_user') is-invalid @enderror"
                                        id="firstname_user" name="firstname_user"
@@ -44,8 +51,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="lastname_user" class="form-label fw-semibold">นามสกุล <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('lastname_user') is-invalid @enderror"
                                        id="lastname_user" name="lastname_user"

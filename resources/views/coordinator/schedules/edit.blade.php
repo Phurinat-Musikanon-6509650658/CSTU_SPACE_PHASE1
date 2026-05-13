@@ -75,6 +75,7 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="exam_datetime" id="h_exam_datetime">
+        <input type="hidden" name="exam_end_time" id="h_exam_end_time">
 
         <div class="row g-4">
 
@@ -121,6 +122,16 @@
                             </div>
                             <input type="time" class="form-control" id="examTime" step="300"
                                    value="{{ $project->exam_datetime ? $project->exam_datetime->format('H:i') : '' }}">
+                        </div>
+                        <div class="mb-1 mt-3">
+                            <label class="section-label">เวลาสิ้นสุดสอบ</label>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                @foreach(['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'] as $t)
+                                    <button type="button" class="time-preset-btn end-preset-btn" data-time="{{ $t }}">{{ $t }}</button>
+                                @endforeach
+                            </div>
+                            <input type="time" class="form-control" id="examEndTime" step="300"
+                                   value="{{ $project->exam_end_time ? $project->exam_end_time->format('H:i') : '' }}">
                         </div>
 
                         {{-- Summary --}}
@@ -212,6 +223,50 @@
                             </select>
                             @error('committee3_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+
+                        <hr class="my-3">
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            ที่ปรึกษาร่วมภายนอก — ต้องสร้างบัญชีใน Admin → Users ก่อน
+                        </p>
+
+                        {{-- Co-Advisor Internal --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-lines-fill text-info me-1"></i>ที่ปรึกษาร่วมภายใน
+                                <span class="badge bg-secondary ms-1" style="font-size:.7rem;">Co-Advisor Internal</span>
+                            </label>
+                            <select name="coadv_int_code" class="form-select committee-select @error('coadv_int_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ ($project->coAdvisorInternal?->user_code) == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->prefix_user ?? '' }} {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                        ({{ $lecturer->user_code }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('coadv_int_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Co-Advisor External --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person-plus text-warning me-1"></i>ที่ปรึกษาร่วมภายนอก
+                                <span class="badge bg-warning text-dark ms-1" style="font-size:.7rem;">Co-Advisor External</span>
+                            </label>
+                            <select name="coadv_ext_code" class="form-select committee-select @error('coadv_ext_code') is-invalid @enderror">
+                                <option value="">— ไม่มี —</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->user_code }}"
+                                            {{ ($project->coAdvisorExternal?->user_code) == $lecturer->user_code ? 'selected' : '' }}>
+                                        {{ $lecturer->prefix_user ?? '' }} {{ $lecturer->firstname_user }} {{ $lecturer->lastname_user }}
+                                        ({{ $lecturer->user_code }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('coadv_ext_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
 
@@ -232,13 +287,22 @@
 
 @push('scripts')
 <script>
-// Time presets
-document.querySelectorAll('.time-preset-btn').forEach(btn => {
+// Time presets (start)
+document.querySelectorAll('.time-preset-btn:not(.end-preset-btn)').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.time-preset-btn:not(.end-preset-btn)').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         document.getElementById('examTime').value = this.dataset.time;
         updateSummary();
+    });
+});
+
+// Time presets (end)
+document.querySelectorAll('.end-preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.end-preset-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('examEndTime').value = this.dataset.time;
     });
 });
 
@@ -280,10 +344,14 @@ document.getElementById('mainForm').addEventListener('submit', function(e) {
         document.getElementById('duplicateWarning').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
-    const date = document.getElementById('examDate').value;
-    const time = document.getElementById('examTime').value;
+    const date    = document.getElementById('examDate').value;
+    const time    = document.getElementById('examTime').value;
+    const endTime = document.getElementById('examEndTime').value;
     if (date && time) {
         document.getElementById('h_exam_datetime').value = `${date}T${time}`;
+    }
+    if (date && endTime) {
+        document.getElementById('h_exam_end_time').value = `${date}T${endTime}`;
     }
 });
 

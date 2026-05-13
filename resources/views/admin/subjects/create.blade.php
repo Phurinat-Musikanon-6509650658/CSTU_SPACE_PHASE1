@@ -93,9 +93,8 @@
                         <label for="semester" class="form-label">ภาคเรียน <span class="text-danger">*</span></label>
                         <select class="form-select @error('semester') is-invalid @enderror" id="semester" name="semester" required>
                             <option value="">-- เลือก --</option>
-                            <option value="1" {{ old('semester') == '1' ? 'selected' : '' }}>ภาคเรียน 1</option>
-                            <option value="2" {{ old('semester') == '2' ? 'selected' : '' }}>ภาคเรียน 2</option>
-                            <option value="3" {{ old('semester') == '3' ? 'selected' : '' }}>ภาคเรียน 3 (ฤดูร้อน)</option>
+                            <option value="1" {{ old('semester', $semester) == 1 ? 'selected' : '' }}>ภาคเรียน 1</option>
+                            <option value="2" {{ old('semester', $semester) == 2 ? 'selected' : '' }}>ภาคเรียน 2</option>
                         </select>
                         @error('semester')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -103,7 +102,7 @@
                         <label for="year" class="form-label">ปีการศึกษา <span class="text-danger">*</span></label>
                         <input type="number" class="form-control @error('year') is-invalid @enderror"
                                id="year" name="year" placeholder="เช่น 2568"
-                               value="{{ old('year', $currentYear) }}" min="2560" max="2600" required>
+                               value="{{ old('year', $year) }}" min="2560" max="2650" required>
                         @error('year')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4 mb-3 d-flex align-items-end">

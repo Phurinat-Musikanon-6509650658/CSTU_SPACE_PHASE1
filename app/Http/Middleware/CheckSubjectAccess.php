@@ -33,7 +33,17 @@ class CheckSubjectAccess
             return $next($request);
         }
 
-        $subject = Subject::where('subject_code', $subjectCode)->first();
+        // Match by year+semester from the student's active group (newest first)
+        $groupYear = $groupSemester = null;
+        if (auth('student')->check()) {
+            $grp = auth('student')->user()->groups()->latest('group_id')->first();
+            if ($grp) { $groupYear = $grp->year; $groupSemester = $grp->semester; }
+        }
+        $subject = Subject::where('subject_code', $subjectCode)
+            ->when($groupYear,     fn($q) => $q->where('year',     $groupYear))
+            ->when($groupSemester, fn($q) => $q->where('semester', $groupSemester))
+            ->orderBy('year', 'desc')->orderBy('semester', 'desc')
+            ->first();
 
         if (!$subject) {
             return $next($request);

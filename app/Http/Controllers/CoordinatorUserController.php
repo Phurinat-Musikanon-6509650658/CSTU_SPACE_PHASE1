@@ -315,4 +315,5 @@ class CoordinatorUserController extends Controller
         return redirect()->route('coordinator.users.index')
             ->with('success', $message);
     }
+
 }

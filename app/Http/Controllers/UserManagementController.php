@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\PermissionHelper;
+use App\Helpers\XlsxParser;
+use App\Helpers\XlsxBuilder;
 
 class UserManagementController extends Controller
 {
@@ -61,6 +63,7 @@ class UserManagementController extends Controller
 
         DB::table('user')->insert([
             'username_user' => $request->username_user,
+            'prefix_user'   => $request->prefix_user,
             'firstname_user' => $request->firstname_user,
             'lastname_user' => $request->lastname_user,
             'email_user' => $request->email_user,
@@ -128,11 +131,12 @@ class UserManagementController extends Controller
         ]);
 
         $updateData = [
+            'prefix_user'    => $request->prefix_user,
             'firstname_user' => $request->firstname_user,
-            'lastname_user' => $request->lastname_user,
-            'email_user' => $request->email_user,
-            'role' => (int)$request->role,
-            'user_code' => $request->user_code,
+            'lastname_user'  => $request->lastname_user,
+            'email_user'     => $request->email_user,
+            'role'           => (int)$request->role,
+            'user_code'      => $request->user_code,
         ];
 
         // ถ้ามีการเปลี่ยนรหัสผ่าน
@@ -166,176 +170,167 @@ class UserManagementController extends Controller
         return redirect()->route('users.index')->with('success', 'ลบผู้ใช้สำเร็จ');
     }
 
-    /**
-     * Show import form
-     */
+    // ─── Import (XLSX) ────────────────────────────────────────────────────────
+
     public function importForm()
     {
         if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
-
         return view('admin.users.import');
     }
 
-    /**
-     * Import users from CSV file
-     */
-    public function import(Request $request)
+    public function importPreview(Request $request)
     {
         if (!PermissionHelper::isAdmin()) {
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'file' => 'required|file|mimes:xlsx,xls|max:10240',
+        ], [
+            'file.required' => 'กรุณาเลือกไฟล์',
+            'file.mimes'    => 'รองรับเฉพาะ .xlsx / .xls',
         ]);
 
-        $file = $request->file('csv_file');
-        $path = $file->getRealPath();
-        
-        $csv = array_map('str_getcsv', file($path));
-        
-        // ตรวจสอบ header
-        $header = array_shift($csv);
-        
-        $imported = 0;
-        $skipped = 0;
-        $errors = [];
+        try {
+            $rows = XlsxParser::parse($request->file('file'), 1); // skip header row
+        } catch (\Exception $e) {
+            return back()->with('error', 'อ่านไฟล์ไม่ได้: ' . $e->getMessage());
+        }
 
-        foreach ($csv as $index => $row) {
-            // ข้ามแถวที่ว่าง
-            if (empty(array_filter($row))) {
-                continue;
-            }
+        $existingUsernames = DB::table('user')
+            ->pluck('username_user')
+            ->flip()
+            ->toArray();
 
-            // Map columns: username, firstname, lastname, email, password, role, user_code
-            $username = trim($row[0] ?? '');
+        $preview = [];
+        foreach ($rows as $row) {
+            $prefix    = trim($row[0] ?? '');
             $firstname = trim($row[1] ?? '');
-            $lastname = trim($row[2] ?? '');
-            $email = trim($row[3] ?? '');
-            $password = trim($row[4] ?? '');
-            $role = trim($row[5] ?? 'advisor');
-            $userCode = trim($row[6] ?? '');
+            $lastname  = trim($row[2] ?? '');
+            $username  = trim($row[3] ?? '');
+            $email     = trim($row[4] ?? '');
+            $userCode  = trim($row[5] ?? '');
+            $roleRaw   = trim($row[6] ?? '');
+            $password  = trim($row[7] ?? '');
 
-            // Validate required fields
-            if (empty($username) || empty($firstname) || empty($lastname) || empty($email) || empty($password)) {
-                $errors[] = "แถวที่ " . ($index + 2) . ": ข้อมูลไม่ครบถ้วน";
-                $skipped++;
-                continue;
-            }
+            if ($username === '' || $firstname === '') continue;
 
-            // Validate role
-            if (!in_array($role, ['admin', 'coordinator', 'advisor'])) {
-                $role = 'advisor'; // default
-            }
+            $role = $this->parseRole($roleRaw);
+            if ($password === '') $password = $username;
 
-            // ตรวจสอบว่า username ซ้ำหรือไม่
-            $exists = DB::table('user')->where('username_user', $username)->exists();
-            
-            if ($exists) {
-                $errors[] = "แถวที่ " . ($index + 2) . ": Username '{$username}' มีอยู่แล้ว";
-                $skipped++;
-                continue;
-            }
+            $warnings = [];
+            if ($email === '') $warnings[] = 'ไม่มี email';
+            if ($userCode === '') $warnings[] = 'ไม่มี user_code';
 
-            // Insert user
-            try {
-                DB::table('user')->insert([
-                    'username_user' => $username,
-                    'firstname_user' => $firstname,
-                    'lastname_user' => $lastname,
-                    'email_user' => $email,
-                    'password_user' => Hash::make($password),
-                    'role' => $role,
-                    'user_code' => $userCode,
-                ]);
-                $imported++;
-            } catch (\Exception $e) {
-                $errors[] = "แถวที่ " . ($index + 2) . ": " . $e->getMessage();
-                $skipped++;
-            }
+            $preview[] = [
+                'prefix'    => $prefix,
+                'firstname' => $firstname,
+                'lastname'  => $lastname,
+                'username'  => $username,
+                'email'     => $email,
+                'user_code' => $userCode,
+                'role'      => $role,
+                'role_raw'  => $roleRaw,
+                'password'  => $password,
+                'exists'    => isset($existingUsernames[$username]),
+                'warnings'  => $warnings,
+            ];
         }
 
-        $message = "Import สำเร็จ {$imported} รายการ";
-        if ($skipped > 0) {
-            $message .= ", ข้าม {$skipped} รายการ";
+        if (empty($preview)) {
+            return back()->with('error', 'ไม่พบข้อมูลในไฟล์');
         }
 
-        if (!empty($errors)) {
-            Session::flash('import_errors', $errors);
-        }
+        session(['user_excel_preview' => $preview]);
 
-        return redirect()->route('users.index')->with('success', $message);
+        $newCount    = count(array_filter($preview, fn($r) => !$r['exists']));
+        $existsCount = count(array_filter($preview, fn($r) => $r['exists']));
+
+        return view('admin.users.import', compact('preview', 'newCount', 'existsCount'));
     }
 
-    /**
-     * Download CSV template
-     */
-    public function downloadTemplate()
+    public function importConfirm(Request $request)
     {
-        // Coordinator, Admin, Staff สามารถดาวน์โหลดได้
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="user_import_template.csv"',
-        ];
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
 
-        $callback = function() {
-            $file = fopen('php://output', 'w');
-            
-            // Header
-            fputcsv($file, ['username', 'firstname', 'lastname', 'email', 'password', 'role', 'user_code']);
-            
-            // ตัวอย่างข้อมูล
-            fputcsv($file, ['teacher01', 'สมชาย', 'ใจดี', 'somchai@cstu.ac.th', 'pass1234', 'advisor', 'SCH']);
-            fputcsv($file, ['teacher02', 'สมหญิง', 'รักเรียน', 'somying@cstu.ac.th', 'pass5678', 'coordinator', 'SMY']);
-            fputcsv($file, ['teacher03', 'สมศักดิ์', 'มานะ', 'somsak@cstu.ac.th', 'pass9012', 'admin', 'SMS']);
-            
-            fclose($file);
-        };
+        $preview = session('user_excel_preview', []);
+        if (empty($preview)) {
+            return redirect()->route('users.importForm')->with('error', 'ไม่พบข้อมูล Preview กรุณาอัปโหลดใหม่');
+        }
 
-        return response()->stream($callback, 200, $headers);
+        $created = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($preview as $row) {
+                if ($row['exists']) continue;
+                DB::table('user')->insertOrIgnore([
+                    'prefix_user'    => $row['prefix'],
+                    'firstname_user' => $row['firstname'],
+                    'lastname_user'  => $row['lastname'],
+                    'username_user'  => $row['username'],
+                    'email_user'     => $row['email'],
+                    'user_code'      => $row['user_code'] ?: null,
+                    'role'           => $row['role'],
+                    'password_user'  => Hash::make($row['password']),
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+                $created++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        session()->forget('user_excel_preview');
+        $skipped = count($preview) - $created;
+
+        return redirect()->route('users.index')
+            ->with('success', "Import users สำเร็จ {$created} คน"
+                . ($skipped ? " (ข้าม {$skipped} ที่มีอยู่แล้ว)" : ''));
     }
-    
-    /**
-     * Export all users to CSV
-     */
+
+    // ─── Export (XLSX) ────────────────────────────────────────────────────────
+
     public function exportAll()
     {
-        // Coordinator, Admin, Staff สามารถ export ได้
-        $users = DB::table('user')->get();
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="users_export_' . date('Y-m-d_His') . '.csv"',
-        ];
+        $users = DB::table('user')->orderBy('user_id')->get();
 
-        $callback = function() use ($users) {
-            $file = fopen('php://output', 'w');
-            
-            // Add BOM for UTF-8
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // Header
-            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'Role', 'User Code', 'วันที่สร้าง']);
-            
-            // Data
-            foreach ($users as $user) {
-                fputcsv($file, [
-                    $user->user_id,
-                    $user->username_user,
-                    $user->firstname_user,
-                    $user->lastname_user,
-                    $user->email_user,
-                    $user->role,
-                    $user->user_code ?? '-',
-                    $user->created_at ?? '-'
-                ]);
-            }
-            
-            fclose($file);
+        $header = ['prefix', 'firstname', 'lastname', 'username', 'email', 'user_code', 'role', 'password'];
+        $rows   = [$header];
+        foreach ($users as $u) {
+            $rows[] = [
+                $u->prefix_user    ?? '',
+                $u->firstname_user ?? '',
+                $u->lastname_user  ?? '',
+                $u->username_user  ?? '',
+                $u->email_user     ?? '',
+                $u->user_code      ?? '',
+                (string)($u->role  ?? ''),
+                '',
+            ];
+        }
+
+        return XlsxBuilder::download('users_export_' . date('Y-m-d_His') . '.xlsx', ['Users' => $rows]);
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function parseRole(string $raw): int
+    {
+        if (is_numeric($raw) && (int)$raw > 0) return (int)$raw;
+        return match(strtolower(trim($raw))) {
+            'admin'                  => 32768,
+            'coordinator'            => 16384,
+            'advisor', 'lecturer'    => 8192,
+            'staff'                  => 4096,
+            'student'                => 2048,
+            default                  => 8192,
         };
-
-        return response()->stream($callback, 200, $headers);
     }
 }

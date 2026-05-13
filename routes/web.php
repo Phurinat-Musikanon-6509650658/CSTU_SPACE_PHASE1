@@ -21,6 +21,7 @@ use App\Http\Controllers\StaffSubmissionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\LecturerSubmissionController;
 use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\SubjectSummaryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,7 +53,7 @@ Route::post('refresh-session', [AuthController::class, 'refreshSession'])->name(
 // ======================================
 // Student Routes (Protected by student auth)
 // ======================================
-Route::middleware(['auth:student', 'check.subject.access'])->group(function () {
+Route::middleware(['auth:student', 'check.subject.access', 'session.timeout'])->group(function () {
     
     // Student Menu/Dashboard
     Route::get('/student/menu', [StudentController::class, 'menu'])->name('student.menu');
@@ -187,6 +188,16 @@ Route::middleware('session.timeout')->group(function () {
         });
         
         Route::get('settings', [CoordinatorController::class, 'settings'])->name('settings');
+
+        // Subject Summary (import / export)
+        Route::prefix('subject-summary')->name('subject-summary.')->group(function () {
+            Route::get('/',               [SubjectSummaryController::class, 'index'])->name('index');
+            Route::get('export',          [SubjectSummaryController::class, 'export'])->name('export');
+            Route::get('template',        [SubjectSummaryController::class, 'template'])->name('template');
+            Route::get('import',          [SubjectSummaryController::class, 'importForm'])->name('import.form');
+            Route::post('import/preview', [SubjectSummaryController::class, 'importPreview'])->name('import.preview');
+            Route::post('import/confirm', [SubjectSummaryController::class, 'importConfirm'])->name('import.confirm');
+        });
     });
     
     // ======================================
@@ -259,11 +270,11 @@ Route::middleware('session.timeout')->group(function () {
         Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
         Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');
         
-        // Import/Export
-        Route::get('import/form', [UserManagementController::class, 'importForm'])->name('importForm');
-        Route::post('import', [UserManagementController::class, 'import'])->name('import');
-        Route::get('template/download', [UserManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
-        Route::get('export/all', [UserManagementController::class, 'exportAll'])->name('exportAll');
+        // Import/Export (XLSX)
+        Route::get('import/form',    [UserManagementController::class, 'importForm'])->name('importForm');
+        Route::post('import/preview',[UserManagementController::class, 'importPreview'])->name('importPreview');
+        Route::post('import/confirm',[UserManagementController::class, 'importConfirm'])->name('importConfirm');
+        Route::get('export/all',     [UserManagementController::class, 'exportAll'])->name('exportAll');
         
         // View details
         Route::get('{user}', [UserManagementController::class, 'show'])->name('show');
@@ -280,11 +291,15 @@ Route::middleware('session.timeout')->group(function () {
         Route::put('{student}', [StudentManagementController::class, 'update'])->name('update');
         Route::delete('{student}', [StudentManagementController::class, 'destroy'])->name('destroy');
         
-        // Import/Export
+        // Import/Export (CSV)
         Route::get('import/form', [StudentManagementController::class, 'importForm'])->name('importForm');
         Route::post('import', [StudentManagementController::class, 'import'])->name('import');
         Route::get('template/download', [StudentManagementController::class, 'downloadTemplate'])->name('downloadTemplate');
         Route::get('export/all', [StudentManagementController::class, 'exportAll'])->name('exportAll');
+        // Import จาก Excel ต้นฉบับ (Admin only)
+        Route::get('import-excel/form',    [StudentManagementController::class, 'importExcelForm'])->name('importExcelForm');
+        Route::post('import-excel/preview',[StudentManagementController::class, 'importExcelPreview'])->name('importExcelPreview');
+        Route::post('import-excel/confirm',[StudentManagementController::class, 'importExcelConfirm'])->name('importExcelConfirm');
         
         // View details
         Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
@@ -294,7 +309,14 @@ Route::middleware('session.timeout')->group(function () {
     // Admin Management
     // ======================================
     Route::prefix('admin')->name('admin.')->group(function () {
-        
+
+        // Project Import from Excel (Admin only)
+        Route::prefix('projects')->name('projects.')->middleware('role:admin')->group(function () {
+            Route::get('import-excel',         [\App\Http\Controllers\ProjectImportController::class, 'form'])->name('importExcel.form');
+            Route::post('import-excel/preview',[\App\Http\Controllers\ProjectImportController::class, 'preview'])->name('importExcel.preview');
+            Route::post('import-excel/confirm',[\App\Http\Controllers\ProjectImportController::class, 'confirm'])->name('importExcel.confirm');
+        });
+
         // Submissions Management
         Route::prefix('submissions')->name('submissions.')->group(function () {
             Route::get('/', [AdminSubmissionController::class, 'index'])->name('index');
@@ -318,6 +340,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::put('{subject}', [SubjectController::class, 'update'])->name('update');
             Route::post('{subject}/toggle', [SubjectController::class, 'toggle'])->name('toggle');
             Route::delete('{subject}', [SubjectController::class, 'destroy'])->name('destroy');
+            Route::post('open-new-term', [SubjectController::class, 'openNewTerm'])->name('openNewTerm');
         });
         
     });

@@ -76,13 +76,13 @@
                     <h4><i class="bi bi-person-badge me-2"></i>System Users</h4>
                     <div class="action-buttons">
                         <a href="{{ route('users.exportAll') }}" class="btn modern-btn btn-info">
-                            <i class="bi bi-download"></i>
-                            <span>Export CSV</span>
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span>Export Excel</span>
                         </a>
                         @if($canEdit ?? true)
                         <a href="{{ route('users.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
-                            <span>Import CSV</span>
+                            <span>Import Excel</span>
                         </a>
                         <a href="{{ route('users.create') }}" class="btn modern-btn btn-primary-modern">
                             <i class="bi bi-plus-circle"></i>
@@ -181,13 +181,21 @@
                     <h4><i class="bi bi-mortarboard me-2"></i>Students</h4>
                     <div class="action-buttons">
                         <a href="{{ route('students.exportAll') }}" class="btn modern-btn btn-info">
-                            <i class="bi bi-download"></i>
-                            <span>Export CSV</span>
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span>Export Excel</span>
                         </a>
                         @if($canEdit ?? true)
                         <a href="{{ route('students.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                             <span>Import CSV</span>
+                        </a>
+                        <a href="{{ route('students.importExcelForm') }}" class="btn modern-btn btn-warning-modern">
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span>Import Students Excel</span>
+                        </a>
+                        <a href="{{ route('admin.projects.importExcel.form') }}" class="btn modern-btn" style="background:linear-gradient(135deg,#6610f2,#520dc2);color:white;">
+                            <i class="bi bi-folder2-open"></i>
+                            <span>Import Projects Excel</span>
                         </a>
                         <a href="{{ route('students.create') }}" class="btn modern-btn btn-primary-modern">
                             <i class="bi bi-plus-circle"></i>

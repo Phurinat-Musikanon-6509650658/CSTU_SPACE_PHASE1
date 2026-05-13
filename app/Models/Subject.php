@@ -253,6 +253,8 @@ class Subject extends Model
     {
         return \DB::table('groups')
             ->where('subject_code', $this->subject_code)
+            ->where('year',     $this->year)
+            ->where('semester', $this->semester)
             ->count();
     }
 }

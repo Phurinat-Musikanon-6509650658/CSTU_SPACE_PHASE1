@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use App\Helpers\PermissionHelper;
+use App\Helpers\XlsxParser;
+use App\Helpers\XlsxBuilder;
 
 class StudentManagementController extends Controller
 {
@@ -79,21 +81,23 @@ class StudentManagementController extends Controller
         }
 
         $request->validate([
-            'firstname_std' => 'required',
-            'lastname_std' => 'required',
-            'email_std' => 'required|email',
-            'course_code' => 'required|in:CS303,CS403',
-            'semester' => 'required|integer|between:1,2',
-            'year' => 'required|integer|min:2560|max:2600',
+            'firstname_std'  => 'required',
+            'lastname_std'   => 'required',
+            'email_std'      => 'required|email',
+            'course_code'    => 'required|in:CS303,CS403',
+            'student_type'   => 'required|in:s,r',
+            'semester'       => 'required|integer|between:1,2',
+            'year'           => 'required|integer|min:2560|max:2600',
         ]);
 
         $updateData = [
             'firstname_std' => $request->firstname_std,
-            'lastname_std' => $request->lastname_std,
-            'email_std' => $request->email_std,
-            'course_code' => $request->course_code,
-            'semester' => $request->semester,
-            'year' => $request->year,
+            'lastname_std'  => $request->lastname_std,
+            'email_std'     => $request->email_std,
+            'course_code'   => $request->course_code,
+            'student_type'  => $request->student_type,
+            'semester'      => $request->semester,
+            'year'          => $request->year,
         ];
 
         // ถ้ามีการเปลี่ยนรหัสผ่าน
@@ -268,47 +272,188 @@ class StudentManagementController extends Controller
         return response()->stream($callback, 200, $headers);
     }
     
+    // ──────────────────────────────────────────────────────────────
+    // Import Students จาก Excel ต้นฉบับ (68-2_Projects format)
+    // Admin only
+    // ──────────────────────────────────────────────────────────────
+
+    public function importExcelForm()
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        return view('admin.students.import-excel');
+    }
+
+    public function importExcelPreview(Request $request)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:20480',
+        ], [
+            'file.required' => 'กรุณาเลือกไฟล์',
+            'file.mimes'    => 'รองรับเฉพาะ .xlsx / .xls',
+            'file.max'      => 'ขนาดไฟล์ต้องไม่เกิน 20 MB',
+        ]);
+
+        try {
+            $sheetNames = XlsxParser::sheetNames($request->file('file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'อ่านไฟล์ไม่ได้: ' . $e->getMessage());
+        }
+
+        $studentSheets = array_filter($sheetNames, fn($n) => str_contains($n, '--Students'));
+        if (empty($studentSheets)) {
+            return back()->with('error',
+                'ไม่พบ sheet ที่ชื่อลงท้ายด้วย "--Students" ในไฟล์นี้ กรุณาตรวจสอบ');
+        }
+
+        $preview = [];
+        foreach ($studentSheets as $sName) {
+            preg_match('/\b(CS\d+)\b/i', $sName, $m);
+            $courseCode = $m[1] ?? 'CS303';
+
+            try {
+                $rows = XlsxParser::parseSheet($request->file('file'), $sName, 0);
+            } catch (\Exception $e) {
+                continue;
+            }
+
+            foreach ($rows as $row) {
+                $studentId = trim($row[2] ?? '');
+                if ($studentId === '') continue;
+                $preview[] = $this->mapExcelStudentRow($row, $courseCode);
+            }
+        }
+
+        if (empty($preview)) {
+            return back()->with('error', 'ไม่พบข้อมูลนักศึกษาในไฟล์');
+        }
+
+        $existingIds = DB::table('student')
+            ->whereIn('username_std', array_column($preview, 'username_std'))
+            ->pluck('username_std')
+            ->toArray();
+
+        foreach ($preview as &$item) {
+            $item['status'] = in_array($item['username_std'], $existingIds) ? 'exists' : 'new';
+        }
+        unset($item);
+
+        $new    = count(array_filter($preview, fn($r) => $r['status'] === 'new'));
+        $exists = count(array_filter($preview, fn($r) => $r['status'] === 'exists'));
+
+        session(['student_excel_preview' => $preview]);
+
+        return view('admin.students.import-excel', compact('preview', 'new', 'exists'));
+    }
+
+    public function importExcelConfirm(Request $request)
+    {
+        if (!PermissionHelper::isAdmin()) {
+            return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+
+        $preview = session('student_excel_preview', []);
+        if (empty($preview)) {
+            return redirect()->route('students.importExcelForm')
+                ->with('error', 'ไม่พบข้อมูล preview กรุณาอัปโหลดใหม่');
+        }
+
+        $newRows = array_filter($preview, fn($r) => $r['status'] === 'new');
+
+        $created = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($newRows as $item) {
+                DB::table('student')->insert([
+                    'prefix_std'    => $item['prefix'],
+                    'username_std'  => $item['username_std'],
+                    'firstname_std' => $item['firstname_std'],
+                    'lastname_std'  => $item['lastname_std'],
+                    'email_std'     => $item['email_std'],
+                    'phone_std'     => $item['phone'],
+                    'password_std'  => Hash::make($item['password']),
+                    'role'          => 2048,
+                    'course_code'   => $item['course_code'],
+                    'student_type'  => $item['student_type'],
+                    'semester'      => 2,
+                    'year'          => 2568,
+                ]);
+                $created++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        session()->forget('student_excel_preview');
+
+        $skipped = count($preview) - $created;
+        return redirect()->route('users.index')
+            ->with('success', "นำเข้านักศึกษาสำเร็จ {$created} คน"
+                . ($skipped ? " (ข้ามที่มีอยู่แล้ว {$skipped} คน)" : ''));
+    }
+
+    private function mapExcelStudentRow(array $row, string $courseCode): array
+    {
+        // col 0: prefix | col 1: fullname   | col 2: student_id
+        // col 3: email  | col 4: phone      | col 5: course_type text
+        // col 6: password (optional — fallback to student_id if empty)
+        $fullname = trim($row[1] ?? '');
+        $parts    = preg_split('/\s+/u', $fullname, 2);
+
+        $username       = trim($row[2] ?? '');
+        $courseTypeText = trim($row[5] ?? '');
+        $studentType    = str_contains($courseTypeText, 'พิเศษ') ? 's' : 'r';
+        $password       = trim($row[6] ?? '');
+        if ($password === '') $password = $username;
+
+        return [
+            'prefix'           => trim($row[0] ?? ''),
+            'firstname_std'    => $parts[0] ?? $fullname,
+            'lastname_std'     => $parts[1] ?? '-',
+            'username_std'     => $username,
+            'email_std'        => trim($row[3] ?? ''),
+            'phone'            => trim($row[4] ?? ''),
+            'password'         => $password,
+            'course_code'      => $courseCode,
+            'student_type'     => $studentType,
+            'course_type_text' => $courseTypeText,
+            'status'           => 'new',
+        ];
+    }
+
     /**
-     * Export all students to CSV
+     * Export all students to Excel
      */
     public function exportAll()
     {
-        // Coordinator, Admin, Staff สามารถ export ได้
         $students = DB::table('student')
-            ->select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'course_code', 'semester', 'year')
+            ->select('student_id', 'prefix_std', 'username_std', 'firstname_std', 'lastname_std',
+                     'email_std', 'phone_std', 'course_code', 'student_type', 'semester', 'year')
+            ->orderBy('student_id')
             ->get();
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="students_export_' . date('Y-m-d_His') . '.csv"',
-        ];
 
-        $callback = function() use ($students) {
-            $file = fopen('php://output', 'w');
-            
-            // Add BOM for UTF-8
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // Header
-            fputcsv($file, ['ID', 'Username', 'ชื่อ', 'นามสกุล', 'อีเมล', 'รหัสวิชา', 'เทอม', 'ปีการศึกษา']);
-            
-            // Data
-            foreach ($students as $student) {
-                fputcsv($file, [
-                    $student->student_id,
-                    $student->username_std,
-                    $student->firstname_std,
-                    $student->lastname_std,
-                    $student->email_std,
-                    $student->course_code ?? '-',
-                    $student->semester ?? '-',
-                    $student->year ?? '-'
-                ]);
-            }
-            
-            fclose($file);
-        };
+        $header = ['prefix', 'fullname', 'username_std', 'email', 'phone', 'course_type', 'password'];
+        $rows   = [$header];
+        foreach ($students as $s) {
+            $rows[] = [
+                $s->prefix_std    ?? '',
+                trim(($s->firstname_std ?? '') . ' ' . ($s->lastname_std ?? '')),
+                $s->username_std  ?? '',
+                $s->email_std     ?? '',
+                $s->phone_std     ?? '',
+                $s->student_type === 's' ? 'โครงการปริญญาตรีภาคพิเศษ' : 'โครงการปกติ',
+                '',
+            ];
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return XlsxBuilder::download('students_export_' . date('Y-m-d_His') . '.xlsx', ['Students' => $rows]);
     }
 }

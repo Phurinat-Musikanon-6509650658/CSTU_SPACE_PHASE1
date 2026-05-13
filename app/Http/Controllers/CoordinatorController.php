@@ -337,21 +337,42 @@ class CoordinatorController extends Controller
             'committeeLecturers.user',
         ]);
 
-        if ($request->semester) {
+        if ($request->filled('semester')) {
             $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
-        if ($request->year) {
+        if ($request->filled('year')) {
             $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         }
-        if ($request->has('has_exam')) {
+        if ($request->filled('course_code')) {
+            $query->whereHas('group', fn($q) => $q->where('subject_code', $request->course_code));
+        }
+        if ($request->filled('has_exam')) {
             $request->has_exam === '1'
                 ? $query->whereNotNull('exam_datetime')
                 : $query->whereNull('exam_datetime');
         }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q
+                ->where('project_code', 'like', "%{$s}%")
+                ->orWhere('project_name', 'like', "%{$s}%")
+            );
+        }
 
-        $projects = $query->orderBy('exam_datetime', 'asc')->paginate(20);
+        // Stats from filtered query (before pagination)
+        $statsQuery   = clone $query;
+        $totalCount   = $statsQuery->count();
+        $withExam     = (clone $query)->whereNotNull('exam_datetime')->count();
+        $withoutExam  = $totalCount - $withExam;
 
-        return view('coordinator.schedules.index', compact('projects'));
+        $projects = $query->orderBy('exam_datetime', 'asc')
+            ->orderBy('project_id', 'asc')
+            ->paginate(20)
+            ->appends($request->query());
+
+        return view('coordinator.schedules.index', compact(
+            'projects', 'totalCount', 'withExam', 'withoutExam'
+        ));
     }
 
     public function scheduleEdit($projectId)
@@ -364,9 +385,12 @@ class CoordinatorController extends Controller
             'group.members.student',
             'advisorLecturer.user',
             'committeeLecturers.user',
+            'coAdvisorInternal.user',
+            'coAdvisorExternal.user',
         ])->findOrFail($projectId)->refresh();
 
-        $lecturers = User::where('role', '&', 8192)->orderBy('firstname_user')->get();
+        $lecturers = User::whereRaw('(role & ?) != 0', [8192])
+            ->orderBy('firstname_user')->get();
 
         return view('coordinator.schedules.edit', compact('project', 'lecturers'));
     }
@@ -378,30 +402,59 @@ class CoordinatorController extends Controller
         }
 
         $request->validate([
-            'exam_datetime'   => 'nullable|date',
-            'advisor_code'    => 'nullable|exists:user,user_code',
-            'committee1_code' => 'nullable|exists:user,user_code',
-            'committee2_code' => 'nullable|exists:user,user_code',
-            'committee3_code' => 'nullable|exists:user,user_code',
+            'exam_datetime'    => 'nullable|date',
+            'exam_end_time'    => 'nullable|date',
+            'advisor_code'     => 'nullable|exists:user,user_code',
+            'committee1_code'  => 'nullable|exists:user,user_code',
+            'committee2_code'  => 'nullable|exists:user,user_code',
+            'committee3_code'  => 'nullable|exists:user,user_code',
+            'coadv_int_code'   => 'nullable|exists:user,user_code',
+            'coadv_ext_code'   => 'nullable|exists:user,user_code',
         ]);
 
-        $project = Project::with(['advisorLecturer', 'committeeLecturers'])->findOrFail($projectId);
+        $project = Project::with([
+            'advisorLecturer', 'committeeLecturers',
+            'coAdvisorInternal', 'coAdvisorExternal',
+        ])->findOrFail($projectId);
+
+        // Check for exam datetime conflict (same datetime used by another project)
+        $conflictWarning = null;
+        if ($request->filled('exam_datetime')) {
+            $conflictProjects = \App\Models\Project::where('project_id', '!=', $projectId)
+                ->where('exam_datetime', $request->exam_datetime)
+                ->pluck('project_code')
+                ->toArray();
+            if (!empty($conflictProjects)) {
+                $conflictWarning = 'วันเวลาสอบ ' . \Carbon\Carbon::parse($request->exam_datetime)->format('d/m/Y H:i') .
+                    ' ถูกใช้โดยโครงงาน: ' . implode(', ', $conflictProjects) . ' แล้ว';
+            }
+        }
 
         $examDateChanged = $project->exam_datetime != $request->exam_datetime && $request->exam_datetime;
         $committeeChanged = (
-            $project->advisor_code   != $request->advisor_code    ||
+            $project->advisor_code    != $request->advisor_code    ||
             $project->committee1_code != $request->committee1_code ||
             $project->committee2_code != $request->committee2_code ||
-            $project->committee3_code != $request->committee3_code
+            $project->committee3_code != $request->committee3_code ||
+            ($project->coAdvisorInternal?->user_code) != $request->coadv_int_code ||
+            ($project->coAdvisorExternal?->user_code) != $request->coadv_ext_code
         );
 
-        $project->update(['exam_datetime' => $request->exam_datetime]);
+        $project->update([
+            'exam_datetime' => $request->exam_datetime ?: null,
+            'exam_end_time' => $request->exam_end_time ?: null,
+        ]);
 
         $project->syncLecturers(
             $request->advisor_code,
             $request->committee1_code,
             $request->committee2_code,
             $request->committee3_code,
+        );
+
+        $project->syncCoAdvisors(
+            $request->coadv_int_code ?: null,
+            $request->coadv_ext_code ?: null,
         );
 
         $user = Auth::guard('web')->user();
@@ -421,8 +474,14 @@ class CoordinatorController extends Controller
             ]);
         }
 
-        return redirect()->route('coordinator.schedules.index')
+        $redirect = redirect()->route('coordinator.schedules.index')
             ->with('success', 'อัพเดทตารางสอบและคณะกรรมการเรียบร้อยแล้ว');
+
+        if ($conflictWarning) {
+            $redirect = $redirect->with('warning', $conflictWarning);
+        }
+
+        return $redirect;
     }
 
     public function scheduleImportForm()

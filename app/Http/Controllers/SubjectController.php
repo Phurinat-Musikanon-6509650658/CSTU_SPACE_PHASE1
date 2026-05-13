@@ -4,139 +4,182 @@ namespace App\Http\Controllers;
 
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class SubjectController extends Controller
 {
-    /**
-     * Display a listing of all subjects.
-     */
     public function index()
     {
-        $query = Subject::query();
-
-        // Filter by year
-        if (request('year')) {
-            $query->where('year', request('year'));
-        }
-
-        // Filter by semester
-        if (request('semester')) {
-            $query->where('semester', request('semester'));
-        }
-
-        $subjects = $query->orderBy('year', 'desc')
+        $all = Subject::orderBy('year', 'desc')
             ->orderBy('semester', 'desc')
             ->orderBy('subject_code', 'asc')
-            ->paginate(12);
+            ->get();
 
-        // Get unique years for filter
-        $years = Subject::select('year')->distinct()->orderBy('year', 'desc')->get();
+        // Group by year-semester, newest first
+        $groups = $all->groupBy(fn($s) => $s->year . '-' . $s->semester)
+            ->map(function ($subs, $key) {
+                [$year, $semester] = explode('-', $key);
+                $now = Carbon::now();
 
-        // Get unique semesters for filter
-        $semesters = [1, 2, 3];
+                // Active = at least one subject has close_date in the future or null
+                $isActive = $subs->filter(fn($s) =>
+                    !$s->close_date || $s->close_date->isFuture()
+                )->isNotEmpty();
 
-        return view('admin.subjects.index', compact('subjects', 'years', 'semesters'));
+                return [
+                    'year'      => (int) $year,
+                    'semester'  => (int) $semester,
+                    'subjects'  => $subs,
+                    'is_active' => $isActive,
+                ];
+            })
+            ->values();
+
+        return view('admin.subjects.index', compact('groups'));
     }
 
-    /**
-     * Show the form for creating a new subject.
-     */
     public function create()
     {
-        $currentYear = intval(date('Y')) + 543; // Convert to Buddhist year
-        $currentSemester = 1; // Assume semester 1 by default
-
-        return view('admin.subjects.create', compact('currentYear', 'currentSemester'));
+        $year     = (int) request('year',     intval(date('Y')) + 543);
+        $semester = (int) request('semester', 1);
+        return view('admin.subjects.create', compact('year', 'semester'));
     }
 
-    /**
-     * Store a newly created subject in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'subject_code' => 'required|string|unique:subjects|max:50',
-            'subject_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'semester' => 'required|integer|in:1,2,3',
-            'year' => 'required|integer',
-            'is_enabled' => 'boolean',
-            'open_date' => 'nullable|date',
-            'close_date' => 'nullable|date|after:open_date',
-            'access_open_date' => 'nullable|date',
-            'access_close_date' => 'nullable|date|after:access_open_date',
-            'evaluation_open_date' => 'nullable|date',
+            'subject_code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('subjects')->where(fn($q) => $q
+                    ->where('year', $request->year)
+                    ->where('semester', $request->semester)
+                ),
+            ],
+            'subject_name'          => 'required|string|max:255',
+            'description'           => 'nullable|string',
+            'semester'              => 'required|integer|in:1,2',
+            'year'                  => 'required|integer|min:2560|max:2650',
+            'is_enabled'            => 'boolean',
+            'open_date'             => 'nullable|date',
+            'close_date'            => 'nullable|date|after:open_date',
+            'access_open_date'      => 'nullable|date',
+            'access_close_date'     => 'nullable|date|after:access_open_date',
+            'evaluation_open_date'  => 'nullable|date',
             'evaluation_close_date' => 'nullable|date|after:evaluation_open_date',
-            'grade_edit_open_date' => 'nullable|date',
+            'grade_edit_open_date'  => 'nullable|date',
             'grade_edit_close_date' => 'nullable|date|after:grade_edit_open_date',
+        ], [
+            'subject_code.unique' => 'รหัสวิชานี้มีอยู่แล้วในปีการศึกษาและเทอมนี้',
         ]);
 
         $validated['is_enabled'] = $request->boolean('is_enabled');
-
         Subject::create($validated);
 
         return redirect()->route('admin.subjects.index')
-            ->with('success', 'สร้างรายวิชา ' . $request->subject_name . ' สำเร็จ');
+            ->with('success', 'สร้างรายวิชา ' . $request->subject_name . ' ปี ' . $request->year . '/' . $request->semester . ' สำเร็จ');
     }
 
-    /**
-     * Show the form for editing the specified subject.
-     */
     public function edit(Subject $subject)
     {
         return view('admin.subjects.edit', compact('subject'));
     }
 
-    /**
-     * Update the specified subject in storage.
-     */
     public function update(Request $request, Subject $subject)
     {
         $validated = $request->validate([
-            'subject_code' => 'required|string|max:50|unique:subjects,subject_code,' . $subject->subject_id . ',subject_id',
-            'subject_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'semester' => 'required|integer|in:1,2,3',
-            'year' => 'required|integer',
-            'is_enabled' => 'boolean',
-            'open_date' => 'nullable|date',
-            'close_date' => 'nullable|date|after:open_date',
-            'access_open_date' => 'nullable|date',
-            'access_close_date' => 'nullable|date|after:access_open_date',
-            'evaluation_open_date' => 'nullable|date',
+            'subject_code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('subjects')
+                    ->where(fn($q) => $q
+                        ->where('year', $subject->year)
+                        ->where('semester', $subject->semester)
+                    )
+                    ->ignore($subject->subject_id, 'subject_id'),
+            ],
+            'subject_name'          => 'required|string|max:255',
+            'description'           => 'nullable|string',
+            'semester'              => 'required|integer|in:1,2',
+            'year'                  => 'required|integer|min:2560|max:2650',
+            'is_enabled'            => 'boolean',
+            'open_date'             => 'nullable|date',
+            'close_date'            => 'nullable|date|after:open_date',
+            'access_open_date'      => 'nullable|date',
+            'access_close_date'     => 'nullable|date|after:access_open_date',
+            'evaluation_open_date'  => 'nullable|date',
             'evaluation_close_date' => 'nullable|date|after:evaluation_open_date',
-            'grade_edit_open_date' => 'nullable|date',
+            'grade_edit_open_date'  => 'nullable|date',
             'grade_edit_close_date' => 'nullable|date|after:grade_edit_open_date',
+        ], [
+            'subject_code.unique' => 'รหัสวิชานี้มีอยู่แล้วในปีการศึกษาและเทอมนี้',
         ]);
 
         $validated['is_enabled'] = $request->boolean('is_enabled');
-
         $subject->update($validated);
 
         return redirect()->route('admin.subjects.index')
             ->with('success', 'อัพเดตรายวิชา ' . $subject->subject_name . ' สำเร็จ');
     }
 
-    /**
-     * Toggle the enabled status of the subject (AJAX).
-     */
+    /** เปิดเทอมใหม่: duplicate CS303+CS403 จากเทอมล่าสุด พร้อม open/close date ใหม่ */
+    public function openNewTerm(Request $request)
+    {
+        $request->validate([
+            'year'       => 'required|integer|min:2560|max:2650',
+            'semester'   => 'required|integer|in:1,2',
+            'open_date'  => 'required|date',
+            'close_date' => 'required|date|after:open_date',
+        ]);
+
+        $year     = (int) $request->year;
+        $semester = (int) $request->semester;
+
+        // Check not already exists
+        $existing = Subject::where('year', $year)->where('semester', $semester)->count();
+        if ($existing > 0) {
+            return back()->with('error', "ปีการศึกษา {$year} เทอม {$semester} มีรายวิชาอยู่แล้ว");
+        }
+
+        // Get latest subjects as template (newest year+semester)
+        $template = Subject::orderBy('year', 'desc')->orderBy('semester', 'desc')->get()
+            ->groupBy(fn($s) => $s->year . '-' . $s->semester)
+            ->first(); // first = newest group
+
+        if (!$template) {
+            return back()->with('error', 'ไม่พบรายวิชาต้นแบบ');
+        }
+
+        $created = 0;
+        foreach ($template as $src) {
+            Subject::create([
+                'subject_code' => $src->subject_code,
+                'subject_name' => $src->subject_name,
+                'description'  => $src->description,
+                'semester'     => $semester,
+                'year'         => $year,
+                'is_enabled'   => true,
+                'open_date'    => $request->open_date,
+                'close_date'   => $request->close_date,
+            ]);
+            $created++;
+        }
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "เปิดเทอมใหม่ ปีการศึกษา {$year} เทอม {$semester} สำเร็จ ({$created} รายวิชา) — กรุณาตั้งค่าช่วงเวลาเพิ่มเติมในแต่ละวิชา");
+    }
+
     public function toggle(Subject $subject)
     {
         $subject->update(['is_enabled' => !$subject->is_enabled]);
-
         $status = $subject->is_enabled ? 'เปิด' : 'ปิด';
 
         return response()->json([
-            'success' => true,
+            'success'    => true,
             'is_enabled' => $subject->is_enabled,
-            'message' => $status . 'ใช้งานรายวิชา ' . $subject->subject_name . ' สำเร็จ',
+            'message'    => $status . 'ใช้งานรายวิชา ' . $subject->subject_name . ' สำเร็จ',
         ]);
     }
 
-    /**
-     * Remove the specified subject from storage.
-     */
     public function destroy(Subject $subject)
     {
         $name = $subject->subject_name;

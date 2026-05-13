@@ -1,0 +1,246 @@
+@extends('layouts.app')
+
+@section('title', 'Import นักศึกษาจาก Excel | CSTU SPACE')
+
+@push('styles')
+<style>
+    .page-card { border:none; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.08); background:white; }
+    .upload-zone {
+        border:2px dashed #c0c9e0; border-radius:12px; padding:2.5rem;
+        text-align:center; background:#f8f9ff; transition:all .2s; cursor:pointer;
+    }
+    .upload-zone:hover, .upload-zone.drag-over { border-color:#667eea; background:#eef0ff; }
+    .upload-icon { font-size:3rem; color:#667eea; margin-bottom:.75rem; }
+
+    /* preview table */
+    .tbl-sm td, .tbl-sm th { font-size:.79rem; padding:.38rem .5rem; vertical-align:middle; }
+    .tbl-sm thead th {
+        background:linear-gradient(135deg,#2E75B6,#1F4E79);
+        color:white; border:none; font-weight:600; white-space:nowrap;
+    }
+    .row-new    { background:#f0fff4; }
+    .row-exists { background:#fffbea; }
+    .pill-new    { background:#dcfce7; color:#166534; }
+    .pill-exists { background:#fef9c3; color:#854d0e; }
+    .status-pill { display:inline-block; font-size:.73rem; font-weight:600; padding:.18rem .55rem; border-radius:20px; }
+    .stats-bar { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .stats-chip { flex:1; min-width:120px; text-align:center; border-radius:10px; padding:.6rem 1rem; font-weight:600; }
+    .chip-new   { background:#dcfce7; color:#166534; }
+    .chip-exist { background:#fef9c3; color:#854d0e; }
+    .chip-total { background:#e0e7ff; color:#3730a3; }
+    .step-num {
+        width:26px; height:26px; border-radius:50%; background:var(--gradient-primary); color:white;
+        display:inline-flex; align-items:center; justify-content:center;
+        font-size:.8rem; font-weight:700; flex-shrink:0;
+    }
+    .type-s { background:#ede9fe; color:#5b21b6; }
+    .type-r { background:#dcfce7; color:#166534; }
+    .type-pill { display:inline-block; font-size:.7rem; padding:.15rem .45rem; border-radius:10px; }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid px-4 py-4">
+
+    {{-- Header --}}
+    <div class="mb-3">
+        <a href="{{ route('coordinator.users.index') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
+            <i class="bi bi-chevron-left me-1"></i>กลับ Users & Students
+        </a>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-1">
+            <div>
+                <h1 class="h3 fw-bold mb-0">
+                    <i class="bi bi-people-fill me-2 text-success"></i>Import นักศึกษาจาก Excel
+                </h1>
+                <p class="text-muted small mb-0">
+                    รองรับไฟล์ Excel ที่มี sheet ชื่อ <code>CS303--Students</code> และ <code>CS403--Students</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3">
+            <i class="bi bi-x-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ $errors->first() }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="row g-4">
+
+        {{-- Left: Info + Upload --}}
+        <div class="col-lg-4">
+
+            <div class="page-card p-4 mb-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-info"></i>ข้อมูลที่จะนำเข้า</h6>
+                <table class="table table-sm mb-0" style="font-size:.8rem;">
+                    <tr><th class="text-muted fw-normal" style="width:45%;">ฟิลด์</th><th>ค่า</th></tr>
+                    <tr><td>รหัสนักศึกษา</td><td>จาก Excel → username + password</td></tr>
+                    <tr><td>ชื่อ-นามสกุล</td><td>แยกอัตโนมัติจาก column 2</td></tr>
+                    <tr><td>Email</td><td>จาก Excel</td></tr>
+                    <tr><td>ประเภท</td><td>"ภาคพิเศษ"→s / "ปกติ"→r</td></tr>
+                    <tr><td>Password เริ่มต้น</td><td><code>= รหัสนักศึกษา</code></td></tr>
+                    <tr><td>ปีการศึกษา / เทอม</td><td>2568 / 2</td></tr>
+                </table>
+                <div class="alert alert-info border-0 rounded-3 mt-3 mb-0 small py-2">
+                    <i class="bi bi-key me-1"></i>
+                    นักศึกษา login ด้วย <strong>รหัสนักศึกษา</strong> ทั้งชื่อผู้ใช้และรหัสผ่าน
+                </div>
+            </div>
+
+            <div class="page-card p-4 mb-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-list-ol me-2 text-primary"></i>ขั้นตอน</h6>
+                <div class="d-flex gap-2 mb-2 align-items-start">
+                    <span class="step-num">1</span>
+                    <div class="small">อัปโหลดไฟล์ <code>.xlsx</code> ที่มี sheet <code>--Students</code></div>
+                </div>
+                <div class="d-flex gap-2 mb-2 align-items-start">
+                    <span class="step-num">2</span>
+                    <div class="small">ตรวจสอบ preview — แถวสีเหลือง = มีในระบบแล้ว (จะข้าม)</div>
+                </div>
+                <div class="d-flex gap-2 align-items-start">
+                    <span class="step-num">3</span>
+                    <div class="small">กด <strong>"ยืนยัน Import"</strong> เพื่อสร้างบัญชีทั้งหมด</div>
+                </div>
+            </div>
+
+            <div class="page-card p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-upload me-2 text-primary"></i>อัปโหลดไฟล์</h6>
+                <form method="POST" action="{{ route('coordinator.students.importExcelPreview') }}"
+                      enctype="multipart/form-data" id="uploadForm">
+                    @csrf
+                    <div class="upload-zone" id="uploadZone"
+                         onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon"><i class="bi bi-file-earmark-excel"></i></div>
+                        <div class="fw-semibold mb-1">คลิกหรือลากไฟล์มาวางที่นี่</div>
+                        <div class="text-muted small">.xlsx เท่านั้น ขนาดไม่เกิน 20 MB</div>
+                        <div id="fileNameDisplay" class="mt-2 text-primary small fw-semibold"></div>
+                    </div>
+                    <input type="file" name="file" id="fileInput" class="d-none"
+                           accept=".xlsx,.xls" onchange="onFileSelect(this)">
+                    <button type="submit" class="btn btn-primary w-100 mt-3"
+                            id="uploadBtn" disabled>
+                        <i class="bi bi-search me-2"></i>Preview ข้อมูล
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {{-- Right: Preview --}}
+        <div class="col-lg-8">
+            @isset($preview)
+
+            <div class="page-card p-3">
+                <div class="stats-bar">
+                    <div class="stats-chip chip-total">รวม {{ count($preview) }} คน</div>
+                    <div class="stats-chip chip-new">✓ ใหม่: {{ $new ?? 0 }} คน</div>
+                    <div class="stats-chip chip-exist">⚠ มีอยู่แล้ว: {{ $exists ?? 0 }} คน</div>
+                </div>
+
+                @if(($new ?? 0) > 0)
+                <form method="POST" action="{{ route('coordinator.students.importExcelConfirm') }}"
+                      id="confirmForm">
+                    @csrf
+                    <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                        <div class="text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            แถวสีเหลืองจะถูกข้าม — กด <strong>ยืนยัน</strong> เพื่อสร้างบัญชีใหม่ {{ $new }} คน
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm fw-semibold px-4">
+                            <i class="bi bi-person-plus-fill me-2"></i>ยืนยัน Import
+                            ({{ $new }} คน)
+                        </button>
+                    </div>
+                </form>
+                @else
+                <div class="alert alert-warning border-0 rounded-3 small mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    นักศึกษาทุกคนในไฟล์มีในระบบแล้ว ไม่มีรายการใหม่
+                </div>
+                @endif
+
+                <div class="table-responsive" style="max-height:580px; overflow-y:auto;">
+                    <table class="table tbl-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>สถานะ</th>
+                                <th>คำนำหน้า</th>
+                                <th style="min-width:130px;">ชื่อ</th>
+                                <th style="min-width:130px;">นามสกุล</th>
+                                <th>รหัสนศ.</th>
+                                <th style="min-width:180px;">Email</th>
+                                <th>วิชา</th>
+                                <th>ประเภท</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($preview as $i => $item)
+                            <tr class="{{ $item['status'] === 'new' ? 'row-new' : 'row-exists' }}">
+                                <td class="text-center text-muted">{{ $i + 1 }}</td>
+                                <td>
+                                    @if($item['status'] === 'new')
+                                        <span class="status-pill pill-new">✓ ใหม่</span>
+                                    @else
+                                        <span class="status-pill pill-exists">⚠ มีอยู่แล้ว</span>
+                                    @endif
+                                </td>
+                                <td>{{ $item['prefix'] }}</td>
+                                <td class="fw-semibold">{{ $item['firstname_std'] }}</td>
+                                <td>{{ $item['lastname_std'] }}</td>
+                                <td><code style="font-size:.75rem;">{{ $item['username_std'] }}</code></td>
+                                <td style="font-size:.76rem;">{{ $item['email_std'] }}</td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill" style="font-size:.7rem;">
+                                        {{ $item['course_code'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="type-pill {{ $item['student_type'] === 's' ? 'type-s' : 'type-r' }}">
+                                        {{ $item['student_type'] === 's' ? 'พิเศษ' : 'ปกติ' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @else
+            <div class="page-card p-5 text-center text-muted">
+                <i class="bi bi-people" style="font-size:4rem; opacity:.15;"></i>
+                <p class="mt-3 mb-0 fw-semibold">ยังไม่มีข้อมูล Preview</p>
+                <small>อัปโหลดไฟล์ Excel ที่มี sheet CS303--Students / CS403--Students</small>
+            </div>
+            @endisset
+        </div>
+
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function onFileSelect(input) {
+    const name = input.files[0]?.name ?? '';
+    document.getElementById('fileNameDisplay').textContent = name ? '📎 ' + name : '';
+    document.getElementById('uploadBtn').disabled = !name;
+}
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const fi = document.getElementById('fileInput');
+    fi.files = e.dataTransfer.files;
+    onFileSelect(fi);
+});
+</script>
+@endpush

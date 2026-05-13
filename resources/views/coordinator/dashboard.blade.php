@@ -306,6 +306,15 @@
             <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูผลการประเมินและคะแนนโครงงาน</p>
         </a>
 
+        <!-- 5. สรุปรายวิชา -->
+        <a href="{{ route('coordinator.subject-summary.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #1F4E79;">
+            <div style="font-size: 2.5rem; color: #1F4E79; margin-bottom: 1rem;">
+                <i class="bi bi-table"></i>
+            </div>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">สรุปรายวิชา</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ภาพรวม CS303/CS403, export & import</p>
+        </a>
+
         <!-- 6. จัดการผู้ใช้ -->
         <a href="{{ route('coordinator.users.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #4299e1;">
             <div style="font-size: 2.5rem; color: #4299e1; margin-bottom: 1rem;">

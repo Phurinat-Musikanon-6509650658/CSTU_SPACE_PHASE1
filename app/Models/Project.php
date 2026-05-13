@@ -14,6 +14,7 @@ class Project extends Model
         'project_name',
         'project_code',
         'exam_datetime',
+        'exam_end_time',
         'student_type',
         'status_project',
         'project_type',
@@ -25,6 +26,7 @@ class Project extends Model
 
     protected $casts = [
         'exam_datetime' => 'datetime',
+        'exam_end_time' => 'datetime',
         'submitted_at'  => 'datetime',
     ];
 
@@ -86,6 +88,18 @@ class Project extends Model
         return $this->hasMany(ProjectLecturer::class, 'project_id', 'project_id')
             ->whereIn('relationship_id', [3, 4])
             ->orderBy('relationship_id')->orderBy('sort_order');
+    }
+
+    public function coAdvisorInternal()
+    {
+        return $this->hasOne(ProjectLecturer::class, 'project_id', 'project_id')
+            ->where('relationship_id', 3);
+    }
+
+    public function coAdvisorExternal()
+    {
+        return $this->hasOne(ProjectLecturer::class, 'project_id', 'project_id')
+            ->where('relationship_id', 4);
     }
 
     // ──────────────────────────────────────────
@@ -172,6 +186,27 @@ class Project extends Model
                 'user_code'       => $code,
                 'relationship_id' => 2,
                 'sort_order'      => $i + 1,
+            ]);
+        }
+    }
+
+    public function syncCoAdvisors(?string $coAdvInt = null, ?string $coAdvExt = null): void
+    {
+        $this->projectLecturers()->whereIn('relationship_id', [3, 4])->delete();
+
+        if ($coAdvInt) {
+            $this->projectLecturers()->create([
+                'user_code'       => $coAdvInt,
+                'relationship_id' => 3,
+                'sort_order'      => 1,
+            ]);
+        }
+
+        if ($coAdvExt) {
+            $this->projectLecturers()->create([
+                'user_code'       => $coAdvExt,
+                'relationship_id' => 4,
+                'sort_order'      => 1,
             ]);
         }
     }

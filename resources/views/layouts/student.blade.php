@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Student') - CSTU SPACE</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -328,7 +329,124 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     @stack('scripts')
+
+    {{-- Session Timeout Warning Modal --}}
+    <div class="modal fade" id="sessionTimeoutModal" tabindex="-1" aria-hidden="true"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content" style="border: none; border-radius: 20px; overflow: hidden;
+                 box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+                <div class="modal-header border-0"
+                     style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 1.5rem 2rem;">
+                    <h5 class="modal-title fw-bold text-white mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>เซสชันจะหมดอายุ
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4 px-4">
+                    <div style="font-size: 3rem; margin-bottom: 0.75rem;">⏱️</div>
+                    <p class="mb-1" style="color: #666; font-size: 0.95rem;">
+                        คุณไม่มีการใช้งาน ระบบจะออกจากระบบอัตโนมัติใน
+                    </p>
+                    <div id="sessionCountdown"
+                         style="font-size: 3.5rem; font-weight: 700; color: #e74c3c;
+                                font-family: 'Courier New', monospace; line-height: 1.1;
+                                margin: 0.5rem 0 1rem; letter-spacing: 2px;">2:00</div>
+                    <div class="progress mb-3" style="height: 10px; border-radius: 5px; background: #f0f0f0;">
+                        <div id="sessionProgressBar" class="progress-bar" role="progressbar"
+                             style="width: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b);
+                                    border-radius: 5px; transition: width 1s linear;"></div>
+                    </div>
+                    <p style="color: #999; font-size: 0.82rem; margin: 0;">
+                        กด <strong>"ใช้งานต่อ"</strong> เพื่อยังคงอยู่ในระบบต่อไป
+                    </p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4 gap-2">
+                    <button type="button" onclick="extendSession()" class="btn fw-semibold"
+                            style="border-radius: 50px; padding: 0.75rem 2rem; border: none; color: white;
+                                   background: linear-gradient(135deg, #0066CC 0%, #003d82 100%);
+                                   box-shadow: 0 4px 15px rgba(0,102,204,0.35);">
+                        <i class="bi bi-arrow-repeat me-2"></i>ใช้งานต่อ
+                    </button>
+                    <button type="button" onclick="window.location.href='/logout'"
+                            class="btn btn-outline-secondary fw-semibold"
+                            style="border-radius: 50px; padding: 0.75rem 2rem;">
+                        <i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        var IDLE_MS     = 15 * 60 * 1000;
+        var WARNING_MS  = 13 * 60 * 1000;
+        var WARNING_SEC = 2 * 60;
+
+        var idleTimer, warnTimer, tickTimer;
+        var bsModal = null;
+
+        function getModal() {
+            if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById('sessionTimeoutModal'));
+            return bsModal;
+        }
+
+        function tick(left) {
+            var m = Math.floor(left / 60);
+            var s = left % 60;
+            document.getElementById('sessionCountdown').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            var bar = document.getElementById('sessionProgressBar');
+            if (bar) bar.style.width = (left / WARNING_SEC * 100) + '%';
+            if (left <= 0) { getModal().hide(); window.location.href = '/logout'; return; }
+            tickTimer = setTimeout(function () { tick(left - 1); }, 1000);
+        }
+
+        function showWarning() {
+            clearTimeout(tickTimer);
+            tick(WARNING_SEC);
+            getModal().show();
+        }
+
+        function hideWarning() {
+            clearTimeout(tickTimer);
+            if (bsModal) bsModal.hide();
+        }
+
+        window.extendSession = function () {
+            hideWarning();
+            reset();
+            fetch('/refresh-session', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            }).catch(function () {});
+        };
+
+        function reset() {
+            clearTimeout(idleTimer);
+            clearTimeout(warnTimer);
+            warnTimer = setTimeout(showWarning, WARNING_MS);
+            idleTimer = setTimeout(function () { hideWarning(); window.location.href = '/logout'; }, IDLE_MS);
+        }
+
+        reset();
+
+        ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (evt) {
+            document.addEventListener(evt, function () {
+                var el = document.getElementById('sessionTimeoutModal');
+                if (el && !el.classList.contains('show')) reset();
+            }, { passive: true });
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (navigator.sendBeacon) {
+                var fd = new FormData();
+                var t = document.querySelector('meta[name="csrf-token"]');
+                if (t) fd.append('_token', t.content);
+                navigator.sendBeacon('/logout-beacon', fd);
+            }
+        });
+    }());
+    </script>
 </body>
 </html>

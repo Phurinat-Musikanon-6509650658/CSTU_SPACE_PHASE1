@@ -145,141 +145,123 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
-    <!-- Auto Logout Script (เฉพาะเมื่อ login แล้ว) -->
     @if(Session::has('displayname'))
+    {{-- Session Timeout Warning Modal --}}
+    <div class="modal fade" id="sessionTimeoutModal" tabindex="-1" aria-hidden="true"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content" style="border: none; border-radius: 20px; overflow: hidden;
+                 box-shadow: 0 25px 60px rgba(0,0,0,0.25);">
+                <div class="modal-header border-0"
+                     style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 1.5rem 2rem;">
+                    <h5 class="modal-title fw-bold text-white mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>เซสชันจะหมดอายุ
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4 px-4">
+                    <div style="font-size: 3rem; margin-bottom: 0.75rem;">⏱️</div>
+                    <p class="mb-1" style="color: #666; font-size: 0.95rem;">
+                        คุณไม่มีการใช้งาน ระบบจะออกจากระบบอัตโนมัติใน
+                    </p>
+                    <div id="sessionCountdown"
+                         style="font-size: 3.5rem; font-weight: 700; color: #e74c3c;
+                                font-family: 'Courier New', monospace; line-height: 1.1;
+                                margin: 0.5rem 0 1rem; letter-spacing: 2px;">2:00</div>
+                    <div class="progress mb-3" style="height: 10px; border-radius: 5px; background: #f0f0f0;">
+                        <div id="sessionProgressBar" class="progress-bar" role="progressbar"
+                             style="width: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b);
+                                    border-radius: 5px; transition: width 1s linear;"></div>
+                    </div>
+                    <p style="color: #999; font-size: 0.82rem; margin: 0;">
+                        กด <strong>"ใช้งานต่อ"</strong> เพื่อยังคงอยู่ในระบบต่อไป
+                    </p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4 gap-2">
+                    <button type="button" onclick="extendSession()" class="btn fw-semibold"
+                            style="border-radius: 50px; padding: 0.75rem 2rem; border: none; color: white;
+                                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                   box-shadow: 0 4px 15px rgba(102,126,234,0.35);">
+                        <i class="bi bi-arrow-repeat me-2"></i>ใช้งานต่อ
+                    </button>
+                    <button type="button" onclick="logout()" class="btn btn-outline-secondary fw-semibold"
+                            style="border-radius: 50px; padding: 0.75rem 2rem;">
+                        <i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
-        let idleTimer;
-        let isWarningShown = false;
-        const IDLE_TIME = 15 * 60 * 1000; // 15 นาที
-        const WARNING_TIME = 13 * 60 * 1000; // 13 นาที (แจ้งเตือนก่อน 2 นาที)
+    function logout() { window.location.href = '/logout'; }
 
-        function resetIdleTimer() {
-            clearTimeout(idleTimer);
-            if (isWarningShown) {
-                hideWarning();
-            }
-            
-            // ตั้งค่าเตือนหลัง 13 นาที
-            setTimeout(() => {
-                if (!isWarningShown) {
-                    showWarning();
-                }
-            }, WARNING_TIME);
-            
-            // Auto logout หลัง 15 นาที
-            idleTimer = setTimeout(() => {
-                logout();
-            }, IDLE_TIME);
+    (function () {
+        var IDLE_MS     = 15 * 60 * 1000;
+        var WARNING_MS  = 13 * 60 * 1000;
+        var WARNING_SEC = 2 * 60;
+
+        var idleTimer, warnTimer, tickTimer;
+        var bsModal = null;
+
+        function getModal() {
+            if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById('sessionTimeoutModal'));
+            return bsModal;
+        }
+
+        function tick(left) {
+            var m = Math.floor(left / 60);
+            var s = left % 60;
+            document.getElementById('sessionCountdown').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            var bar = document.getElementById('sessionProgressBar');
+            if (bar) bar.style.width = (left / WARNING_SEC * 100) + '%';
+            if (left <= 0) { getModal().hide(); logout(); return; }
+            tickTimer = setTimeout(function () { tick(left - 1); }, 1000);
         }
 
         function showWarning() {
-            isWarningShown = true;
-            
-            // สร้าง modal แจ้งเตือน
-            const modal = document.createElement('div');
-            modal.id = 'logoutWarningModal';
-            modal.innerHTML = `
-                <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header bg-warning text-dark">
-                                <h5 class="modal-title">⚠️ แจ้งเตือน</h5>
-                            </div>
-                            <div class="modal-body">
-                                <p>คุณจะถูก logout อัตโนมัติใน <span id="countdown">2:00</span> นาที</p>
-                                <p>หากต้องการใช้งานต่อ กรุณาคลิก "ใช้งานต่อ"</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" onclick="extendSession()">ใช้งานต่อ</button>
-                                <button type="button" class="btn btn-secondary" onclick="logout()">Logout ทันที</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // นับถอยหลัง 2 นาที
-            let timeLeft = 120; // 2 นาที = 120 วินาที
-            const countdownEl = document.getElementById('countdown');
-            
-            const countdownInterval = setInterval(() => {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    logout();
-                }
-            }, 1000);
+            clearTimeout(tickTimer);
+            tick(WARNING_SEC);
+            getModal().show();
         }
 
         function hideWarning() {
-            const modal = document.getElementById('logoutWarningModal');
-            if (modal) {
-                modal.remove();
-            }
-            isWarningShown = false;
+            clearTimeout(tickTimer);
+            if (bsModal) bsModal.hide();
         }
 
-        function extendSession() {
+        window.extendSession = function () {
             hideWarning();
-            
-            // ส่ง request ไป server เพื่อ refresh session
+            reset();
             fetch('/refresh-session', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                }
-            }).then(() => {
-                resetIdleTimer();
-            });
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            }).catch(function () {});
+        };
+
+        function reset() {
+            clearTimeout(idleTimer);
+            clearTimeout(warnTimer);
+            warnTimer = setTimeout(showWarning, WARNING_MS);
+            idleTimer = setTimeout(function () { hideWarning(); logout(); }, IDLE_MS);
         }
 
-        function logout() {
-            window.location.href = '/logout';
-        }
+        reset();
 
-        // เริ่มต้น timer
-        resetIdleTimer();
-
-        // Reset timer เมื่อมี activity
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
-            document.addEventListener(event, resetIdleTimer, true);
+        ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (evt) {
+            document.addEventListener(evt, function () {
+                var el = document.getElementById('sessionTimeoutModal');
+                if (el && !el.classList.contains('show')) reset();
+            }, { passive: true });
         });
 
-        // จัดการการปิดเบราว์เซอร์หรือปิดแท็บ
-        window.addEventListener('beforeunload', function(event) {
-            // ส่ง request เพื่ออัปเดต logout time
-            // ใช้ sendBeacon เพื่อให้แน่ใจว่า request จะถูกส่งแม้เบราว์เซอร์จะปิด
+        window.addEventListener('beforeunload', function () {
             if (navigator.sendBeacon) {
-                const formData = new FormData();
-                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
-                navigator.sendBeacon('/logout-beacon', formData);
+                var fd = new FormData();
+                var t = document.querySelector('meta[name="csrf-token"]');
+                if (t) fd.append('_token', t.content);
+                navigator.sendBeacon('/logout-beacon', fd);
             }
         });
-
-        // จัดการ visibility change (เมื่อเปลี่ยนแท็บหรือปิดเบราว์เซอร์)
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // บันทึกเวลาที่ออกจากหน้า
-                sessionStorage.setItem('page_hidden_time', Date.now());
-            } else {
-                // เมื่อกลับมาใช้หน้า ตรวจสอบว่านานแค่ไหน
-                const hiddenTime = sessionStorage.getItem('page_hidden_time');
-                if (hiddenTime) {
-                    const timeDiff = Date.now() - parseInt(hiddenTime);
-                    // ถ้าหายไปนานกว่า 5 นาที ให้ logout
-                    if (timeDiff > 5 * 60 * 1000) {
-                        logout();
-                    }
-                    sessionStorage.removeItem('page_hidden_time');
-                }
-            }
-        });
+    }());
     </script>
     @endif
 

@@ -67,7 +67,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="course_code" class="form-label fw-semibold">รหัสวิชา <span class="text-danger">*</span></label>
                                 <select class="form-select @error('course_code') is-invalid @enderror"
                                         id="course_code" name="course_code" required>
@@ -80,7 +80,19 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="student_type" class="form-label fw-semibold">ประเภทนักศึกษา <span class="text-danger">*</span></label>
+                                <select class="form-select @error('student_type') is-invalid @enderror"
+                                        id="student_type" name="student_type" required>
+                                    <option value="s" {{ old('student_type', $student->student_type) == 's' ? 'selected' : '' }}>ภาคพิเศษ</option>
+                                    <option value="r" {{ old('student_type', $student->student_type) == 'r' ? 'selected' : '' }}>ปกติ</option>
+                                </select>
+                                @error('student_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-3 mb-3">
                                 <label for="semester" class="form-label fw-semibold">เทอม <span class="text-danger">*</span></label>
                                 <select class="form-select @error('semester') is-invalid @enderror"
                                         id="semester" name="semester" required>
@@ -93,7 +105,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="year" class="form-label fw-semibold">ปีการศึกษา (พ.ศ.) <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('year') is-invalid @enderror"
                                        id="year" name="year"

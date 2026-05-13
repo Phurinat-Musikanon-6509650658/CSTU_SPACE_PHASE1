@@ -151,7 +151,10 @@ class LecturerController extends Controller
             ->first();
 
         // ตรวจสอบช่วงเวลาประเมิน/แก้ไขคะแนนจาก Subject
-        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')->first();
+        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')
+            ->where('year',     $project->group->year)
+            ->where('semester', $project->group->semester)
+            ->first();
         $canSubmitNew = !$subject || $subject->canEvaluateNow();
         $canEditGrade = !$subject || $subject->canEditGradeNow();
         $subjectLockMessage = null;
@@ -225,7 +228,10 @@ class LecturerController extends Controller
         }
 
         // ตรวจสอบช่วงเวลาจาก Subject
-        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')->first();
+        $subject = Subject::where('subject_code', $project->group->subject_code ?? '')
+            ->where('year',     $project->group->year)
+            ->where('semester', $project->group->semester)
+            ->first();
         if ($subject) {
             $existingEval = $project->evaluations
                 ->where('evaluator_code', $userCode)

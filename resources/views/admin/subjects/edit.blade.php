@@ -167,7 +167,6 @@
                                 id="semester" name="semester" required>
                             <option value="1" {{ old('semester', $subject->semester) == 1 ? 'selected' : '' }}>ภาคเรียน 1</option>
                             <option value="2" {{ old('semester', $subject->semester) == 2 ? 'selected' : '' }}>ภาคเรียน 2</option>
-                            <option value="3" {{ old('semester', $subject->semester) == 3 ? 'selected' : '' }}>ภาคเรียน 3</option>
                         </select>
                         @error('semester')
                             <div class="invalid-feedback">{{ $message }}</div>
