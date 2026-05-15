@@ -14,6 +14,7 @@ services:
       - cstu_space_network
     depends_on:
       - db
+      - redis
     environment:
       - DB_HOST=db
       - DB_USERNAME=root
@@ -72,18 +73,17 @@ services:
     depends_on:
       - db
 
-  # Node.js for Vite development
+  # Node.js Asset Builder (runs once, builds production assets)
   node:
     image: node:20-alpine
     container_name: cstu_space_node
+    restart: "no"
     working_dir: /var/www/html
     volumes:
       - ../:/var/www/html
-    ports:
-      - "5173:5173"
     networks:
       - cstu_space_network
-    command: sh -c "rm -rf node_modules package-lock.json && npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm install && npm run build"
 
   # Queue Worker
   queue:
@@ -99,6 +99,7 @@ services:
       - cstu_space_network
     depends_on:
       - db
+      - redis
     environment:
       - DB_HOST=db
       - DB_USERNAME=root
@@ -106,10 +107,22 @@ services:
       - TZ=Asia/Bangkok
     command: php artisan queue:work --tries=3
 
+  # Redis (session, cache, queue)
+  redis:
+    image: redis:7-alpine
+    container_name: cstu_space_redis
+    restart: unless-stopped
+    networks:
+      - cstu_space_network
+    volumes:
+      - redisdata:/data
+
 networks:
   cstu_space_network:
     driver: bridge
 
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local

@@ -8,56 +8,38 @@ use Carbon\Carbon;
 
 class SubjectSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get current year (in Buddhist calendar)
-        $currentYear = intval(date('Y')) + 543; // 2026 + 543 = 2569
+        // ปีการศึกษา 2568 เทอม 2 (ข้อมูลจริง 68-2_Projects1-2)
+        // ขอบเขต: 1 ม.ค. 2569 → 31 ก.ค. 2569 (CE: 2026-01-01 → 2026-07-31)
+        $open  = Carbon::parse('2026-01-01')->startOfDay();
+        $close = Carbon::parse('2026-07-31')->endOfDay();
 
-        // CS303 - Update or Create
-        Subject::updateOrCreate(
-            ['subject_code' => 'CS303'],
-            [
-                'subject_name' => 'โครงงานพิเศษ1',
-                'semester' => 1,
-                'year' => $currentYear,
-                'is_enabled' => true,
-                'open_date' => Carbon::now()->startOfDay(),
-                'close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Access period - เปิดการเข้าใช้ตั้งแต่วันแรก
-                'access_open_date' => Carbon::now()->startOfDay(),
-                'access_close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Evaluation period - อาจารย์ประเมินได้ 2 เดือนสุดท้าย
-                'evaluation_open_date' => Carbon::now()->addMonths(2)->startOfDay(),
-                'evaluation_close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Grade edit period - แก้ไขคะแนนได้ 1 เดือนหลังปิด
-                'grade_edit_open_date' => Carbon::now()->addMonths(4)->addDays(1)->startOfDay(),
-                'grade_edit_close_date' => Carbon::now()->addMonths(5)->endOfDay(),
-            ]
-        );
+        $subjects = [
+            ['code' => 'CS303', 'name' => 'โครงงานพิเศษ1'],
+            ['code' => 'CS403', 'name' => 'โครงงานพิเศษ2'],
+        ];
 
-        // CS403 - Update or Create
-        Subject::updateOrCreate(
-            ['subject_code' => 'CS403'],
-            [
-                'subject_name' => 'โครงงานพิเศษ2',
-                'semester' => 1,
-                'year' => $currentYear,
-                'is_enabled' => true,
-                'open_date' => Carbon::now()->startOfDay(),
-                'close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Access period - เปิดการเข้าใช้ตั้งแต่วันแรก
-                'access_open_date' => Carbon::now()->startOfDay(),
-                'access_close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Evaluation period - อาจารย์ประเมินได้ 2 เดือนสุดท้าย
-                'evaluation_open_date' => Carbon::now()->addMonths(2)->startOfDay(),
-                'evaluation_close_date' => Carbon::now()->addMonths(4)->endOfDay(),
-                // Grade edit period - แก้ไขคะแนนได้ 1 เดือนหลังปิด
-                'grade_edit_open_date' => Carbon::now()->addMonths(4)->addDays(1)->startOfDay(),
-                'grade_edit_close_date' => Carbon::now()->addMonths(5)->endOfDay(),
-            ]
-        );
+        foreach ($subjects as $s) {
+            Subject::updateOrCreate(
+                [
+                    'subject_code' => $s['code'],
+                    'year'         => 2568,
+                    'semester'     => 2,
+                ],
+                [
+                    'subject_name'          => $s['name'],
+                    'is_enabled'            => true,
+                    'open_date'             => $open,
+                    'close_date'            => $close,
+                    'access_open_date'      => $open,
+                    'access_close_date'     => $close,
+                    'evaluation_open_date'  => Carbon::parse('2026-06-01')->startOfDay(),
+                    'evaluation_close_date' => $close,
+                    'grade_edit_open_date'  => Carbon::parse('2026-08-01')->startOfDay(),
+                    'grade_edit_close_date' => Carbon::parse('2026-08-31')->endOfDay(),
+                ]
+            );
+        }
     }
 }
