@@ -679,6 +679,13 @@ class CoordinatorController extends Controller
         if ($request->filled('year')) {
             $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q
+                ->where('project_name', 'like', "%{$s}%")
+                ->orWhere('project_code', 'like', "%{$s}%")
+            );
+        }
 
         $projects = $query
             ->join('groups', 'projects.group_id', '=', 'groups.group_id')
@@ -686,8 +693,20 @@ class CoordinatorController extends Controller
             ->orderBy('groups.semester', 'desc')
             ->orderBy('groups.group_id', 'asc')
             ->select('projects.*')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
+
+        if ($request->filled('eval_status')) {
+            $projects = $projects->filter(function ($p) use ($request) {
+                $exp  = collect([$p->advisor_code, $p->committee1_code, $p->committee2_code, $p->committee3_code])->filter()->count();
+                $done = $p->evaluations->pluck('evaluator_role')->unique()->count();
+                return match($request->eval_status) {
+                    'complete' => $exp > 0 && $done >= $exp,
+                    'partial'  => $done > 0 && $done < $exp,
+                    'none'     => $done === 0,
+                    default    => true,
+                };
+            })->values();
+        }
 
         $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 

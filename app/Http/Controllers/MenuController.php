@@ -167,7 +167,7 @@ class MenuController extends Controller
     }
 
     /**
-     * เมนูสำหรับ Staff (ดูตารางสอบอย่างเดียว)
+     * เมนูสำหรับ Staff
      */
     private function getStaffMenu()
     {
@@ -197,6 +197,30 @@ class MenuController extends Controller
                     'url' => route('staff.submissions.index'),
                     'class' => 'success-card',
                     'btn_class' => 'success-btn'
+                ],
+                [
+                    'title' => 'จัดการรายวิชา',
+                    'description' => 'กำหนดช่วงเวลาเปิด-ปิดรายวิชา',
+                    'icon' => 'bi-book-fill',
+                    'url' => route('admin.subjects.index'),
+                    'class' => 'primary-card',
+                    'btn_class' => 'primary-btn'
+                ],
+                [
+                    'title' => 'ข้อมูลผู้ใช้/นักศึกษา',
+                    'description' => 'ตรวจสอบและ export ข้อมูลผู้ใช้และนักศึกษา',
+                    'icon' => 'bi-person-lines-fill',
+                    'url' => route('users.index'),
+                    'class' => 'info-card',
+                    'btn_class' => 'info-btn'
+                ],
+                [
+                    'title' => 'สรุปรายวิชา',
+                    'description' => 'ดูภาพรวมโครงงานแยกตามรหัสวิชา และ export ข้อมูล',
+                    'icon' => 'bi-table',
+                    'url' => route('coordinator.subject-summary.index'),
+                    'class' => 'warning-card',
+                    'btn_class' => 'warning-btn'
                 ]
             ]
         ];
@@ -369,42 +393,6 @@ class MenuController extends Controller
                     'url' => '#',
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
-                ]
-            ]
-        ];
-    }
-
-    /**
-     * เมนู Staff Management สำหรับ Staff และ Admin
-     */
-    private function getStaffManagementMenu()
-    {
-        return [
-            'title' => 'Staff Management',
-            'items' => [
-                [
-                    'title' => 'User & Student Records',
-                    'description' => 'ดูและ Export รายชื่อผู้ใช้และนักศึกษา',
-                    'icon' => 'bi-person-lines-fill',
-                    'url' => route('users.index'),
-                    'class' => 'primary-card',
-                    'btn_class' => 'primary-btn'
-                ],
-                [
-                    'title' => 'Document Management',
-                    'description' => 'Manage official documents',
-                    'icon' => 'bi-files',
-                    'url' => '#',
-                    'class' => 'info-card',
-                    'btn_class' => 'info-btn'
-                ],
-                [
-                    'title' => 'Resource Booking',
-                    'description' => 'Book rooms and resources',
-                    'icon' => 'bi-geo-alt-fill',
-                    'url' => '#',
-                    'class' => 'success-card',
-                    'btn_class' => 'success-btn'
                 ]
             ]
         ];
