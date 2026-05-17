@@ -703,6 +703,8 @@ class CoordinatorController extends Controller
             'committeeLecturers.user',
         ])->findOrFail($projectId);
 
-        return view('coordinator.evaluations.scores', compact('project'));
+        $criteria = \App\Models\EvaluationCriteria::forSubject($project->group->subject_code ?? '');
+
+        return view('coordinator.evaluations.scores', compact('project', 'criteria'));
     }
 }

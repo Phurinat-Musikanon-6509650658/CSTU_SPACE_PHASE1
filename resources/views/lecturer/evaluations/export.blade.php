@@ -194,7 +194,7 @@
             'committee2' => 'กรรมการคนที่ 2',
             'committee3' => 'กรรมการคนที่ 3',
         ];
-        $maxScore = $role === 'advisor' ? 100 : 90;
+        $maxScore = $role === 'advisor' ? $criteria->getAdvisorMax() : $criteria->getCommitteeMax();
         $evaluatorName = trim(($user->firstname_user ?? '') . ' ' . ($user->lastname_user ?? '')) ?: $user->username_user;
     @endphp
 
@@ -273,8 +273,8 @@
 
             {{-- ส่วนที่ 2 --}}
             <tr>
-                <td><strong>ส่วนที่ 2:</strong> คุณภาพของรายงาน</td>
-                <td class="max-col">30</td>
+                <td><strong>ส่วนที่ 2:</strong> {{ $criteria->part2_label }}</td>
+                <td class="max-col">{{ $criteria->part2_max }}</td>
                 @foreach($students as $idx => $student)
                 <td class="score-col">{{ $scores[$idx]['part2'] }}</td>
                 @endforeach
@@ -283,29 +283,29 @@
             {{-- ส่วนที่ 3 header --}}
             <tr class="section-header">
                 <td colspan="{{ 2 + $students->count() }}">
-                    ส่วนที่ 3: การนำเสนอโครงงาน (รวม 60 คะแนน)
+                    ส่วนที่ 3: การนำเสนอโครงงาน (รวม {{ $criteria->getPart3Max() }} คะแนน)
                 </td>
             </tr>
 
             <tr class="sub-row">
-                <td>3.1 ความเข้าใจในงานที่ทำ</td>
-                <td class="max-col">20</td>
+                <td>3.1 {{ $criteria->part3a_label }}</td>
+                <td class="max-col">{{ $criteria->part3a_max }}</td>
                 @foreach($students as $idx => $student)
                 <td class="score-col">{{ $scores[$idx]['part3a'] }}</td>
                 @endforeach
             </tr>
 
             <tr class="sub-row">
-                <td>3.2 คุณภาพการนำเสนอและการตอบคำถาม</td>
-                <td class="max-col">20</td>
+                <td>3.2 {{ $criteria->part3b_label }}</td>
+                <td class="max-col">{{ $criteria->part3b_max }}</td>
                 @foreach($students as $idx => $student)
                 <td class="score-col">{{ $scores[$idx]['part3b'] }}</td>
                 @endforeach
             </tr>
 
             <tr class="sub-row">
-                <td>3.3 การประยุกต์ใช้ความรู้ทางวิทยาการคอมพิวเตอร์อย่างเหมาะสมในการนำเสนอโครงงาน</td>
-                <td class="max-col">20</td>
+                <td>3.3 {{ $criteria->part3c_label }}</td>
+                <td class="max-col">{{ $criteria->part3c_max }}</td>
                 @foreach($students as $idx => $student)
                 <td class="score-col">{{ $scores[$idx]['part3c'] }}</td>
                 @endforeach
@@ -314,7 +314,7 @@
             {{-- รวมส่วนที่ 3 --}}
             <tr class="subtotal-row">
                 <td>รวมส่วนที่ 3</td>
-                <td class="max-col">60</td>
+                <td class="max-col">{{ $criteria->getPart3Max() }}</td>
                 @foreach($students as $idx => $student)
                 <td class="score-col">
                     @php

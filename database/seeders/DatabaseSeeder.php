@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\UserTableSeeder::class,
             \Database\Seeders\StudentTableSeeder::class,
             \Database\Seeders\SubjectSeeder::class,
+            \Database\Seeders\EvaluationCriteriaSeeder::class,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\ProjectEvaluation;
 use App\Models\ProjectProposal;
 use App\Models\GroupMember;
 use App\Models\Subject;
+use App\Models\EvaluationCriteria;
 use App\Helpers\SubjectTimingHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -185,10 +186,77 @@ class LecturerController extends Controller
             }
         }
 
+        $criteria = EvaluationCriteria::forSubject($project->group->subject_code ?? '');
+
         return view('lecturer.evaluations.form', compact(
             'project', 'role', 'evaluation',
-            'canSubmitNew', 'canEditGrade', 'subjectLockMessage'
+            'canSubmitNew', 'canEditGrade', 'subjectLockMessage', 'criteria'
         ));
+    }
+
+    /**
+     * Export ใบประเมินทุกโครงงานรวมเป็นไฟล์เดียว
+     */
+    public function exportAll(Request $request)
+    {
+        $user     = Auth::guard('web')->user();
+        $userCode = $user->user_code;
+
+        $allProjects = Project::with([
+            'group.members.student',
+            'advisorLecturer.user',
+            'committeeLecturers.user',
+            'projectLecturers',
+            'evaluations',
+        ])
+            ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))
+            ->whereNotNull('exam_datetime')
+            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
+            ->orderBy('groups.year', 'desc')
+            ->orderBy('groups.semester', 'desc')
+            ->orderBy('groups.group_id', 'asc')
+            ->select('projects.*')
+            ->get();
+
+        $evaluated = [];
+        $pending   = [];
+
+        foreach ($allProjects as $project) {
+            $role = $project->getEvaluatorRole($userCode);
+            $eval = $project->evaluations
+                ->where('evaluator_code', $userCode)
+                ->where('evaluator_role', $role)
+                ->first();
+
+            $criteria = EvaluationCriteria::forSubject($project->group->subject_code ?? '');
+            $students = $project->group->members->pluck('student')->take(2);
+
+            $scores = [];
+            foreach ($students as $idx => $student) {
+                $ev = $project->evaluations
+                    ->where('student_id', $student->student_id)
+                    ->where('evaluator_code', $userCode)
+                    ->where('evaluator_role', $role)
+                    ->first();
+                $scores[$idx] = [
+                    'part1'  => $ev ? ($ev->part1_score  ?? '-') : '-',
+                    'part2'  => $ev ? ($ev->part2_score  ?? '-') : '-',
+                    'part3a' => $ev ? ($ev->part3a_score ?? '-') : '-',
+                    'part3b' => $ev ? ($ev->part3b_score ?? '-') : '-',
+                    'part3c' => $ev ? ($ev->part3c_score ?? '-') : '-',
+                ];
+            }
+
+            $entry = compact('project', 'role', 'students', 'scores', 'criteria');
+
+            if ($eval) {
+                $evaluated[] = $entry;
+            } else {
+                $pending[] = $entry;
+            }
+        }
+
+        return view('lecturer.evaluations.export-all', compact('evaluated', 'pending', 'user'));
     }
 
     /**
@@ -227,7 +295,9 @@ class LecturerController extends Controller
             ];
         }
 
-        return view('lecturer.evaluations.export', compact('project', 'role', 'students', 'scores', 'user'));
+        $criteria = EvaluationCriteria::forSubject($project->group->subject_code ?? '');
+
+        return view('lecturer.evaluations.export', compact('project', 'role', 'students', 'scores', 'user', 'criteria'));
     }
 
     /**
@@ -266,9 +336,11 @@ class LecturerController extends Controller
             }
         }
 
+        $criteria = EvaluationCriteria::forSubject($project->group->subject_code ?? '');
+
         // ตรวจสอบ validation สำหรับ 2 นักศึกษา
         $students = $project->group->members->pluck('student')->take(2);
-        
+
         foreach ($students as $index => $student) {
             $name = $student->firstname_std . ' ' . $student->lastname_std;
 
@@ -277,32 +349,32 @@ class LecturerController extends Controller
             $part3b = (float)$request->input("student_{$index}_part3b_score", 0);
             $part3c = (float)$request->input("student_{$index}_part3c_score", 0);
 
-            if ($part2 < 0 || $part2 > 30) {
+            if ($part2 < 0 || $part2 > $criteria->part2_max) {
                 return redirect()->back()
-                    ->with('error', "คะแนนส่วนที่ 2 สำหรับ {$name} ต้อง 0-30")
+                    ->with('error', "คะแนนส่วนที่ 2 สำหรับ {$name} ต้อง 0-{$criteria->part2_max}")
                     ->withInput();
             }
-            if ($part3a < 0 || $part3a > 20) {
+            if ($part3a < 0 || $part3a > $criteria->part3a_max) {
                 return redirect()->back()
-                    ->with('error', "คะแนน 3.1 สำหรับ {$name} ต้อง 0-20")
+                    ->with('error', "คะแนน 3.1 สำหรับ {$name} ต้อง 0-{$criteria->part3a_max}")
                     ->withInput();
             }
-            if ($part3b < 0 || $part3b > 20) {
+            if ($part3b < 0 || $part3b > $criteria->part3b_max) {
                 return redirect()->back()
-                    ->with('error', "คะแนน 3.2 สำหรับ {$name} ต้อง 0-20")
+                    ->with('error', "คะแนน 3.2 สำหรับ {$name} ต้อง 0-{$criteria->part3b_max}")
                     ->withInput();
             }
-            if ($part3c < 0 || $part3c > 20) {
+            if ($part3c < 0 || $part3c > $criteria->part3c_max) {
                 return redirect()->back()
-                    ->with('error', "คะแนน 3.3 สำหรับ {$name} ต้อง 0-20")
+                    ->with('error', "คะแนน 3.3 สำหรับ {$name} ต้อง 0-{$criteria->part3c_max}")
                     ->withInput();
             }
 
             if ($role === 'advisor') {
                 $part1 = (float)$request->input("student_{$index}_part1_score", 0);
-                if ($part1 < 0 || $part1 > 10) {
+                if ($part1 < 0 || $part1 > $criteria->part1_max) {
                     return redirect()->back()
-                        ->with('error', "คะแนนส่วนที่ 1 สำหรับ {$name} ต้อง 0-10")
+                        ->with('error', "คะแนนส่วนที่ 1 สำหรับ {$name} ต้อง 0-{$criteria->part1_max}")
                         ->withInput();
                 }
             }

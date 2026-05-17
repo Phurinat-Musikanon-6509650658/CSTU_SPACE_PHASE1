@@ -357,9 +357,9 @@
                         <tr>
                             <td>
                                 <span class="fw-semibold">ส่วนที่ 2</span>
-                                <span class="text-muted ms-1">คุณภาพของรายงาน</span>
+                                <span class="text-muted ms-1">{{ $criteria->part2_label }}</span>
                             </td>
-                            <td class="max-col">30</td>
+                            <td class="max-col">{{ $criteria->part2_max }}</td>
                             @foreach($activeRoles as $role)
                                 @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
                                 <td class="score-cell">
@@ -379,14 +379,14 @@
                                 <i class="bi bi-card-checklist me-1"></i>
                                 <span class="fw-bold">ส่วนที่ 3</span>
                                 <span class="fw-normal ms-1">การนำเสนอโครงงาน</span>
-                                <span class="text-muted ms-1" style="font-size:.8rem;">(60 คะแนน)</span>
+                                <span class="text-muted ms-1" style="font-size:.8rem;">({{ $criteria->getPart3Max() }} คะแนน)</span>
                             </td>
                         </tr>
 
                         {{-- Part 3a --}}
                         <tr class="row-sub-criteria">
-                            <td>3.1 ความเข้าใจในงานที่ทำ</td>
-                            <td class="max-col">20</td>
+                            <td>3.1 {{ $criteria->part3a_label }}</td>
+                            <td class="max-col">{{ $criteria->part3a_max }}</td>
                             @foreach($activeRoles as $role)
                                 @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
                                 <td class="score-cell">
@@ -402,8 +402,8 @@
 
                         {{-- Part 3b --}}
                         <tr class="row-sub-criteria">
-                            <td>3.2 คุณภาพการนำเสนอและการตอบคำถาม</td>
-                            <td class="max-col">20</td>
+                            <td>3.2 {{ $criteria->part3b_label }}</td>
+                            <td class="max-col">{{ $criteria->part3b_max }}</td>
                             @foreach($activeRoles as $role)
                                 @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
                                 <td class="score-cell">
@@ -419,8 +419,8 @@
 
                         {{-- Part 3c --}}
                         <tr class="row-sub-criteria">
-                            <td style="font-size:.82rem;">3.3 การประยุกต์ใช้ความรู้ทางวิทยาการคอมพิวเตอร์ในการนำเสนอ</td>
-                            <td class="max-col">20</td>
+                            <td style="font-size:.82rem;">3.3 {{ $criteria->part3c_label }}</td>
+                            <td class="max-col">{{ $criteria->part3c_max }}</td>
                             @foreach($activeRoles as $role)
                                 @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
                                 <td class="score-cell">
@@ -437,7 +437,7 @@
                         {{-- Part 3 subtotal --}}
                         <tr class="row-subtotal">
                             <td class="fw-bold">รวมส่วนที่ 3</td>
-                            <td class="text-center fw-bold">60</td>
+                            <td class="text-center fw-bold">{{ $criteria->getPart3Max() }}</td>
                             @foreach($activeRoles as $role)
                                 @php $ev = $evalMatrix[$idx][$role] ?? null; @endphp
                                 <td class="score-cell">
@@ -454,11 +454,11 @@
                         {{-- Grand total --}}
                         <tr class="row-total">
                             <td class="fw-bold">คะแนนรวมทั้งสิ้น</td>
-                            <td class="text-center fw-bold">100</td>
+                            <td class="text-center fw-bold">{{ $criteria->getAdvisorMax() }}</td>
                             @foreach($activeRoles as $role)
                                 @php
                                     $ev   = $evalMatrix[$idx][$role] ?? null;
-                                    $maxR = ($role === 'advisor') ? 100 : 90;
+                                    $maxR = ($role === 'advisor') ? $criteria->getAdvisorMax() : $criteria->getCommitteeMax();
                                 @endphp
                                 <td class="score-cell">
                                     @if($ev)
@@ -487,34 +487,34 @@
                     <div class="col score-summary-col border-end">
                         <div class="label">ส่วนที่ 1</div>
                         <div class="value text-info">{{ number_format($summary['p1'], 1) }}</div>
-                        <div class="max">/10</div>
+                        <div class="max">/{{ $criteria->part1_max }}</div>
                     </div>
                     <div class="col score-summary-col border-end">
                         <div class="label">ส่วนที่ 2</div>
                         <div class="value text-primary">{{ number_format($summary['p2avg'], 1) }}</div>
-                        <div class="max">/30</div>
+                        <div class="max">/{{ $criteria->part2_max }}</div>
                     </div>
                     <div class="col score-summary-col border-end">
-                        <div class="label">3.1 ความเข้าใจ</div>
+                        <div class="label">3.1</div>
                         <div class="value text-warning">{{ number_format($summary['p3a'], 1) }}</div>
-                        <div class="max">/20</div>
+                        <div class="max">/{{ $criteria->part3a_max }}</div>
                     </div>
                     <div class="col score-summary-col border-end">
-                        <div class="label">3.2 นำเสนอ</div>
+                        <div class="label">3.2</div>
                         <div class="value text-warning">{{ number_format($summary['p3b'], 1) }}</div>
-                        <div class="max">/20</div>
+                        <div class="max">/{{ $criteria->part3b_max }}</div>
                     </div>
                     <div class="col score-summary-col border-end">
-                        <div class="label">3.3 ประยุกต์</div>
+                        <div class="label">3.3</div>
                         <div class="value text-warning">{{ number_format($summary['p3c'], 1) }}</div>
-                        <div class="max">/20</div>
+                        <div class="max">/{{ $criteria->part3c_max }}</div>
                     </div>
                     <div class="col score-summary-col final-col">
                         <div class="label">คะแนนรวม</div>
                         <div class="value" style="color:{{ $fsColor }};">
                             {{ number_format($fs, 1) }}
                         </div>
-                        <div class="max">/100</div>
+                        <div class="max">/{{ $criteria->getAdvisorMax() }}</div>
                     </div>
                 </div>
             </div>

@@ -220,6 +220,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::get('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'evaluateForm'])->name('form');
             Route::post('{project}/evaluate', [App\Http\Controllers\LecturerController::class, 'submitEvaluation'])->name('submit');
             Route::get('{project}/export', [App\Http\Controllers\LecturerController::class, 'exportEvaluation'])->name('export');
+            Route::get('export-all', [App\Http\Controllers\LecturerController::class, 'exportAll'])->name('export-all');
         });
 
         // Submissions Management
@@ -336,6 +337,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::post('{subject}/toggle', [SubjectController::class, 'toggle'])->name('toggle');
             Route::delete('{subject}', [SubjectController::class, 'destroy'])->name('destroy');
             Route::post('open-new-term', [SubjectController::class, 'openNewTerm'])->name('openNewTerm');
+            Route::post('bulk-update-term', [SubjectController::class, 'bulkUpdateTerm'])->name('bulkUpdateTerm');
         });
         
     });

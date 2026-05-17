@@ -32,9 +32,15 @@
             </h1>
             <p class="text-muted mb-0">โครงงานที่คุณเป็นอาจารย์ที่ปรึกษาหรือคณะกรรมการ</p>
         </div>
-        <a href="{{ route('menu') }}" class="btn btn-outline-primary">
-            <i class="bi bi-house me-2"></i>กลับหน้าหลัก
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('lecturer.evaluations.export-all') }}" target="_blank"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-printer me-2"></i>Export รวม PDF
+            </a>
+            <a href="{{ route('menu') }}" class="btn btn-outline-primary">
+                <i class="bi bi-house me-2"></i>กลับหน้าหลัก
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

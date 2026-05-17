@@ -93,7 +93,7 @@
             'committee2' => 'success',
             'committee3' => 'success',
         ];
-        $maxScore = $role === 'advisor' ? 100 : 90;
+        $maxScore = $role === 'advisor' ? $criteria->getAdvisorMax() : $criteria->getCommitteeMax();
         $students = $project->group->members->pluck('student')->take(2);
 
         // Pre-compute saved scores per student
@@ -189,6 +189,68 @@
             <form action="{{ route('lecturer.evaluations.submit', $project->project_id) }}" method="POST" id="evaluationForm">
                 @csrf
 
+                {{-- คำชี้แจง --}}
+                <div class="alert alert-info border-0 mb-4" style="background:#e8f4fd;">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-info-circle-fill text-primary mt-1 flex-shrink-0"></i>
+                        <div>
+                            <strong>หมายเหตุ:</strong>
+                            หลังจากกรรมการให้คะแนนเรียบร้อยแล้วกรุณาพิมพ์และเซ็นชื่อรับรองเพื่อยืนยันความถูกต้องในการให้คะแนน
+                            และส่งเป็นไฟล์ PDF กลับมาให้ผู้ประสานงาน
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    {{-- คอลัมน์ซ้าย: ช่วงเวลาสอบ --}}
+                    <div class="col-md-6">
+                        <div class="rounded-3 p-3 h-100" style="background:#f0f4ff;border:1px solid #c7d2fe;">
+                            <div class="fw-semibold text-primary mb-2" style="font-size:.85rem;">
+                                <i class="bi bi-clock me-1"></i>ช่วงเวลาสอบ (โดยประมาณ)
+                            </div>
+                            <div class="d-flex flex-column gap-1" style="font-size:.85rem;">
+                                @foreach([
+                                    ['นักศึกษาเตรียมตัวสอบ',        '10 นาที'],
+                                    ['นำเสนอผลงาน',                   '30–40 นาที'],
+                                    ['ตอบคำถาม',                      '30 นาที'],
+                                    ['กรรมการสรุปผลการสอบ',           '10 นาที'],
+                                ] as [$label, $time])
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">{{ $label }}</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold" style="font-size:.78rem;">{{ $time }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- คอลัมน์ขวา: เกณฑ์เกรด --}}
+                    <div class="col-md-6">
+                        <div class="rounded-3 p-3 h-100" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                            <div class="fw-semibold text-success mb-2" style="font-size:.85rem;">
+                                <i class="bi bi-bar-chart-steps me-1"></i>เกณฑ์การวัดผล
+                            </div>
+                            <div class="row row-cols-2 g-1" style="font-size:.82rem;">
+                                @foreach([
+                                    ['90–100', 'A',  '#28a745'],
+                                    ['85–89',  'B+', '#20c997'],
+                                    ['80–84',  'B',  '#17a2b8'],
+                                    ['70–79',  'C+', '#4e73df'],
+                                    ['60–69',  'C',  '#6f42c1'],
+                                    ['55–59',  'D+', '#fd7e14'],
+                                    ['50–54',  'D',  '#e67e22'],
+                                    ['0–49',   'F',  '#dc3545'],
+                                ] as [$range, $grade, $color])
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge fw-bold" style="background:{{ $color }};color:#fff;min-width:2.2rem;font-size:.8rem;">{{ $grade }}</span>
+                                    <span class="text-secondary">{{ $range }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-bordered eval-table">
                         <thead>
@@ -228,14 +290,14 @@
 
                             {{-- ส่วนที่ 2 --}}
                             <tr>
-                                <td><strong>ส่วนที่ 2:</strong> คุณภาพของรายงาน</td>
-                                <td class="max-col">30</td>
+                                <td><strong>ส่วนที่ 2:</strong> {{ $criteria->part2_label }}</td>
+                                <td class="max-col">{{ $criteria->part2_max }}</td>
                                 @foreach($students as $idx => $student)
                                 <td>
                                     <input type="number"
                                            name="student_{{ $idx }}_part2_score"
                                            class="score-input part2-score-{{ $idx }}"
-                                           min="0" max="30" step="0.01"
+                                           min="0" max="{{ $criteria->part2_max }}" step="0.01"
                                            placeholder="0.00"
                                            value="{{ $scores[$idx]['part2'] }}">
                                 </td>
@@ -247,20 +309,20 @@
                                 <td colspan="{{ 2 + $students->count() }}">
                                     <i class="bi bi-card-checklist me-1"></i>
                                     ส่วนที่ 3: การนำเสนอโครงงาน
-                                    <span class="fw-normal ms-1">(รวม 60 คะแนน)</span>
+                                    <span class="fw-normal ms-1">(รวม {{ $criteria->getPart3Max() }} คะแนน)</span>
                                 </td>
                             </tr>
 
                             {{-- 3.1 --}}
                             <tr class="sub-criteria">
-                                <td>3.1 ความเข้าใจในงานที่ทำ</td>
-                                <td class="max-col">20</td>
+                                <td>3.1 {{ $criteria->part3a_label }}</td>
+                                <td class="max-col">{{ $criteria->part3a_max }}</td>
                                 @foreach($students as $idx => $student)
                                 <td>
                                     <input type="number"
                                            name="student_{{ $idx }}_part3a_score"
                                            class="score-input part3a-score-{{ $idx }}"
-                                           min="0" max="20" step="0.01"
+                                           min="0" max="{{ $criteria->part3a_max }}" step="0.01"
                                            placeholder="0.00"
                                            value="{{ $scores[$idx]['part3a'] }}">
                                 </td>
@@ -269,14 +331,14 @@
 
                             {{-- 3.2 --}}
                             <tr class="sub-criteria">
-                                <td>3.2 คุณภาพการนำเสนอและการตอบคำถาม</td>
-                                <td class="max-col">20</td>
+                                <td>3.2 {{ $criteria->part3b_label }}</td>
+                                <td class="max-col">{{ $criteria->part3b_max }}</td>
                                 @foreach($students as $idx => $student)
                                 <td>
                                     <input type="number"
                                            name="student_{{ $idx }}_part3b_score"
                                            class="score-input part3b-score-{{ $idx }}"
-                                           min="0" max="20" step="0.01"
+                                           min="0" max="{{ $criteria->part3b_max }}" step="0.01"
                                            placeholder="0.00"
                                            value="{{ $scores[$idx]['part3b'] }}">
                                 </td>
@@ -285,14 +347,14 @@
 
                             {{-- 3.3 --}}
                             <tr class="sub-criteria">
-                                <td>3.3 การประยุกต์ใช้ความรู้ทางวิทยาการคอมพิวเตอร์อย่างเหมาะสมในการนำเสนอโครงงาน</td>
-                                <td class="max-col">20</td>
+                                <td>3.3 {{ $criteria->part3c_label }}</td>
+                                <td class="max-col">{{ $criteria->part3c_max }}</td>
                                 @foreach($students as $idx => $student)
                                 <td>
                                     <input type="number"
                                            name="student_{{ $idx }}_part3c_score"
                                            class="score-input part3c-score-{{ $idx }}"
-                                           min="0" max="20" step="0.01"
+                                           min="0" max="{{ $criteria->part3c_max }}" step="0.01"
                                            placeholder="0.00"
                                            value="{{ $scores[$idx]['part3c'] }}">
                                 </td>
@@ -302,11 +364,11 @@
                             {{-- รวมส่วนที่ 3 --}}
                             <tr class="part3-subtotal-row">
                                 <td>รวมส่วนที่ 3</td>
-                                <td class="text-center">60</td>
+                                <td class="text-center">{{ $criteria->getPart3Max() }}</td>
                                 @foreach($students as $idx => $student)
                                 <td class="text-center">
                                     <span class="part3-subtotal-display part3-sub-{{ $idx }}">0.00</span>
-                                    <span class="text-muted small"> / 60</span>
+                                    <span class="text-muted small"> / {{ $criteria->getPart3Max() }}</span>
                                 </td>
                                 @endforeach
                             </tr>
@@ -319,6 +381,8 @@
                                 <td class="text-center">
                                     <span class="total-score-display total-score-{{ $idx }}">0.00</span>
                                     <span class="text-muted"> / {{ $maxScore }}</span>
+                                    <br>
+                                    <span class="grade-badge-{{ $idx }} badge fw-bold mt-1" style="font-size:.85rem;min-width:2.4rem;background:#dee2e6;color:#495057;">—</span>
                                 </td>
                                 @endforeach
                             </tr>
@@ -347,6 +411,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const isAdvisor = {{ $role === 'advisor' ? 'true' : 'false' }};
     const studentCount = {{ $students->count() }};
 
+    const gradeTable = [
+        { min: 90, label: 'A',  color: '#28a745' },
+        { min: 85, label: 'B+', color: '#20c997' },
+        { min: 80, label: 'B',  color: '#17a2b8' },
+        { min: 70, label: 'C+', color: '#4e73df' },
+        { min: 60, label: 'C',  color: '#6f42c1' },
+        { min: 55, label: 'D+', color: '#fd7e14' },
+        { min: 50, label: 'D',  color: '#e67e22' },
+        { min: 0,  label: 'F',  color: '#dc3545' },
+    ];
+
+    function getGrade(score) {
+        return gradeTable.find(g => score >= g.min) || gradeTable[gradeTable.length - 1];
+    }
+
     function updateTotals() {
         for (let i = 0; i < studentCount; i++) {
             const part1  = isAdvisor ? (parseFloat(document.querySelector(`.part1-score-${i}`)?.value)  || 0) : 0;
@@ -358,17 +437,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const part3Total = part3a + part3b + part3c;
             const grandTotal = part1 + part2 + part3Total;
 
-            const sub = document.querySelector(`.part3-sub-${i}`);
-            const tot = document.querySelector(`.total-score-${i}`);
+            const sub   = document.querySelector(`.part3-sub-${i}`);
+            const tot   = document.querySelector(`.total-score-${i}`);
+            const badge = document.querySelector(`.grade-badge-${i}`);
 
             if (sub) sub.textContent = part3Total.toFixed(2);
             if (tot) {
                 tot.textContent = grandTotal.toFixed(2);
-                if      (grandTotal >= 90) tot.style.color = '#28a745';
-                else if (grandTotal >= 80) tot.style.color = '#17a2b8';
-                else if (grandTotal >= 70) tot.style.color = '#ffc107';
-                else if (grandTotal >= 50) tot.style.color = '#fd7e14';
-                else                       tot.style.color = '#dc3545';
+                const g = getGrade(grandTotal);
+                tot.style.color = g.color;
+                if (badge) {
+                    badge.textContent = g.label;
+                    badge.style.background = g.color;
+                    badge.style.color = '#fff';
+                }
             }
         }
     }

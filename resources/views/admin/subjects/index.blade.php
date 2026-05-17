@@ -149,6 +149,21 @@
                         @endforeach
                     </span>
                     @endif
+                    @php $first = $group['subjects']->first(); @endphp
+                    <button type="button"
+                            class="btn btn-sm btn-light btn-term-edit opacity-90"
+                            style="font-size:.75rem;padding:.2rem .6rem;border-radius:6px;"
+                            data-year="{{ $year }}"
+                            data-semester="{{ $semester }}"
+                            data-open-date="{{ $first?->open_date?->format('Y-m-d\TH:i') }}"
+                            data-close-date="{{ $first?->close_date?->format('Y-m-d\TH:i') }}"
+                            data-eval-open="{{ $first?->evaluation_open_date?->format('Y-m-d\TH:i') }}"
+                            data-eval-close="{{ $first?->evaluation_close_date?->format('Y-m-d\TH:i') }}"
+                            data-grade-open="{{ $first?->grade_edit_open_date?->format('Y-m-d\TH:i') }}"
+                            data-grade-close="{{ $first?->grade_edit_close_date?->format('Y-m-d\TH:i') }}"
+                            data-bs-toggle="modal" data-bs-target="#termEditModal">
+                        <i class="bi bi-pencil me-1"></i>แก้ไขช่วงเวลา
+                    </button>
                 </div>
             </div>
 
@@ -209,10 +224,23 @@
 
                                     {{-- Actions --}}
                                     <div class="card-actions">
-                                        <a href="{{ route('admin.subjects.edit', $subject) }}"
-                                           class="btn btn-outline-primary btn-sm text-center">
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm text-center btn-quick-edit"
+                                                data-subject-id="{{ $subject->subject_id }}"
+                                                data-subject-code="{{ $subject->subject_code }}"
+                                                data-subject-name="{{ $subject->subject_name }}"
+                                                data-year="{{ $subject->year }}"
+                                                data-semester="{{ $subject->semester }}"
+                                                data-is-enabled="{{ $subject->is_enabled ? 1 : 0 }}"
+                                                data-open-date="{{ $subject->open_date?->format('Y-m-d\TH:i') }}"
+                                                data-close-date="{{ $subject->close_date?->format('Y-m-d\TH:i') }}"
+                                                data-eval-open="{{ $subject->evaluation_open_date?->format('Y-m-d\TH:i') }}"
+                                                data-eval-close="{{ $subject->evaluation_close_date?->format('Y-m-d\TH:i') }}"
+                                                data-grade-open="{{ $subject->grade_edit_open_date?->format('Y-m-d\TH:i') }}"
+                                                data-grade-close="{{ $subject->grade_edit_close_date?->format('Y-m-d\TH:i') }}"
+                                                data-bs-toggle="modal" data-bs-target="#quickEditModal">
                                             <i class="bi bi-pencil-square me-1"></i>แก้ไข
-                                        </a>
+                                        </button>
                                         <button type="button"
                                                 class="btn btn-sm {{ $subject->is_enabled ? 'btn-outline-warning' : 'btn-outline-success' }} toggle-subject"
                                                 data-subject-id="{{ $subject->subject_id }}"
@@ -311,8 +339,180 @@
     </div>
 </div>
 
+{{-- Modal: Term Bulk Edit --}}
+<div class="modal fade" id="termEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" id="termEditForm" method="POST"
+              action="{{ route('admin.subjects.bulkUpdateTerm') }}">
+            @csrf
+            <input type="hidden" name="year"     id="te-year">
+            <input type="hidden" name="semester" id="te-semester">
+            <div class="modal-header border-0"
+                 style="background:linear-gradient(135deg,#2E75B6,#1F4E79);border-radius:12px 12px 0 0;">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="bi bi-calendar-range me-2"></i>แก้ไขช่วงเวลาเทอม
+                    <span id="te-title" class="fw-normal ms-1 opacity-75"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-3 pb-2">
+                <div class="alert alert-info border-0 py-2 mb-3" style="font-size:.83rem;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    การเปลี่ยนแปลงนี้จะ<strong>อัปเดตทุกรายวิชาในเทอมนี้พร้อมกัน</strong>
+                </div>
+
+                @foreach([
+                    ['primary', 'calendar2-week', 'เปิด-ปิด รายวิชา',    'te-open',       'open_date',             'te-close',      'close_date'],
+                    ['success', 'star',           'ช่วงประเมินคะแนน',     'te-eval-open',  'evaluation_open_date',  'te-eval-close', 'evaluation_close_date'],
+                    ['info',    'pencil',          'ช่วงแก้ไขคะแนน',       'te-grade-open', 'grade_edit_open_date',  'te-grade-close','grade_edit_close_date'],
+                ] as [$color, $icon, $label, $openId, $openName, $closeId, $closeName])
+                <div class="p-2 rounded-3 mb-2" style="background:#f8f9fa;border-left:3px solid var(--bs-{{ $color }});">
+                    <div class="small fw-semibold mb-2">
+                        <i class="bi bi-{{ $icon }} me-1 text-{{ $color }}"></i>{{ $label }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1">วันเปิด</label>
+                            <input type="datetime-local" class="form-control form-control-sm"
+                                   id="{{ $openId }}" name="{{ $openName }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1">วันปิด</label>
+                            <input type="datetime-local" class="form-control form-control-sm"
+                                   id="{{ $closeId }}" name="{{ $closeName }}">
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4">
+                    <i class="bi bi-check-circle me-1"></i>บันทึก (ทุกรายวิชาในเทอม)
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal: Quick Edit --}}
+<div class="modal fade" id="quickEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" id="quickEditForm" method="POST">
+            @csrf @method('PUT')
+            <div class="modal-header border-0"
+                 style="background:linear-gradient(135deg,#4e73df,#224abe);border-radius:12px 12px 0 0;">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i>แก้ไขรายวิชา
+                    <span id="qe-title" class="fw-normal ms-1 opacity-75"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-3 pb-2">
+
+                {{-- ข้อมูลทั่วไป --}}
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small">รหัสวิชา</label>
+                        <input type="text" class="form-control form-control-sm" name="subject_code" id="qe-code" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">ชื่อวิชา</label>
+                        <input type="text" class="form-control form-control-sm" name="subject_name" id="qe-name" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small">ปีการศึกษา</label>
+                        <input type="number" class="form-control form-control-sm" name="year" id="qe-year" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small">เทอม</label>
+                        <select class="form-select form-select-sm" name="semester" id="qe-semester" required>
+                            <option value="1">เทอม 1</option>
+                            <option value="2">เทอม 2</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="qe-enabled" name="is_enabled" value="1">
+                            <label class="form-check-label small fw-semibold" for="qe-enabled">เปิดใช้งาน</label>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ช่วงเวลา --}}
+                @foreach([
+                    ['primary', 'calendar2-week', 'เปิด-ปิด รายวิชา',       'qe-open',       'open_date',             'qe-close',      'close_date'],
+                    ['success', 'star',           'ช่วงประเมินคะแนน',         'qe-eval-open',  'evaluation_open_date',  'qe-eval-close', 'evaluation_close_date'],
+                    ['info',    'pencil',          'ช่วงแก้ไขคะแนน',           'qe-grade-open', 'grade_edit_open_date',  'qe-grade-close','grade_edit_close_date'],
+                ] as [$color, $icon, $label, $openId, $openName, $closeId, $closeName])
+                <div class="p-2 rounded-3 mb-2" style="background:#f8f9fa;border-left:3px solid var(--bs-{{ $color }});">
+                    <div class="small fw-semibold mb-2">
+                        <i class="bi bi-{{ $icon }} me-1 text-{{ $color }}"></i>{{ $label }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1">วันเปิด</label>
+                            <input type="datetime-local" class="form-control form-control-sm"
+                                   id="{{ $openId }}" name="{{ $openName }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1">วันปิด</label>
+                            <input type="datetime-local" class="form-control form-control-sm"
+                                   id="{{ $closeId }}" name="{{ $closeName }}">
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4">
+                    <i class="bi bi-check-circle me-1"></i>บันทึก
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+// Quick Edit modal: populate fields from data attributes
+document.querySelectorAll('.btn-quick-edit').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const d = this.dataset;
+        document.getElementById('quickEditForm').action = `/admin/subjects/${d.subjectId}`;
+        document.getElementById('qe-title').textContent  = d.subjectCode;
+        document.getElementById('qe-code').value         = d.subjectCode;
+        document.getElementById('qe-name').value         = d.subjectName;
+        document.getElementById('qe-year').value         = d.year;
+        document.getElementById('qe-semester').value     = d.semester;
+        document.getElementById('qe-enabled').checked    = d.isEnabled === '1';
+        document.getElementById('qe-open').value         = d.openDate  || '';
+        document.getElementById('qe-close').value        = d.closeDate || '';
+        document.getElementById('qe-eval-open').value    = d.evalOpen  || '';
+        document.getElementById('qe-eval-close').value   = d.evalClose || '';
+        document.getElementById('qe-grade-open').value   = d.gradeOpen || '';
+        document.getElementById('qe-grade-close').value  = d.gradeClose|| '';
+    });
+});
+
+// Term Edit modal: populate fields from data attributes
+document.querySelectorAll('.btn-term-edit').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const d = this.dataset;
+        document.getElementById('te-title').textContent   = `ปีการศึกษา ${d.year} เทอม ${d.semester}`;
+        document.getElementById('te-year').value          = d.year;
+        document.getElementById('te-semester').value      = d.semester;
+        document.getElementById('te-open').value          = d.openDate   || '';
+        document.getElementById('te-close').value         = d.closeDate  || '';
+        document.getElementById('te-eval-open').value     = d.evalOpen   || '';
+        document.getElementById('te-eval-close').value    = d.evalClose  || '';
+        document.getElementById('te-grade-open').value    = d.gradeOpen  || '';
+        document.getElementById('te-grade-close').value   = d.gradeClose || '';
+    });
+});
+
 document.querySelectorAll('.toggle-subject').forEach(btn => {
     btn.addEventListener('click', async function () {
         const id = this.dataset.subjectId;

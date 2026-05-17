@@ -88,9 +88,11 @@
                     <a href="{{ route('password.reset') }}" class="forgot-link">
                         <i class="bi bi-key me-1"></i>ลืมรหัสผ่าน?
                     </a>
-                    <span class="mx-2 text-muted">|</span>
-                    <i class="bi bi-shield-check me-1"></i>
-                    ระบบปลอดภัย | ภาควิชาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยธรรมศาสตร์
+                    <div class="footer-divider"></div>
+                    <div class="footer-secure">
+                        <i class="bi bi-shield-check me-1"></i>ระบบปลอดภัย
+                    </div>
+                    <div class="footer-dept">ภาควิชาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยธรรมศาสตร์</div>
                 </div>
             </div>
         </div>
@@ -269,6 +271,11 @@
 }
 .toggle-btn:hover { color: #495057; }
 
+/* ── ซ่อน built-in password reveal ของ browser ── */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
+input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; }
+
 /* ── Submit Button ───────────────────────────────────────────────── */
 .login-btn {
     width: 100%;
@@ -315,9 +322,25 @@
 .forgot-link {
     color: #667eea;
     text-decoration: none;
+    font-weight: 600;
     transition: color .2s;
 }
 .forgot-link:hover { color: #764ba2; }
+.footer-divider {
+    width: 40px;
+    height: 1px;
+    background: #e9ecef;
+    margin: 0.75rem auto;
+}
+.footer-secure {
+    color: #6c757d;
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+}
+.footer-dept {
+    color: #adb5bd;
+    font-size: 0.75rem;
+}
 
 /* ── Animations ──────────────────────────────────────────────────── */
 @keyframes fadeInUp {

@@ -118,8 +118,6 @@ class SubjectController extends Controller
             'is_enabled'            => 'boolean',
             'open_date'             => 'nullable|date',
             'close_date'            => 'nullable|date|after:open_date',
-            'access_open_date'      => 'nullable|date',
-            'access_close_date'     => 'nullable|date|after:access_open_date',
             'evaluation_open_date'  => 'nullable|date',
             'evaluation_close_date' => 'nullable|date|after:evaluation_open_date',
             'grade_edit_open_date'  => 'nullable|date',
@@ -133,6 +131,34 @@ class SubjectController extends Controller
 
         return redirect()->route('admin.subjects.index')
             ->with('success', 'อัพเดตรายวิชา ' . $subject->subject_name . ' สำเร็จ');
+    }
+
+    /** อัปเดตช่วงเวลาทุกวิชาในเทอมพร้อมกัน */
+    public function bulkUpdateTerm(Request $request)
+    {
+        $request->validate([
+            'year'                  => 'required|integer',
+            'semester'              => 'required|integer|in:1,2',
+            'open_date'             => 'nullable|date',
+            'close_date'            => 'nullable|date',
+            'evaluation_open_date'  => 'nullable|date',
+            'evaluation_close_date' => 'nullable|date',
+            'grade_edit_open_date'  => 'nullable|date',
+            'grade_edit_close_date' => 'nullable|date',
+        ]);
+
+        $fields = collect([
+            'open_date', 'close_date',
+            'evaluation_open_date', 'evaluation_close_date',
+            'grade_edit_open_date', 'grade_edit_close_date',
+        ])->mapWithKeys(fn($f) => [$f => $request->filled($f) ? Carbon::parse($request->$f) : null])->all();
+
+        $count = Subject::where('year', $request->year)
+            ->where('semester', $request->semester)
+            ->update($fields);
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "อัปเดตช่วงเวลาเทอม {$request->year}/{$request->semester} สำเร็จ ({$count} รายวิชา)");
     }
 
     /** เปิดเทอมใหม่: duplicate CS303+CS403 จากเทอมล่าสุด พร้อม open/close date ใหม่ */
