@@ -123,28 +123,35 @@
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="page-header">
-        <h2>
-            <i class="fas fa-file-pdf" style="color: #667eea;"></i> จัดการเล่มโครงงานที่ส่ง
-        </h2>
-        <p class="text-muted mb-0"><i class="fas fa-box"></i> ทั้งหมด <strong>{{ $totalSubmissions }}</strong> เล่ม</p>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0 text-muted mb-1">
+                    <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
+                </a>
+                <h2 class="mb-0">
+                    <i class="bi bi-file-pdf-fill" style="color: #667eea;"></i> จัดการเล่มโครงงานที่ส่ง
+                </h2>
+                <p class="text-muted mb-0"><i class="bi bi-archive-fill"></i> ทั้งหมด <strong>{{ $totalSubmissions }}</strong> เล่ม</p>
+            </div>
+        </div>
     </div>
 
     @if($grouped->isEmpty())
         <div class="empty-state">
-            <i class="fas fa-inbox"></i>
+            <i class="bi bi-inbox-fill"></i>
             <p>ยังไม่มีเล่มโครงงานที่ได้รับการส่ง</p>
         </div>
     @else
         @foreach($grouped as $year => $semesters)
             <div class="section-card">
                 <h3 class="section-title">
-                    <i class="fas fa-calendar-alt"></i> ปีการศึกษา {{ $year }}
+                    <i class="bi bi-calendar3"></i> ปีการศึกษา {{ $year }}
                 </h3>
 
                 @foreach($semesters as $semester => $projects)
                     <div style="margin-left: 1rem; margin-bottom: 2rem;">
                         <div class="semester-badge">
-                            <i class="fas fa-graduation-cap"></i> เทอม {{ $semester }}
+                            <i class="bi bi-mortarboard-fill"></i> เทอม {{ $semester }}
                         </div>
 
                         <div class="table-responsive">
@@ -206,13 +213,13 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('coordinator.submissions.show', $project->project_id) }}" 
+                                                <a href="{{ route('coordinator.submissions.show', $project->project_id) }}"
                                                    class="btn btn-sm btn-outline-primary btn-action" title="ดูรายละเอียด">
-                                                    <i class="fas fa-eye"></i> ดู
+                                                    <i class="bi bi-eye"></i> ดู
                                                 </a>
-                                                <a href="{{ route('coordinator.submissions.download', $project->project_id) }}" 
+                                                <a href="{{ route('coordinator.submissions.download', $project->project_id) }}"
                                                    class="btn btn-sm btn-outline-success btn-action" title="ดาวน์โหลด">
-                                                    <i class="fas fa-download"></i>
+                                                    <i class="bi bi-download"></i>
                                                 </a>
                                             </td>
                                         </tr>

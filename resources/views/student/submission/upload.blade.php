@@ -116,7 +116,7 @@
                             @enderror
                             <div class="form-text">
                                 <i class="bi bi-info-circle me-1"></i>
-                                รูปแบบไฟล์: PDF เท่านั้น | ขนาดไม่เกิน 50 MB
+                                รูปแบบไฟล์: PDF เท่านั้น | ขนาดไม่เกิน 1.5 GB
                             </div>
                         </div>
 
@@ -180,8 +180,8 @@ document.getElementById('report_file').addEventListener('change', function(e) {
         fileInfo.classList.remove('d-none');
         
         // ตรวจสอบขนาดไฟล์
-        if (file.size > 50 * 1024 * 1024) {
-            alert('ไฟล์มีขนาดใหญ่เกิน 50 MB กรุณาเลือกไฟล์ใหม่');
+        if (file.size > 1.5 * 1024 * 1024 * 1024) {
+            alert('ไฟล์มีขนาดใหญ่เกิน 1.5 GB กรุณาเลือกไฟล์ใหม่');
             e.target.value = '';
             fileInfo.classList.add('d-none');
         }

@@ -9,15 +9,8 @@ class AdminSubmissionController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all submitted projects
         $submissions = Project::whereNotNull('submission_file')
-            ->with([
-                'group',
-                'advisor',
-                'committee1',
-                'committee2',
-                'committee3'
-            ])
+            ->with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
             ->get();
 
         // Group by year and semester
@@ -37,13 +30,8 @@ class AdminSubmissionController extends Controller
 
     public function show($project_id)
     {
-        $project = Project::with([
-            'group',
-            'advisor',
-            'committee1',
-            'committee2',
-            'committee3'
-        ])->findOrFail($project_id);
+        $project = Project::with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
+            ->findOrFail($project_id);
 
         if (!$project->submission_file) {
             abort(404, 'Submission not found');
@@ -60,12 +48,13 @@ class AdminSubmissionController extends Controller
             abort(404, 'Submission file not found');
         }
 
-        $filePath = 'submissions/' . $project->submission_file;
-        
-        if (!\Storage::exists($filePath)) {
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($project->submission_file)) {
             abort(404, 'File not found');
         }
 
-        return \Storage::download($filePath, $project->submission_original_name ?? 'submission.pdf');
+        return \Illuminate\Support\Facades\Storage::disk('public')->download(
+            $project->submission_file,
+            $project->submission_original_name ?? 'submission.pdf'
+        );
     }
 }

@@ -120,14 +120,14 @@
 <div class="container-fluid">
     <div class="btn-back">
         <a href="{{ route('coordinator.submissions.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> กลับ
+            <i class="bi bi-arrow-left"></i> กลับ
         </a>
     </div>
 
     <div class="detail-card">
         <div class="detail-card-header">
             <h4>
-                <i class="fas fa-file-pdf"></i> {{ $project->project_name }}
+                <i class="bi bi-file-pdf-fill"></i> {{ $project->project_name }}
             </h4>
         </div>
         <div class="detail-card-body">
@@ -246,9 +246,9 @@
             </div>
 
             <div style="margin-top: 2rem;">
-                <a href="{{ route('coordinator.submissions.download', $project->project_id) }}" 
+                <a href="{{ route('coordinator.submissions.download', $project->project_id) }}"
                    class="btn-download" download>
-                    <i class="fas fa-download"></i> ดาวน์โหลดเล่มโครงงาน
+                    <i class="bi bi-download"></i> ดาวน์โหลดเล่มโครงงาน
                 </a>
             </div>
         </div>

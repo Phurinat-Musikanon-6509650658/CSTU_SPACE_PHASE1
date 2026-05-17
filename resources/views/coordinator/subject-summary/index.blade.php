@@ -90,13 +90,15 @@
                 <h1 class="h3 fw-bold mb-0">
                     <i class="bi bi-table me-2 text-primary"></i>สรุปข้อมูลรายวิชา
                 </h1>
-                <p class="text-muted small mb-0">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม export / import</p>
+                <p class="text-muted small mb-0">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม export{{ (\App\Helpers\PermissionHelper::isCoordinator() || \App\Helpers\PermissionHelper::isAdmin()) ? ' / import' : '' }}</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
+                @if(\App\Helpers\PermissionHelper::isCoordinator() || \App\Helpers\PermissionHelper::isAdmin())
                 <a href="{{ route('coordinator.subject-summary.import.form') }}"
                    class="btn btn-outline-primary export-btn">
                     <i class="bi bi-file-earmark-arrow-up me-1"></i>Import
                 </a>
+                @endif
                 <a href="{{ route('coordinator.subject-summary.template') }}"
                    class="btn btn-outline-secondary export-btn">
                     <i class="bi bi-download me-1"></i>ดาวน์โหลด Template

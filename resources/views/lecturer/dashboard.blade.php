@@ -250,38 +250,46 @@
 
     <!-- Notifications -->
     @if($newProposals > 0)
-        <div class="notification-alert">
-            <i class="bi bi-bell-fill me-2"></i>
-            <strong>มีข้อเสนอโครงงานใหม่!</strong> นักศึกษาได้เสนอโครงงานมาหาคุณ {{ $newProposals }} รายการ
+        <div class="notification-alert alert alert-dismissible fade show d-flex align-items-center gap-2">
+            <i class="bi bi-bell-fill flex-shrink-0"></i>
+            <span><strong>มีข้อเสนอโครงงานใหม่!</strong> นักศึกษาได้เสนอโครงงานมาหาคุณ {{ $newProposals }} รายการ</span>
+            <button type="button" class="btn-close btn-close-white ms-auto flex-shrink-0" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if($newReports > 0)
-        <div class="notification-alert">
-            <i class="bi bi-file-earmark-pdf-fill me-2"></i>
-            <strong>มีรายงานที่ส่งมาใหม่!</strong> นักศึกษาได้ส่งรายงานโครงงาน {{ $newReports }} รายการ
+        <div class="notification-alert alert alert-dismissible fade show d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-pdf-fill flex-shrink-0"></i>
+            <span><strong>มีรายงานที่ส่งมาใหม่!</strong> นักศึกษาได้ส่งรายงานโครงงาน {{ $newReports }} รายการ</span>
+            <button type="button" class="btn-close btn-close-white ms-auto flex-shrink-0" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if($recentGroups > 0)
-        <div class="notification-alert">
-            <i class="bi bi-people-fill me-2"></i>
-            <strong>มีกลุ่มใหม่ที่เสนอมาหาคุณ!</strong> มีกลุ่มนักศึกษาที่เพิ่งสร้างและเสนอมา {{ $recentGroups }} กลุ่ม
+        <div class="notification-alert alert alert-dismissible fade show d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill flex-shrink-0"></i>
+            <span><strong>มีกลุ่มใหม่ที่เสนอมาหาคุณ!</strong> มีกลุ่มนักศึกษาที่เพิ่งสร้างและเสนอมา {{ $recentGroups }} กลุ่ม</span>
+            <button type="button" class="btn-close btn-close-white ms-auto flex-shrink-0" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if(session('exam_scheduled'))
-        <div class="notification-alert">
-            <i class="bi bi-calendar-check-fill me-2"></i>
-            <strong>📅 ตารางสอบโครงงานใหม่!</strong>
-            <ul class="mt-2 mb-0">
-                @foreach(session('exam_scheduled') as $schedule)
-                    <li>
-                        <strong>{{ $schedule['project_name'] }}</strong> ({{ $schedule['role'] }})<br>
-                        <small>วันเวลาสอบ: {{ $schedule['exam_datetime'] }}</small>
-                    </li>
-                @endforeach
-            </ul>
+        <div class="notification-alert alert alert-dismissible fade show">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-calendar-check-fill flex-shrink-0 mt-1"></i>
+                <div class="flex-grow-1">
+                    <strong>ตารางสอบโครงงานใหม่!</strong>
+                    <ul class="mt-2 mb-0 ps-3">
+                        @foreach(session('exam_scheduled') as $schedule)
+                            <li>
+                                <strong>{{ $schedule['project_name'] }}</strong> ({{ $schedule['role'] }})<br>
+                                <small>วันเวลาสอบ: {{ $schedule['exam_datetime'] }}</small>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <button type="button" class="btn-close btn-close-white flex-shrink-0" data-bs-dismiss="alert"></button>
+            </div>
         </div>
     @endif
 

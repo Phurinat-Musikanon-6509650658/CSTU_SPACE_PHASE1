@@ -153,18 +153,25 @@
     }
 
     .role-badge .badge {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
+        font-size: .92rem;
+        padding: 0.45rem 1rem;
         border-radius: 50px;
-        font-weight: 500;
+        font-weight: 600;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1.5px solid rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
     }
 
-    .role-admin { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
-    .role-coordinator { background: linear-gradient(45deg, #4834d4, #686de0); }
-    .role-lecturer { background: linear-gradient(45deg, #0abde3, #006ba6); }
-    .role-advisor { background: linear-gradient(45deg, #0abde3, #006ba6); }
-    .role-staff { background: linear-gradient(45deg, #f39c12, #e67e22); }
-    .role-student { background: linear-gradient(45deg, #55a3ff, #003d82); }
+    /* เส้นสีซ้ายแยก role แทนพื้นหลังทั้งก้อน */
+    .role-admin       { border-left: 4px solid #ff8a80 !important; }
+    .role-coordinator { border-left: 4px solid #b0c4ff !important; }
+    .role-lecturer    { border-left: 4px solid #80deea !important; }
+    .role-advisor     { border-left: 4px solid #80deea !important; }
+    .role-staff       { border-left: 4px solid #ffe082 !important; }
+    .role-student     { border-left: 4px solid #a5d6a7 !important; }
 
     .welcome-decoration {
         position: absolute;

@@ -34,8 +34,8 @@ class SubmissionController extends Controller
         
         $project = $group->project;
         
-        // ตรวจสอบสถานะ project
-        if ($project->status_project !== 'approved' && $project->status_project !== 'in_progress') {
+        // ตรวจสอบสถานะ project (submitted อนุญาตให้อัพโหลดทับไฟล์เดิมได้)
+        if (!in_array($project->status_project, ['approved', 'in_progress', 'submitted'])) {
             return redirect()->route('student.menu')
                 ->with('error', 'โครงงานยังไม่ได้รับการอนุมัติ ไม่สามารถส่งเล่มรายงานได้');
         }
@@ -53,11 +53,11 @@ class SubmissionController extends Controller
     public function upload(Request $request, $projectId)
     {
         $request->validate([
-            'report_file' => 'required|file|mimes:pdf|max:51200', // 50 MB
+            'report_file' => 'required|file|mimes:pdf|max:1572864', // 1.5 GB
         ], [
             'report_file.required' => 'กรุณาเลือกไฟล์เล่มรายงาน',
             'report_file.mimes' => 'ไฟล์ต้องเป็น PDF เท่านั้น',
-            'report_file.max' => 'ไฟล์มีขนาดใหญ่เกิน 50 MB',
+            'report_file.max' => 'ไฟล์มีขนาดใหญ่เกิน 1.5 GB',
         ]);
         
         $student = Auth::guard('student')->user();

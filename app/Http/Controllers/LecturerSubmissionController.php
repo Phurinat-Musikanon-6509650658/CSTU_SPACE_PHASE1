@@ -12,9 +12,9 @@ class LecturerSubmissionController extends Controller
     {
         $user = Auth::user();
 
-        // Get submitted projects where user is the advisor
+        // Show submitted projects where user is advisor OR any committee member
         $submissions = Project::whereNotNull('submission_file')
-            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $user->user_code))
+            ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $user->user_code))
             ->with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
             ->get();
 
@@ -36,11 +36,12 @@ class LecturerSubmissionController extends Controller
     public function show($project_id)
     {
         $user = Auth::user();
-        
+
         $project = Project::with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
             ->findOrFail($project_id);
 
-        if ($project->advisor_code !== $user->user_code) {
+        $isRelated = $project->projectLecturers()->where('user_code', $user->user_code)->exists();
+        if (!$isRelated) {
             abort(403, 'Unauthorized');
         }
 
@@ -54,11 +55,11 @@ class LecturerSubmissionController extends Controller
     public function download($project_id)
     {
         $user = Auth::user();
-        
+
         $project = Project::findOrFail($project_id);
 
-        // Check if user is the advisor
-        if ($project->advisor_code !== $user->user_code) {
+        $isRelated = $project->projectLecturers()->where('user_code', $user->user_code)->exists();
+        if (!$isRelated) {
             abort(403, 'Unauthorized');
         }
 
@@ -66,12 +67,13 @@ class LecturerSubmissionController extends Controller
             abort(404, 'Submission file not found');
         }
 
-        $filePath = 'submissions/' . $project->submission_file;
-        
-        if (!\Storage::exists($filePath)) {
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($project->submission_file)) {
             abort(404, 'File not found');
         }
 
-        return \Storage::download($filePath, $project->submission_original_name ?? 'submission.pdf');
+        return \Illuminate\Support\Facades\Storage::disk('public')->download(
+            $project->submission_file,
+            $project->submission_original_name ?? 'submission.pdf'
+        );
     }
 }
