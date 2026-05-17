@@ -1,6 +1,19 @@
 # CSTU Space — ระบบจัดการโครงงานนักศึกษา
 
+> **Branch:** `CSTU-SPACE-dev` — development branch สำหรับฟีเจอร์ใหม่และการทดสอบ
+> **Base branch:** `main` (production)
+
 **CSTU Space** เป็นระบบจัดการโครงงานพิเศษ (CS303 / CS403) สำหรับภาควิชาวิทยาการคอมพิวเตอร์ รองรับ workflow ตั้งแต่นักศึกษาสร้างกลุ่ม เสนอหัวข้อ ส่งรายงาน จนถึงอาจารย์ประเมินคะแนน
+
+---
+
+## What's New in This Branch
+
+- **Dynamic Evaluation Criteria** — แยกเกณฑ์การประเมินตาม subject_code (CS303 / CS403) ผ่าน `evaluation_criteria` table
+- **Export รวม PDF** — อาจารย์ export ใบประเมินทุกโครงงานรวมเป็น PDF เล่มเดียว พร้อมแจ้งเตือนโครงงานที่ยังไม่ประเมิน
+- **Quick Edit Modal** — แก้ไขรายวิชาโดยไม่ออกจากหน้า subjects index
+- **Bulk Term Date Edit** — อัปเดตช่วงเวลาทุกวิชาในเทอมพร้อมกันในคลิกเดียว
+- **UI Fixes** — แก้ double eye icon บนหน้า login, จัดหน้า footer ใหม่
 
 ---
 
@@ -9,7 +22,7 @@
 | Layer | Technology |
 |---|---|
 | Backend | Laravel 12.x / PHP 8.2 |
-| Frontend | Blade + TailwindCSS + Vite |
+| Frontend | Blade + Bootstrap 5 + Vite |
 | Database | MySQL 8.0 |
 | Web Server | Nginx |
 | Container | Docker & Docker Compose |
@@ -20,10 +33,11 @@
 
 - **RBAC แบบ Bitmask** — Admin (32768), Coordinator (16384), Lecturer (8192), Staff (4096), Student (2048) บวกรวมกันได้ เช่น Coordinator+Lecturer = 24576
 - **Dual Auth Guard** — `web` guard สำหรับ Staff/Admin/Lecturer, `student` guard สำหรับนักศึกษา
-- **Subject-based Access Control** — แต่ละรายวิชา (CS303/CS403) มีช่วงเวลาเปิด-ปิดเป็นอิสระ ไม่มี global system close
-- **Project Lecturers Pivot** — อาจารย์ที่ปรึกษาและกรรมการเก็บใน `project_lecturers` table แทน column ตรง ทำให้ยืดหยุ่นและรองรับ co-advisor ได้
+- **Dynamic Evaluation Criteria** — เกณฑ์คะแนน (labels + max) เปลี่ยนตาม subject_code ผ่าน `EvaluationCriteria` model พร้อม CS303 fallback
+- **Subject-based Access Control** — แต่ละรายวิชา (CS303/CS403) มีช่วงเวลาเปิด-ปิดเป็นอิสระ
+- **Project Lecturers Pivot** — อาจารย์ที่ปรึกษาและกรรมการเก็บใน `project_lecturers` table รองรับ co-advisor
 - **PDF Submission** — นักศึกษา (หัวหน้ากลุ่ม) อัปโหลดรายงาน PDF
-- **CSV Import/Export** — Coordinator นำเข้าตารางสอบและส่งออกข้อมูลโครงงาน
+- **XLSX Import/Export** — Coordinator นำเข้า/ส่งออกข้อมูลโครงงานด้วย Excel
 
 ---
 
@@ -35,12 +49,12 @@ CSTU_SPACE_PHASE1/
 │   ├── Http/
 │   │   ├── Controllers/        # Admin, Coordinator, Lecturer, Staff, Student
 │   │   └── Middleware/         # CheckSubjectAccess, RedirectIfAuthenticated
-│   ├── Models/                 # Eloquent Models
+│   ├── Models/                 # Eloquent Models (รวม EvaluationCriteria)
 │   └── Helpers/                # PermissionHelper, SubjectTimingHelper
 ├── database/
-│   ├── migrations/             # 5 consolidated migration files
-│   └── seeders/                # User, Student, Subject, Role, Relationship seeders
-├── resources/views/            # Blade templates (coordinator/lecturer/student/staff)
+│   ├── migrations/             # 5 consolidated + evaluation_criteria migration
+│   └── seeders/                # User, Student, Subject, EvaluationCriteria, Role seeders
+├── resources/views/            # Blade templates (coordinator/lecturer/student/staff/admin)
 ├── docker/
 │   ├── docker-compose.yml
 │   ├── Dockerfile
@@ -53,17 +67,18 @@ CSTU_SPACE_PHASE1/
 
 ---
 
-## Quick Start
+## Quick Start (Dev)
 
 ### Prerequisites
 - Docker Desktop (running)
 - Git
 
-### 1. Clone & Setup Environment
+### 1. Clone & Checkout Dev Branch
 
 ```bash
 git clone https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1.git
 cd CSTU_SPACE_PHASE1
+git checkout CSTU-SPACE-dev
 
 # Windows
 copy .env.docker .env
@@ -94,7 +109,7 @@ docker-compose up -d
 ### 5. Run Migrations & Seed
 
 ```bash
-# สร้างตารางทั้งหมดและใส่ข้อมูลเริ่มต้น
+# สร้างตารางทั้งหมดและใส่ข้อมูลเริ่มต้น (รวม evaluation_criteria)
 docker-compose exec app php artisan migrate:fresh --seed
 
 # Fix permissions
@@ -106,7 +121,7 @@ docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstr
 
 | Service | URL |
 |---|---|
-| Web App | http://localhost:8080 |
+| Web App | http://localhost |
 | phpMyAdmin | http://localhost:8081 |
 | Vite Dev | http://localhost:5173 |
 
@@ -135,7 +150,7 @@ docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstr
 
 ## Database
 
-### Schema (5 Migration Files)
+### Schema (Migration Files)
 
 | ไฟล์ | Tables |
 |---|---|
@@ -144,6 +159,7 @@ docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstr
 | `100003_create_project_tables` | relationship_with_projects, projects, project_proposals, project_evaluations |
 | `100004_create_exam_and_lecturer_tables` | exam_schedule, project_lecturers |
 | `100005_create_subjects_table` | subjects |
+| `2026_05_17_000001_create_evaluation_criteria_table` | evaluation_criteria |
 
 ดู schema เต็มและ ER Diagram ได้ที่ [ER_DIAGRAM.md](./ER_DIAGRAM.md)
 
@@ -173,6 +189,7 @@ docker-compose exec app php artisan db:seed
 # รัน seeder เฉพาะตัว
 docker-compose exec app php artisan db:seed --class=UserTableSeeder
 docker-compose exec app php artisan db:seed --class=SubjectSeeder
+docker-compose exec app php artisan db:seed --class=EvaluationCriteriaSeeder
 ```
 
 **Seeder ที่มี:**
@@ -184,6 +201,7 @@ docker-compose exec app php artisan db:seed --class=SubjectSeeder
 | `UserTableSeeder` | Admin, Coordinator, Staff + อาจารย์ 19 ท่าน |
 | `StudentTableSeeder` | นักศึกษาทดสอบ 9 คน |
 | `SubjectSeeder` | CS303 และ CS403 |
+| `EvaluationCriteriaSeeder` | เกณฑ์คะแนนสำหรับ CS303 และ CS403 |
 
 ---
 
@@ -258,11 +276,11 @@ cd docker
 docker-compose exec app php artisan migrate:fresh --seed
 ```
 
-### Port 8080 ถูกใช้อยู่
+### Port 80 ถูกใช้อยู่
 แก้ `docker/docker-compose.yml` บรรทัด `ports` ของ `webserver`:
 ```yaml
 ports:
-  - "8082:80"   # เปลี่ยนเป็น port ที่ว่าง
+  - "8080:80"   # เปลี่ยนเป็น port ที่ว่าง
 ```
 
 ### Reset ทุกอย่าง (Fresh Install)
@@ -323,5 +341,6 @@ docker-compose exec db mysql -u root -prootpassword cstu_space
 ## Links
 
 - **Repository**: https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1
+- **Dev Branch**: https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1/tree/CSTU-SPACE-dev
 - **Laravel Docs**: https://laravel.com/docs/12.x
 - **ER Diagram**: [ER_DIAGRAM.md](./ER_DIAGRAM.md)
