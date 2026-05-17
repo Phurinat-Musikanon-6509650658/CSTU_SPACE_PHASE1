@@ -311,10 +311,10 @@ class MenuController extends Controller
                     'btn_class' => 'info-btn'
                 ],
                 [
-                    'title' => 'จัดการผู้ใช้และนักศึกษา',
-                    'description' => 'นำเข้า/ส่งออกข้อมูลผู้ใช้และนักศึกษา',
+                    'title' => 'ข้อมูลผู้ใช้และนักศึกษา',
+                    'description' => 'ดูและ export ข้อมูลผู้ใช้และนักศึกษา',
                     'icon' => 'bi-person-lines-fill',
-                    'url' => route('coordinator.users.index'),
+                    'url' => route('users.index'),
                     'class' => 'warning-card',
                     'btn_class' => 'warning-btn'
                 ]

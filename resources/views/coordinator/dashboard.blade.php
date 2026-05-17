@@ -315,13 +315,13 @@
             <p style="color: #718096; font-size: 0.9rem; margin: 0;">ภาพรวม CS303/CS403, export & import</p>
         </a>
 
-        <!-- 6. จัดการผู้ใช้ -->
-        <a href="{{ route('coordinator.users.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #4299e1;">
+        <!-- 6. ข้อมูลผู้ใช้ -->
+        <a href="{{ route('users.index') }}" class="menu-card" style="background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); text-decoration: none; color: #2c3e50; border-left: 4px solid #4299e1;">
             <div style="font-size: 2.5rem; color: #4299e1; margin-bottom: 1rem;">
-                <i class="bi bi-person-gear"></i>
+                <i class="bi bi-person-lines-fill"></i>
             </div>
-            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">จัดการผู้ใช้</h5>
-            <p style="color: #718096; font-size: 0.9rem; margin: 0;">นำเข้าและจัดการข้อมูลผู้ใช้</p>
+            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">ข้อมูลผู้ใช้</h5>
+            <p style="color: #718096; font-size: 0.9rem; margin: 0;">ดูและ export ข้อมูลผู้ใช้และนักศึกษา</p>
         </a>
     </div>
 

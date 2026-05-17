@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
@@ -16,22 +17,35 @@ class SubjectController extends Controller
             ->orderBy('subject_code', 'asc')
             ->get();
 
+        // Precompute group counts: key = "subject_code-year-semester"
+        $gcRaw = DB::table('groups')
+            ->select('subject_code', 'year', 'semester', DB::raw('count(*) as cnt'))
+            ->groupBy('subject_code', 'year', 'semester')
+            ->get()
+            ->mapWithKeys(fn($r) => ["{$r->subject_code}-{$r->year}-{$r->semester}" => (int)$r->cnt]);
+
         // Group by year-semester, newest first
         $groups = $all->groupBy(fn($s) => $s->year . '-' . $s->semester)
-            ->map(function ($subs, $key) {
+            ->map(function ($subs, $key) use ($gcRaw) {
                 [$year, $semester] = explode('-', $key);
-                $now = Carbon::now();
 
                 // Active = at least one subject has close_date in the future or null
                 $isActive = $subs->filter(fn($s) =>
                     !$s->close_date || $s->close_date->isFuture()
                 )->isNotEmpty();
 
+                // Group counts per subject
+                $subjectCounts = $subs->mapWithKeys(fn($s) => [
+                    $s->subject_code => $gcRaw->get("{$s->subject_code}-{$s->year}-{$s->semester}", 0)
+                ]);
+
                 return [
-                    'year'      => (int) $year,
-                    'semester'  => (int) $semester,
-                    'subjects'  => $subs,
-                    'is_active' => $isActive,
+                    'year'          => (int) $year,
+                    'semester'      => (int) $semester,
+                    'subjects'      => $subs,
+                    'is_active'     => $isActive,
+                    'subject_counts'=> $subjectCounts,
+                    'total_groups'  => $subjectCounts->sum(),
                 ];
             })
             ->values();
@@ -92,8 +106,8 @@ class SubjectController extends Controller
                 'required', 'string', 'max:50',
                 Rule::unique('subjects')
                     ->where(fn($q) => $q
-                        ->where('year', $subject->year)
-                        ->where('semester', $subject->semester)
+                        ->where('year', $request->year)
+                        ->where('semester', $request->semester)
                     )
                     ->ignore($subject->subject_id, 'subject_id'),
             ],

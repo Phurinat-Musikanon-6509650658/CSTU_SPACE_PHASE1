@@ -41,7 +41,14 @@
     <div class="card mb-4">
         <div class="card-body">
             <form class="row g-3" method="GET" action="{{ route('coordinator.projects.review') }}">
-                <div class="col-md-3">
+                <div class="col-md-4">
+                    <label class="form-label">ค้นหาโครงงาน</label>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="ชื่อโครงงาน หรือ รหัสโครงงาน"
+                           value="{{ request('search') }}">
+                </div>
+
+                <div class="col-md-2">
                     <label class="form-label">สถานะ</label>
                     <select name="status" class="form-select">
                         <option value="">-- ทั้งหมด --</option>
@@ -53,7 +60,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">ปีการศึกษา</label>
                     <select name="year" class="form-select">
                         <option value="">-- ทั้งหมด --</option>
@@ -65,23 +72,25 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">เทอม</label>
                     <select name="semester" class="form-select">
                         <option value="">-- ทั้งหมด --</option>
                         @foreach ($semesters as $sem)
                             <option value="{{ $sem }}" {{ request('semester') == $sem ? 'selected' : '' }}>
-                                เทอมที่ {{ $sem }}
+                                เทอม {{ $sem }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
+                <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search me-2"></i>ค้นหา
+                        <i class="bi bi-search me-1"></i>ค้นหา
                     </button>
+                    <a href="{{ route('coordinator.projects.review') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
                 </div>
             </form>
         </div>

@@ -53,13 +53,15 @@
     <div class="modern-tabs-container mb-4">
         <ul class="nav nav-pills nav-modern" id="userTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-panel" type="button" role="tab">
+                <button class="nav-link {{ request('tab') == 'students' ? '' : 'active' }}" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-panel" type="button" role="tab">
                     <i class="bi bi-person-badge me-2"></i>Users
+                    <span class="badge bg-secondary ms-1" style="font-size:.7rem;">{{ $users->total() }}</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="student-tab" data-bs-toggle="tab" data-bs-target="#student-panel" type="button" role="tab">
+                <button class="nav-link {{ request('tab') == 'students' ? 'active' : '' }}" id="student-tab" data-bs-toggle="tab" data-bs-target="#student-panel" type="button" role="tab">
                     <i class="bi bi-mortarboard me-2"></i>Students
+                    <span class="badge bg-secondary ms-1" style="font-size:.7rem;">{{ $students->total() }}</span>
                 </button>
             </li>
         </ul>
@@ -69,19 +71,43 @@
     <div class="tab-content" id="userTabsContent">
 
         <!-- User Tab -->
-        <div class="tab-pane fade show active" id="user-panel" role="tabpanel">
+        <div class="tab-pane fade {{ request('tab') == 'students' ? '' : 'show active' }}" id="user-panel" role="tabpanel">
             <div class="management-section">
                 <div class="section-header">
                     <h4><i class="bi bi-person-badge me-2"></i>System Users</h4>
                     <div class="action-buttons">
-                        <a href="{{ route('coordinator.users.export') }}" class="btn modern-btn btn-info">
+                        <a href="{{ route('users.exportAll') }}" class="btn modern-btn btn-info">
                             <i class="bi bi-download"></i>
                             <span>Export CSV</span>
                         </a>
-                        <a href="{{ route('coordinator.users.importForm') }}" class="btn modern-btn btn-success-modern">
+                        <a href="{{ route('users.importForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                             <span>Import CSV</span>
                         </a>
+                    </div>
+                </div>
+
+                <!-- Filter Users -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body py-2">
+                        <form method="GET" action="{{ route('users.index') }}">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-5">
+                                    <input type="text" name="user_search" class="form-control form-control-sm"
+                                        placeholder="ค้นหาชื่อ / username / user code"
+                                        value="{{ request('user_search') }}">
+                                </div>
+                                <div class="col-auto d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-search me-1"></i>ค้นหา
+                                    </button>
+                                    <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                </div>
+                                <div class="col-auto ms-auto text-muted small">{{ $users->total() }} รายการ</div>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -144,16 +170,14 @@
                         </table>
                     </div>
 
-                    @if($users->hasPages())
                     <div class="card-footer bg-white border-top">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <small class="text-muted">
-                                แสดง {{ $users->firstItem() ?? 0 }} ถึง {{ $users->lastItem() ?? 0 }} จากทั้งหมด {{ $users->total() }} รายการ
+                                แสดง {{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }} จาก {{ $users->total() }} รายการ
                             </small>
-                            {{ $users->appends(['student_page' => request('student_page')])->links() }}
+                            <div>{{ $users->links('pagination::bootstrap-4') }}</div>
                         </div>
                     </div>
-                    @endif
                 </div>
 
                 <div class="alert alert-info alert-modern mt-3">
@@ -165,19 +189,66 @@
         </div>
 
         <!-- Student Tab -->
-        <div class="tab-pane fade" id="student-panel" role="tabpanel">
+        <div class="tab-pane fade {{ request('tab') == 'students' ? 'show active' : '' }}" id="student-panel" role="tabpanel">
             <div class="management-section">
                 <div class="section-header">
                     <h4><i class="bi bi-mortarboard me-2"></i>Students</h4>
                     <div class="action-buttons">
-                        <a href="{{ route('coordinator.students.export') }}" class="btn modern-btn btn-info">
+                        <a href="{{ route('students.exportAll') }}" class="btn modern-btn btn-info">
                             <i class="bi bi-download"></i>
                             <span>Export CSV</span>
                         </a>
-                        <a href="{{ route('coordinator.students.importForm') }}" class="btn modern-btn btn-success-modern">
+                        <a href="{{ route('students.importExcelForm') }}" class="btn modern-btn btn-success-modern">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                             <span>Import CSV</span>
                         </a>
+                    </div>
+                </div>
+
+                <!-- Filter Students -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body py-2">
+                        <form method="GET" action="{{ route('users.index') }}">
+                            <input type="hidden" name="tab" value="students">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-3">
+                                    <input type="text" name="std_search" class="form-control form-control-sm"
+                                        placeholder="ค้นหาชื่อ / username"
+                                        value="{{ request('std_search') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <select name="std_course" class="form-select form-select-sm">
+                                        <option value="">ทุกวิชา</option>
+                                        <option value="CS303" {{ request('std_course') == 'CS303' ? 'selected' : '' }}>CS303</option>
+                                        <option value="CS403" {{ request('std_course') == 'CS403' ? 'selected' : '' }}>CS403</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select name="std_semester" class="form-select form-select-sm">
+                                        <option value="">ทุกเทอม</option>
+                                        <option value="1" {{ request('std_semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
+                                        <option value="2" {{ request('std_semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select name="std_year" class="form-select form-select-sm">
+                                        <option value="">ทุกปี</option>
+                                        @foreach($years as $yr)
+                                            <option value="{{ $yr }}" {{ request('std_year') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-auto d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-search me-1"></i>ค้นหา
+                                    </button>
+                                    <a href="{{ route('users.index') }}?tab=students" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                </div>
+                                <div class="col-auto ms-auto text-muted small">{{ $students->total() }} รายการ</div>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -230,16 +301,14 @@
                         </table>
                     </div>
 
-                    @if($students->hasPages())
                     <div class="card-footer bg-white border-top">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <small class="text-muted">
-                                แสดง {{ $students->firstItem() ?? 0 }} ถึง {{ $students->lastItem() ?? 0 }} จากทั้งหมด {{ $students->total() }} รายการ
+                                แสดง {{ $students->firstItem() ?? 0 }}–{{ $students->lastItem() ?? 0 }} จาก {{ $students->total() }} รายการ
                             </small>
-                            {{ $students->appends(['user_page' => request('user_page')])->links() }}
+                            <div>{{ $students->links('pagination::bootstrap-4') }}</div>
                         </div>
                     </div>
-                    @endif
                 </div>
 
                 <div class="alert alert-info alert-modern mt-3">

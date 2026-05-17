@@ -17,30 +17,53 @@ class CoordinatorUserController extends Controller
      * - สามารถ Import ได้
      * - ไม่สามารถกำหนด role ได้
      */
-    public function index()
+    public function index(Request $request)
     {
-        // ดึงข้อมูล Users (ไม่รวม Student)
-        $users = DB::table('user')
-            ->select('user_id', 'username_user', 'firstname_user', 'lastname_user', 'email_user', 'user_code', 'role')
-            ->orderBy('user_id', 'asc')
-            ->paginate(20, ['*'], 'user_page');
+        // ── Users ──
+        $userQuery = DB::table('user')
+            ->select('user_id', 'username_user', 'firstname_user', 'lastname_user', 'email_user', 'user_code', 'role');
 
-        // ดึงข้อมูล Students (รวม course_code, semester, year) - ใช้ Eloquent Model
-        $students = Student::select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role', 'course_code', 'semester', 'year')
+        if ($request->filled('user_search')) {
+            $s = $request->user_search;
+            $userQuery->where(fn($q) => $q
+                ->where('username_user', 'like', "%{$s}%")
+                ->orWhere('firstname_user', 'like', "%{$s}%")
+                ->orWhere('lastname_user',  'like', "%{$s}%")
+                ->orWhere('user_code',      'like', "%{$s}%")
+            );
+        }
+
+        $users = $userQuery
+            ->orderBy('firstname_user', 'asc')
+            ->orderBy('lastname_user',  'asc')
+            ->paginate(20, ['*'], 'user_page')
+            ->withQueryString();
+
+        // ── Students ──
+        $stdQuery = Student::select('student_id', 'username_std', 'firstname_std', 'lastname_std', 'email_std', 'role', 'course_code', 'semester', 'year');
+
+        if ($request->filled('std_search')) {
+            $s = $request->std_search;
+            $stdQuery->where(fn($q) => $q
+                ->where('username_std',  'like', "%{$s}%")
+                ->orWhere('firstname_std', 'like', "%{$s}%")
+                ->orWhere('lastname_std',  'like', "%{$s}%")
+            );
+        }
+        if ($request->filled('std_year'))     $stdQuery->where('year',        $request->std_year);
+        if ($request->filled('std_semester')) $stdQuery->where('semester',    $request->std_semester);
+        if ($request->filled('std_course'))   $stdQuery->where('course_code', $request->std_course);
+
+        $students = $stdQuery
+            ->orderBy('year',       'desc')
+            ->orderBy('semester',   'desc')
             ->orderBy('student_id', 'asc')
-            ->paginate(20, ['*'], 'student_page');
+            ->paginate(20, ['*'], 'student_page')
+            ->withQueryString();
 
-        // Role mapping
-        $roleMap = [
-            1 => 'Student',
-            2 => 'Lecturer',
-            4 => 'Coordinator',
-            8 => 'Staff',
-            16 => 'Admin',
-            2048 => 'Student'
-        ];
+        $years = DB::table('student')->distinct()->orderBy('year', 'desc')->pluck('year');
 
-        return view('coordinator.users.index', compact('users', 'students', 'roleMap'));
+        return view('coordinator.users.index', compact('users', 'students', 'years'));
     }
 
     /**

@@ -51,6 +51,58 @@
         </div>
     @endif
 
+    <!-- Filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-2">
+            <form method="GET" action="{{ route('lecturer.evaluations.index') }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small mb-1">ปีการศึกษา</label>
+                        <select name="year" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            @foreach($years as $yr)
+                                <option value="{{ $yr }}" {{ request('year') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small mb-1">เทอม</label>
+                        <select name="semester" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
+                            <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small mb-1">รหัสวิชา</label>
+                        <select name="subject" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            <option value="CS303" {{ request('subject') == 'CS303' ? 'selected' : '' }}>CS303</option>
+                            <option value="CS403" {{ request('subject') == 'CS403' ? 'selected' : '' }}>CS403</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small mb-1">สถานะ</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            <option value="done"   {{ request('status') == 'done'    ? 'selected' : '' }}>ให้คะแนนแล้ว</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>ยังไม่ให้คะแนน</option>
+                        </select>
+                    </div>
+                    <div class="col-auto d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-search me-1"></i>ค้นหา
+                        </button>
+                        <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
+                    <div class="col-auto ms-auto text-muted small">{{ $projects->total() }} โครงงาน</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Projects List -->
     <div class="row">
         @forelse($projects as $project)
@@ -109,7 +161,7 @@
                         <div class="col-md-2">
                             <label class="small text-muted d-block mb-1">วันเวลาสอบ</label>
                             @if($project->exam_datetime)
-                                <strong class="text-danger">
+                                <strong class="text-success">
                                     <i class="bi bi-calendar-event me-1"></i>
                                     {{ $project->exam_datetime->format('d/m/Y H:i') }}
                                 </strong>
@@ -160,8 +212,9 @@
     </div>
 
     <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-4">
-        {{ $projects->links() }}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 gap-2">
+        <small class="text-muted">แสดง {{ $projects->firstItem() ?? 0 }}–{{ $projects->lastItem() ?? 0 }} จาก {{ $projects->total() }} โครงงาน</small>
+        <div>{{ $projects->links('pagination::bootstrap-4') }}</div>
     </div>
 </div>
 @endsection

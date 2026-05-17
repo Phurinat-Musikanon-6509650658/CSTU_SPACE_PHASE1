@@ -27,8 +27,8 @@ class SubjectSummaryController extends Controller
         $cs303 = $this->getProjects($year, $semester, 'CS303');
         $cs403 = $this->getProjects($year, $semester, 'CS403');
 
-        $years     = [2566, 2567, 2568, 2569];
-        $semesters = [1, 2, 3];
+        $years     = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year')->toArray();
+        $semesters = [1, 2];
 
         return view('coordinator.subject-summary.index',
             compact('cs303', 'cs403', 'year', 'semester', 'years', 'semesters'));

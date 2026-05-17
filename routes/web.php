@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\StudentManagementController;
@@ -42,6 +43,12 @@ use App\Http\Controllers\SubjectSummaryController;
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login.page');
 Route::post('login', [AuthController::class, 'login'])->name('login.submit');
+
+// Password reset routes
+Route::get('password/reset', [PasswordResetController::class, 'showVerifyForm'])->name('password.reset');
+Route::post('password/verify', [PasswordResetController::class, 'verify'])->name('password.verify');
+Route::get('password/new', [PasswordResetController::class, 'showNewPasswordForm'])->name('password.new');
+Route::post('password/update', [PasswordResetController::class, 'update'])->name('password.update');
 
 // Logout routes
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
@@ -149,20 +156,6 @@ Route::middleware('session.timeout')->group(function () {
         // Submission Download for Coordinator/Staff
         Route::get('submission/{project}/download', [SubmissionController::class, 'download'])->name('submission.download');
         
-        // User & Student Management (Import/Export only - NO role assignment)
-        Route::prefix('users')->name('users.')->group(function () {
-            Route::get('/', [CoordinatorUserController::class, 'index'])->name('index');
-            Route::get('export', [CoordinatorUserController::class, 'exportUsers'])->name('export');
-            Route::get('import', [CoordinatorUserController::class, 'importUserForm'])->name('importForm');
-            Route::post('import', [CoordinatorUserController::class, 'importUsers'])->name('import');
-        });
-        
-        Route::prefix('students')->name('students.')->group(function () {
-            Route::get('export', [CoordinatorUserController::class, 'exportStudents'])->name('export');
-            Route::get('import', [CoordinatorUserController::class, 'importStudentForm'])->name('importForm');
-            Route::post('import', [CoordinatorUserController::class, 'importStudents'])->name('import');
-        });
-        
         // Schedule & Committee Assignment (Full Access for Coordinator & Staff)
         Route::prefix('schedules')->name('schedules.')->middleware('role:staff,coordinator,admin')->group(function () {
             Route::get('/', [CoordinatorController::class, 'schedulesIndex'])->name('index');
@@ -259,7 +252,7 @@ Route::middleware('session.timeout')->group(function () {
     // ======================================
     // User Management (Admin/Coordinator Only)
     // ======================================
-    Route::prefix('users')->name('users.')->middleware('role:coordinator,admin')->group(function () {
+    Route::prefix('users')->name('users.')->middleware('role:coordinator,staff,admin')->group(function () {
         // View list - Coordinator, Admin can view
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
         
@@ -273,7 +266,9 @@ Route::middleware('session.timeout')->group(function () {
         // Import/Export (XLSX)
         Route::get('import/form',    [UserManagementController::class, 'importForm'])->name('importForm');
         Route::post('import/preview',[UserManagementController::class, 'importPreview'])->name('importPreview');
+        Route::get('import/preview', fn() => redirect()->route('users.importForm'))->name('importPreview.get');
         Route::post('import/confirm',[UserManagementController::class, 'importConfirm'])->name('importConfirm');
+        Route::get('import/confirm', fn() => redirect()->route('users.importForm'))->name('importConfirm.get');
         Route::get('export/all',     [UserManagementController::class, 'exportAll'])->name('exportAll');
         
         // View details

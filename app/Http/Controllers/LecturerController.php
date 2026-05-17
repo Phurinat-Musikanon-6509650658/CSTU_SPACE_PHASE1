@@ -106,24 +106,43 @@ class LecturerController extends Controller
     /**
      * แสดงรายการโครงงานที่ต้องประเมิน
      */
-    public function evaluationsIndex()
+    public function evaluationsIndex(Request $request)
     {
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
 
-        // ดึงโครงงานที่อาจารย์เป็น advisor หรือ committee
-        $projects = Project::with([
+        $query = Project::with([
                 'group.members.student',
                 'advisorLecturer.user',
                 'committeeLecturers.user',
                 'evaluations' => fn($q) => $q->where('evaluator_code', $userCode),
             ])
             ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))
-            ->whereNotNull('exam_datetime') // มีตารางสอบแล้ว
-            ->orderBy('exam_datetime', 'asc')
-            ->paginate(20);
+            ->whereNotNull('exam_datetime');
 
-        return view('lecturer.evaluations.index', compact('projects'));
+        if ($request->filled('year'))     $query->whereHas('group', fn($q) => $q->where('year',        $request->year));
+        if ($request->filled('semester')) $query->whereHas('group', fn($q) => $q->where('semester',    $request->semester));
+        if ($request->filled('subject'))  $query->whereHas('group', fn($q) => $q->where('subject_code', $request->subject));
+        if ($request->filled('status')) {
+            if ($request->status === 'done') {
+                $query->whereHas('evaluations', fn($q) => $q->where('evaluator_code', $userCode));
+            } else {
+                $query->whereDoesntHave('evaluations', fn($q) => $q->where('evaluator_code', $userCode));
+            }
+        }
+
+        $projects = $query
+            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
+            ->orderBy('groups.year', 'desc')
+            ->orderBy('groups.semester', 'desc')
+            ->orderBy('groups.group_id', 'asc')
+            ->select('projects.*')
+            ->paginate(20)
+            ->withQueryString();
+
+        $years = \Illuminate\Support\Facades\DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
+
+        return view('lecturer.evaluations.index', compact('projects', 'years'));
     }
 
     /**

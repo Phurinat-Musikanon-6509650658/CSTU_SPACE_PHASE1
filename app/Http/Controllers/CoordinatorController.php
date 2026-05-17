@@ -42,10 +42,18 @@ class CoordinatorController extends Controller
         if ($request->status)   $query->where('status_group', $request->status);
         if ($request->subject)  $query->where('subject_code', $request->subject);
         if ($request->semester) $query->where('semester', $request->semester);
+        if ($request->year)     $query->where('year', $request->year);
 
-        $groups = $query->orderBy('created_at', 'desc')->paginate(20);
+        $groups = $query
+            ->orderBy('year', 'desc')
+            ->orderBy('semester', 'desc')
+            ->orderBy('group_id', 'asc')
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('coordinator.groups.index', compact('groups'));
+        $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
+
+        return view('coordinator.groups.index', compact('groups', 'years'));
     }
 
     public function groupShow($id)
@@ -203,11 +211,27 @@ class CoordinatorController extends Controller
         if ($request->semester) {
             $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q
+                ->where('project_code', 'like', "%{$s}%")
+                ->orWhere('project_name', 'like', "%{$s}%")
+            );
+        }
 
-        $projects  = $query->orderBy('project_code', 'asc')->paginate(20);
+        $projects = $query
+            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
+            ->orderBy('groups.year', 'desc')
+            ->orderBy('groups.semester', 'desc')
+            ->orderBy('groups.group_id', 'asc')
+            ->orderBy('projects.project_code', 'asc')
+            ->select('projects.*')
+            ->paginate(20)
+            ->withQueryString();
+
         $statuses  = ['pending', 'in_progress', 'submitted', 'late_submission', 'approved'];
-        $years     = [2566, 2567, 2568];
-        $semesters = [1, 2, 3];
+        $years     = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
+        $semesters = [1, 2];
 
         return view('coordinator.projects.review', compact('projects', 'statuses', 'years', 'semesters'));
     }
@@ -365,13 +389,19 @@ class CoordinatorController extends Controller
         $withExam     = (clone $query)->whereNotNull('exam_datetime')->count();
         $withoutExam  = $totalCount - $withExam;
 
-        $projects = $query->orderBy('exam_datetime', 'asc')
-            ->orderBy('project_id', 'asc')
+        $projects = $query
+            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
+            ->orderBy('groups.year', 'desc')
+            ->orderBy('groups.semester', 'desc')
+            ->orderBy('groups.group_id', 'asc')
+            ->select('projects.*')
             ->paginate(20)
-            ->appends($request->query());
+            ->withQueryString();
+
+        $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 
         return view('coordinator.schedules.index', compact(
-            'projects', 'totalCount', 'withExam', 'withoutExam'
+            'projects', 'totalCount', 'withExam', 'withoutExam', 'years'
         ));
     }
 
@@ -643,13 +673,25 @@ class CoordinatorController extends Controller
     {
         $query = Project::with(['group.members.student', 'evaluations.evaluator']);
 
-        if ($request->semester) {
+        if ($request->filled('semester')) {
             $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
         }
+        if ($request->filled('year')) {
+            $query->whereHas('group', fn($q) => $q->where('year', $request->year));
+        }
 
-        $projects = $query->orderBy('project_id', 'desc')->paginate(20);
+        $projects = $query
+            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
+            ->orderBy('groups.year', 'desc')
+            ->orderBy('groups.semester', 'desc')
+            ->orderBy('groups.group_id', 'asc')
+            ->select('projects.*')
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('coordinator.evaluations.index', compact('projects'));
+        $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
+
+        return view('coordinator.evaluations.index', compact('projects', 'years'));
     }
 
     public function viewScores($projectId)

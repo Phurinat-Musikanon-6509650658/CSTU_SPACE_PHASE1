@@ -150,17 +150,17 @@
                     <label class="form-label fw-semibold small mb-1">ภาคเรียน</label>
                     <select name="semester" class="form-select form-select-sm">
                         <option value="">ทั้งหมด</option>
-                        <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>1</option>
-                        <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>2</option>
+                        <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
+                        <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
                     </select>
                 </div>
                 <div class="col-sm-4 col-md-2">
                     <label class="form-label fw-semibold small mb-1">ปีการศึกษา</label>
                     <select name="year" class="form-select form-select-sm">
                         <option value="">ทั้งหมด</option>
-                        @for($y = 2568; $y >= 2560; $y--)
+                        @foreach($years as $y)
                             <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endfor
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-sm-4 col-md-2">
@@ -295,14 +295,12 @@
     @endforelse
 
     {{-- Pagination --}}
-    @if($projects->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 gap-2">
         <small class="text-muted">
-            แสดง {{ $projects->firstItem() }}–{{ $projects->lastItem() }} จาก {{ $projects->total() }} โครงงาน
+            แสดง {{ $projects->firstItem() ?? 0 }}–{{ $projects->lastItem() ?? 0 }} จาก {{ $projects->total() }} โครงงาน
         </small>
-        {{ $projects->links() }}
+        <div>{{ $projects->links('pagination::bootstrap-4') }}</div>
     </div>
-    @endif
 
 </div>
 @endsection

@@ -34,8 +34,8 @@
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('coordinator.groups.index') }}">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold small"><i class="bi bi-flag me-1"></i>สถานะ</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
@@ -45,7 +45,7 @@
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>ปฏิเสธ</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold small"><i class="bi bi-book me-1"></i>รหัสวิชา</label>
                         <select name="subject" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
@@ -53,20 +53,29 @@
                             <option value="CS403" {{ request('subject') == 'CS403' ? 'selected' : '' }}>CS403</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold small"><i class="bi bi-calendar-event me-1"></i>เทอม</label>
                         <select name="semester" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
-                            <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>ภาคต้น (1)</option>
-                            <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>ภาคปลาย (2)</option>
+                            <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
+                            <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex gap-2">
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small"><i class="bi bi-calendar me-1"></i>ปีการศึกษา</label>
+                        <select name="year" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            @foreach($years as $yr)
+                                <option value="{{ $yr }}" {{ request('year') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm flex-fill">
                             <i class="bi bi-search me-1"></i>ค้นหา
                         </button>
                         <a href="{{ route('coordinator.groups.index') }}" class="btn btn-outline-secondary btn-sm" title="ล้างตัวกรอง">
-                            <i class="bi bi-x"></i>
+                            <i class="bi bi-x-lg"></i>
                         </a>
                     </div>
                 </div>
@@ -86,7 +95,7 @@
             <table class="table table-hover align-middle mb-0" style="font-size:.88rem;">
                 <thead>
                     <tr>
-                        <th class="ps-3" style="width:8%">Group</th>
+                        <th class="ps-3" style="width:5%">#</th>
                         <th style="width:8%">วิชา</th>
                         <th style="width:8%">ปี/เทอม</th>
                         <th style="width:20%">ชื่อโครงงาน</th>
@@ -100,12 +109,13 @@
                 <tbody>
                     @forelse($groups as $group)
                     <tr>
-                        <td class="ps-3">
-                            <span class="badge rounded-pill" style="background:var(--gradient-primary,linear-gradient(135deg,#667eea,#764ba2));font-size:.8rem;">
-                                {{ sprintf('%02d-%02d', $group->semester, $group->group_id) }}
-                            </span>
+                        <td class="ps-3 text-center text-muted" style="font-size:.82rem;">
+                            {{ ($groups->currentPage() - 1) * $groups->perPage() + $loop->iteration }}
                         </td>
-                        <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $group->subject_code }}</span></td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $group->subject_code }}</span>
+                            <div class="text-muted" style="font-size:.72rem;">#{{ $group->group_id }}</div>
+                        </td>
                         <td><span class="text-muted">{{ $group->year }}/{{ $group->semester }}</span></td>
                         <td>
                             @if($group->project)
@@ -196,14 +206,16 @@
             </table>
         </div>
 
-        @if($groups->hasPages())
         <div class="card-footer bg-white border-top">
-            <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">แสดง {{ $groups->firstItem() }}–{{ $groups->lastItem() }} จาก {{ $groups->total() }} กลุ่ม</small>
-                {{ $groups->links() }}
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <small class="text-muted">
+                    แสดง {{ $groups->firstItem() ?? 0 }}–{{ $groups->lastItem() ?? 0 }} จาก {{ $groups->total() }} กลุ่ม
+                </small>
+                <div>
+                    {{ $groups->links('pagination::bootstrap-4') }}
+                </div>
             </div>
         </div>
-        @endif
     </div>
 
 </div>

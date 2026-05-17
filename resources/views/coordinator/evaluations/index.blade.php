@@ -85,8 +85,17 @@
                         <label class="form-label fw-semibold small mb-1">ภาคเรียน</label>
                         <select name="semester" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
-                            <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>ภาคต้น (1)</option>
-                            <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>ภาคปลาย (2)</option>
+                            <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
+                            <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small mb-1">ปีการศึกษา</label>
+                        <select name="year" class="form-select form-select-sm">
+                            <option value="">ทั้งหมด</option>
+                            @foreach($years as $yr)
+                                <option value="{{ $yr }}" {{ request('year') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-auto d-flex gap-2">
@@ -94,7 +103,7 @@
                             <i class="bi bi-search me-1"></i>ค้นหา
                         </button>
                         <a href="{{ route('coordinator.evaluations.index') }}" class="btn btn-outline-secondary btn-sm" title="ล้าง">
-                            <i class="bi bi-x"></i>
+                            <i class="bi bi-x-lg"></i>
                         </a>
                     </div>
                 </div>
@@ -215,12 +224,10 @@
         </div>
     </div>
 
-    @if($projects->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <small class="text-muted">แสดง {{ $projects->firstItem() }}–{{ $projects->lastItem() }} จาก {{ $projects->total() }} โครงงาน</small>
-        {{ $projects->links() }}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <small class="text-muted">แสดง {{ $projects->firstItem() ?? 0 }}–{{ $projects->lastItem() ?? 0 }} จาก {{ $projects->total() }} โครงงาน</small>
+        <div>{{ $projects->links('pagination::bootstrap-4') }}</div>
     </div>
-    @endif
 
 </div>
 @endsection

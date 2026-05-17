@@ -44,7 +44,7 @@
 
     {{-- Header --}}
     <div class="mb-3">
-        <a href="{{ route('coordinator.users.index') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
+        <a href="{{ route('users.index') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
             <i class="bi bi-chevron-left me-1"></i>กลับ Users & Students
         </a>
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-1">

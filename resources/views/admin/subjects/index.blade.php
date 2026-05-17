@@ -123,9 +123,11 @@
     {{-- Term Groups --}}
     @forelse($groups as $group)
         @php
-            $isActive = $group['is_active'];
-            $year     = $group['year'];
-            $semester = $group['semester'];
+            $isActive      = $group['is_active'];
+            $year          = $group['year'];
+            $semester      = $group['semester'];
+            $totalGroups   = $group['total_groups'];
+            $subjectCounts = $group['subject_counts'];
         @endphp
         <div class="term-section">
             <div class="term-header {{ $isActive ? 'active' : 'closed' }}">
@@ -136,7 +138,18 @@
                 @else
                     <span class="badge bg-secondary ms-1">ปิดแล้ว</span>
                 @endif
-                <span class="ms-auto small fw-normal opacity-75">{{ $group['subjects']->count() }} รายวิชา</span>
+                <div class="ms-auto d-flex align-items-center gap-2 small fw-normal">
+                    <span class="opacity-75">{{ $group['subjects']->count() }} รายวิชา</span>
+                    @if($totalGroups > 0)
+                    <span class="opacity-25">|</span>
+                    <span class="opacity-90">
+                        <i class="bi bi-people me-1"></i>รวม {{ $totalGroups }} กลุ่ม
+                        @foreach($subjectCounts as $code => $cnt)
+                            · {{ $code }}: {{ $cnt }}
+                        @endforeach
+                    </span>
+                    @endif
+                </div>
             </div>
 
             <div class="term-body">
@@ -189,7 +202,7 @@
                                     @endif
 
                                     {{-- Group count --}}
-                                    @php $gc = $subject->getGroupCount(); @endphp
+                                    @php $gc = $subjectCounts[$subject->subject_code] ?? 0; @endphp
                                     <div class="mt-2 small text-muted">
                                         <i class="bi bi-people me-1"></i>{{ $gc }} กลุ่มโครงงาน
                                     </div>
