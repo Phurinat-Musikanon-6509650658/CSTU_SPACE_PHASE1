@@ -80,13 +80,13 @@ CSTU_SPACE_PHASE1/
 │   └── seeders/
 ├── resources/views/
 ├── docker/
-│   ├── docker-compose.yml          # base config
-│   ├── docker-compose.prod.yml     # production overrides
+│   ├── docker-compose.yml      # production-ready config
 │   ├── Dockerfile
 │   ├── nginx/default.conf
 │   ├── php/local.ini
 │   └── mysql/my.cnf
-├── deploy.sh                   # one-command deploy script
+├── deploy.sh                   # one-command deploy script (Linux/server)
+├── refresh.bat                 # clear Laravel cache (Windows)
 ├── .env.docker                 # production env template
 └── ER_DIAGRAM.md
 ```
@@ -98,14 +98,18 @@ CSTU_SPACE_PHASE1/
 ```bash
 cd docker
 
-# Production mode (MySQL port ไม่ถูก expose)
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# Dev mode (MySQL port 3306 เปิด, phpMyAdmin พร้อมใช้)
+# Start all containers
 docker-compose up -d
 
-# phpMyAdmin บน production (เปิดเฉพาะเมื่อต้องการ)
-docker-compose --profile tools up -d phpmyadmin
+# Stop
+docker-compose stop
+
+# Restart app only
+docker-compose restart app
+
+# View logs
+docker-compose logs -f app
+docker-compose logs -f webserver
 ```
 
 ---

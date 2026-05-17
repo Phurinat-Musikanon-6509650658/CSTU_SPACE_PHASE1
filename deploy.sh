@@ -30,7 +30,7 @@ docker-compose run --rm node
 
 # ── 5. Start / restart containers ───────────────────────────────────
 echo "[5/7] Starting containers..."
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
+docker-compose up -d --remove-orphans
 
 # wait for db to be ready
 echo "      Waiting for database..."

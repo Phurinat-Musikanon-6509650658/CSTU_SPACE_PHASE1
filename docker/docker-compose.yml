@@ -41,8 +41,6 @@ services:
     image: mysql:8.0
     container_name: cstu_space_db
     restart: unless-stopped
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_DATABASE: cstu_space
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -112,6 +110,7 @@ services:
     image: redis:7-alpine
     container_name: cstu_space_redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
     networks:
       - cstu_space_network
     volumes:
