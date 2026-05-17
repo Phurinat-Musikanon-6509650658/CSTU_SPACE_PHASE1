@@ -125,6 +125,25 @@
                       enctype="multipart/form-data" id="uploadForm">
                     @csrf
 
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label fw-semibold small">
+                                <i class="bi bi-calendar2 me-1 text-primary"></i>ภาคเรียน
+                            </label>
+                            <select class="form-select" name="semester">
+                                <option value="1" {{ ($semester ?? 2) == 1 ? 'selected' : '' }}>1</option>
+                                <option value="2" {{ ($semester ?? 2) == 2 ? 'selected' : '' }}>2</option>
+                            </select>
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label fw-semibold small">
+                                <i class="bi bi-calendar2 me-1 text-primary"></i>ปีการศึกษา (พ.ศ.)
+                            </label>
+                            <input type="number" class="form-control" name="year"
+                                   value="{{ old('year', $year ?? 2568) }}" min="2560" max="2599">
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">
                             <i class="bi bi-calendar-month me-1 text-danger"></i>เดือน/ปี ที่สอบ (ค.ศ.)
@@ -158,6 +177,9 @@
 
             <div class="page-card p-3">
                 <div class="stats-bar">
+                    <div class="stats-chip" style="background:#e0f2fe;color:#0369a1;">
+                        ภาคเรียน {{ $semester ?? '?' }}/{{ $year ?? '?' }}
+                    </div>
                     <div class="stats-chip chip-total">รวม {{ count($preview) }} โครงงาน</div>
                     <div class="stats-chip chip-new">✓ ใหม่: {{ $newCount ?? 0 }}</div>
                     <div class="stats-chip chip-exist">⚠ มีอยู่แล้ว: {{ $existsCount ?? 0 }}</div>

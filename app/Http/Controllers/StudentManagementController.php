@@ -404,14 +404,13 @@ class StudentManagementController extends Controller
     {
         // col 0: prefix | col 1: fullname   | col 2: student_id
         // col 3: email  | col 4: phone      | col 5: course_type text
-        // col 6: password (optional — fallback to student_id if empty)
         $fullname = trim($row[1] ?? '');
         $parts    = preg_split('/\s+/u', $fullname, 2);
 
         $username       = trim($row[2] ?? '');
         $courseTypeText = trim($row[5] ?? '');
         $studentType    = str_contains($courseTypeText, 'พิเศษ') ? 's' : 'r';
-        $password       = trim($row[6] ?? '');
+        $password       = trim($row[4] ?? ''); // เบอร์โทร = password เริ่มต้น
         if ($password === '') $password = $username;
 
         return [

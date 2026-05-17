@@ -34,6 +34,8 @@ class ProjectImportController extends Controller
         ]);
 
         $examMonth = $request->input('exam_month'); // e.g. "2025-08" or null
+        $semester  = (int)$request->input('semester', 2);
+        $year      = (int)$request->input('year', 2568);
 
         try {
             $sheetNames = XlsxParser::sheetNames($request->file('file'));
@@ -203,7 +205,11 @@ class ProjectImportController extends Controller
             return back()->with('error', 'ไม่พบข้อมูลโครงงานในไฟล์');
         }
 
-        session(['project_excel_preview' => $preview]);
+        session([
+            'project_excel_preview' => $preview,
+            'project_import_semester' => $semester,
+            'project_import_year'     => $year,
+        ]);
 
         $newCount    = count(array_filter($preview, fn($r) => !$r['exists']));
         $existsCount = count(array_filter($preview, fn($r) => $r['exists']));
@@ -211,7 +217,7 @@ class ProjectImportController extends Controller
         $dateCount   = count(array_filter($preview, fn($r) => !empty($r['exam_datetime'])));
 
         return view('admin.projects.import-excel', compact(
-            'preview', 'newCount', 'existsCount', 'warnCount', 'dateCount', 'examMonth'
+            'preview', 'newCount', 'existsCount', 'warnCount', 'dateCount', 'examMonth', 'semester', 'year'
         ));
     }
 
@@ -221,7 +227,9 @@ class ProjectImportController extends Controller
             return redirect()->route('menu')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
-        $preview = session('project_excel_preview', []);
+        $preview  = session('project_excel_preview', []);
+        $semester = (int)session('project_import_semester', 2);
+        $year     = (int)session('project_import_year', 2568);
         if (empty($preview)) {
             return redirect()->route('admin.projects.importExcel.form')
                 ->with('error', 'ไม่พบข้อมูล Preview กรุณาอัปโหลดใหม่');
@@ -270,10 +278,7 @@ class ProjectImportController extends Controller
                     }
                 }
 
-                // 2. Extract year/semester from project_code (e.g. "68-2_01_kdc-s1")
-                preg_match('/^(\d+)-(\d+)[_\-]/', $row['project_code'], $pm);
-                $year     = isset($pm[1]) ? 2500 + (int)$pm[1] : 2568;
-                $semester = isset($pm[2]) ? (int)$pm[2] : 2;
+                // 2. Use semester/year from import form (not from project_code)
 
                 // 3. Create group
                 $groupId = DB::table('groups')->insertGetId([
@@ -337,7 +342,7 @@ class ProjectImportController extends Controller
             return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
 
-        session()->forget('project_excel_preview');
+        session()->forget(['project_excel_preview', 'project_import_semester', 'project_import_year']);
 
         $skippedExisting = count(array_filter($existingRows, fn($r) => $r['exam_datetime'] === null));
         $msg = "Import สำเร็จ: สร้างใหม่ {$created} โครงงาน";

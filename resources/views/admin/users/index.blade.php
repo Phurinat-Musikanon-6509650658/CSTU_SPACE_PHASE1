@@ -180,26 +180,22 @@
                 <div class="section-header">
                     <h4><i class="bi bi-mortarboard me-2"></i>Students</h4>
                     <div class="action-buttons">
-                        <a href="{{ route('students.exportAll') }}" class="btn modern-btn btn-info">
+                        <a href="{{ route('students.exportAll') }}" class="btn btn-sm modern-btn btn-info">
                             <i class="bi bi-file-earmark-excel"></i>
                             <span>Export Excel</span>
                         </a>
                         @if($canEdit ?? true)
-                        <a href="{{ route('students.importForm') }}" class="btn modern-btn btn-success-modern">
-                            <i class="bi bi-file-earmark-arrow-up"></i>
-                            <span>Import CSV</span>
-                        </a>
-                        <a href="{{ route('students.importExcelForm') }}" class="btn modern-btn btn-warning-modern">
+                        <a href="{{ route('students.importExcelForm') }}" class="btn btn-sm modern-btn btn-warning-modern">
                             <i class="bi bi-file-earmark-excel"></i>
-                            <span>Import Students Excel</span>
+                            <span>Import Students</span>
                         </a>
-                        <a href="{{ route('admin.projects.importExcel.form') }}" class="btn modern-btn" style="background:linear-gradient(135deg,#6610f2,#520dc2);color:white;">
+                        <a href="{{ route('admin.projects.importExcel.form') }}" class="btn btn-sm modern-btn btn-purple">
                             <i class="bi bi-folder2-open"></i>
-                            <span>Import Projects Excel</span>
+                            <span>Import Projects</span>
                         </a>
-                        <a href="{{ route('students.create') }}" class="btn modern-btn btn-primary-modern">
+                        <a href="{{ route('students.create') }}" class="btn btn-sm modern-btn btn-primary-modern">
                             <i class="bi bi-plus-circle"></i>
-                            <span>Add New Student</span>
+                            <span>Add Student</span>
                         </a>
                         @endif
                     </div>
@@ -403,9 +399,16 @@
     }
 
     .btn-sm.modern-btn {
-        padding: 0.5rem 1rem;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.82rem;
         border-radius: 25px;
     }
+
+    .btn-purple {
+        background: linear-gradient(135deg, #6610f2, #520dc2);
+        color: white;
+    }
+    .btn-purple:hover { color: white; opacity: 0.9; }
 
     /* Responsive */
     @media (max-width: 768px) {

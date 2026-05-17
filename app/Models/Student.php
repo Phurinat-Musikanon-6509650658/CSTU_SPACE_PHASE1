@@ -32,6 +32,10 @@ class Student extends Authenticatable
         'password_std',
     ];
 
+    protected $casts = [
+        'password_std' => 'hashed',
+    ];
+
     // Override auth field names
     public function getAuthIdentifierName()
     {

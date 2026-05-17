@@ -72,6 +72,12 @@
     {{-- ── Preview table ── --}}
     @else
     <div class="stats-bar mb-4">
+        @if($isLecturersSheet ?? false)
+        <div class="stat-chip stat-lecturers">
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>Sheet: Lecturers (อาจารย์) · role = Lecturer</span>
+        </div>
+        @endif
         <div class="stat-chip stat-total">
             <i class="bi bi-people"></i>
             <span>ทั้งหมด {{ count($preview) }} คน</span>
@@ -190,6 +196,7 @@
         padding: 0.5rem 1.2rem; border-radius: 50px;
         font-weight: 600; font-size: 0.9rem;
     }
+    .stat-lecturers { background: #fef3c7; color: #92400e; }
     .stat-total  { background: #e3e8ff; color: #3730a3; }
     .stat-new    { background: #d1fae5; color: #065f46; }
     .stat-exists { background: #f3f4f6; color: #6b7280; }

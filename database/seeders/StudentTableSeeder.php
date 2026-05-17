@@ -15,7 +15,6 @@ class StudentTableSeeder extends Seeder
      */
     public function run()
     {
-        // Student ทดสอบ - role_code = 2048
         DB::table('student')->updateOrInsert(
             ['username_std' => 'student'],
             [
@@ -23,35 +22,6 @@ class StudentTableSeeder extends Seeder
                 'lastname_std' => 'ทดสอบ',
                 'email_std' => 'student@cstu.ac.th',
                 'password_std' => Hash::make('student123'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        // ข้อมูลเดิม - นักศึกษาชั้นปี 3 ลง CS303 (โครงงานพิเศษ 1)
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650757'],
-            [
-                'firstname_std' => 'หฤษฎ์',
-                'lastname_std' => 'อัชฌาวนิชย์',
-                'email_std' => 'haritch.utc@dome.tu.ac.th',
-                'password_std' => Hash::make('1101700338550'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509611676'],
-            [
-                'firstname_std' => 'ณัชชา',
-                'lastname_std' => 'วัฒนบำเพ็ญ',
-                'email_std' => 'natcha.wattan@dome.tu.ac.th',
-                'password_std' => Hash::make('1709700292985'),
                 'role' => 2048,
                 'course_code' => 'CS303',
                 'semester' => 2,
@@ -68,77 +38,6 @@ class StudentTableSeeder extends Seeder
                 'password_std' => Hash::make('1104000099105'),
                 'role' => 2048,
                 'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        // เพิ่ม student เพื่อทดสอบกลุ่ม - นักศึกษาชั้นปี 3 ลง CS303 (โครงงานพิเศษ 1)
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650001'],
-            [
-                'firstname_std' => 'สมชาย',
-                'lastname_std' => 'ใจดี',
-                'email_std' => '6509650001@dome.tu.ac.th',
-                'password_std' => Hash::make('password'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650002'],
-            [
-                'firstname_std' => 'สมหญิง',
-                'lastname_std' => 'รักเรียน',
-                'email_std' => '6509650002@dome.tu.ac.th',
-                'password_std' => Hash::make('password'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650003'],
-            [
-                'firstname_std' => 'วิทยา',
-                'lastname_std' => 'ศรีสุข',
-                'email_std' => '6509650003@dome.tu.ac.th',
-                'password_std' => Hash::make('password'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650004'],
-            [
-                'firstname_std' => 'ชัยชนะ',
-                'lastname_std' => 'มั่นคง',
-                'email_std' => '6509650004@dome.tu.ac.th',
-                'password_std' => Hash::make('password'),
-                'role' => 2048,
-                'course_code' => 'CS303',
-                'semester' => 2,
-                'year' => 2568,
-            ]
-        );
-
-        DB::table('student')->updateOrInsert(
-            ['username_std' => '6509650005'],
-            [
-                'firstname_std' => 'ปรีชา',
-                'lastname_std' => 'เจริญ',
-                'email_std' => '6509650005@dome.tu.ac.th',
-                'password_std' => Hash::make('password'),
-                'role' => 2048,
-                'course_code' => 'CS403',
                 'semester' => 2,
                 'year' => 2568,
             ]

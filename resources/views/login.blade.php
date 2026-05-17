@@ -21,6 +21,15 @@
         </div>
 
         {{-- Error Alerts --}}
+        @if(session('success_message'))
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+             style="border-radius:12px; border:none; border-left:4px solid #198754;">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>{{ session('success_message') }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+
         @if(session('login_error_message'))
         <div class="alert login-alert alert-dismissible fade show mb-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -76,6 +85,10 @@
                 </form>
 
                 <div class="login-footer">
+                    <a href="{{ route('password.reset') }}" class="forgot-link">
+                        <i class="bi bi-key me-1"></i>ลืมรหัสผ่าน?
+                    </a>
+                    <span class="mx-2 text-muted">|</span>
                     <i class="bi bi-shield-check me-1"></i>
                     ระบบปลอดภัย | ภาควิชาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยธรรมศาสตร์
                 </div>
@@ -296,9 +309,15 @@
     padding-top: 1.25rem;
     border-top: 1px solid #f0f0f0;
     text-align: center;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: #adb5bd;
 }
+.forgot-link {
+    color: #667eea;
+    text-decoration: none;
+    transition: color .2s;
+}
+.forgot-link:hover { color: #764ba2; }
 
 /* ── Animations ──────────────────────────────────────────────────── */
 @keyframes fadeInUp {
