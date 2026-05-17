@@ -1,19 +1,45 @@
 # CSTU Space — ระบบจัดการโครงงานนักศึกษา
 
-> **Branch:** `CSTU-SPACE-dev` — development branch สำหรับฟีเจอร์ใหม่และการทดสอบ
-> **Base branch:** `main` (production)
+> **Branch:** `CSTU-SPACE-prod` — production branch
+> **URL:** http://203.131.208.27
+> **Dev branch:** `CSTU-SPACE-dev`
 
 **CSTU Space** เป็นระบบจัดการโครงงานพิเศษ (CS303 / CS403) สำหรับภาควิชาวิทยาการคอมพิวเตอร์ รองรับ workflow ตั้งแต่นักศึกษาสร้างกลุ่ม เสนอหัวข้อ ส่งรายงาน จนถึงอาจารย์ประเมินคะแนน
 
 ---
 
-## What's New in This Branch
+## Deploy (Production Server)
 
-- **Dynamic Evaluation Criteria** — แยกเกณฑ์การประเมินตาม subject_code (CS303 / CS403) ผ่าน `evaluation_criteria` table
-- **Export รวม PDF** — อาจารย์ export ใบประเมินทุกโครงงานรวมเป็น PDF เล่มเดียว พร้อมแจ้งเตือนโครงงานที่ยังไม่ประเมิน
-- **Quick Edit Modal** — แก้ไขรายวิชาโดยไม่ออกจากหน้า subjects index
-- **Bulk Term Date Edit** — อัปเดตช่วงเวลาทุกวิชาในเทอมพร้อมกันในคลิกเดียว
-- **UI Fixes** — แก้ double eye icon บนหน้า login, จัดหน้า footer ใหม่
+### Prerequisites
+- Docker & Docker Compose ติดตั้งบน server
+- Git
+- Port 80 เปิดอยู่
+
+### ครั้งแรก (First Deploy)
+
+```bash
+git clone https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1.git
+cd CSTU_SPACE_PHASE1
+git checkout CSTU-SPACE-prod
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### อัปเดต (Re-deploy)
+
+```bash
+./deploy.sh
+```
+
+Script จะทำทุกขั้นตอนอัตโนมัติ:
+1. `git pull` จาก CSTU-SPACE-prod
+2. ตั้งค่า `.env` จาก `.env.docker`
+3. `composer install --no-dev`
+4. Build frontend assets (`npm run build`)
+5. Start containers (production mode)
+6. `php artisan migrate --force`
+7. `php artisan optimize`
+8. Fix storage permissions
 
 ---
 
@@ -31,13 +57,13 @@
 
 ## Features
 
-- **RBAC แบบ Bitmask** — Admin (32768), Coordinator (16384), Lecturer (8192), Staff (4096), Student (2048) บวกรวมกันได้ เช่น Coordinator+Lecturer = 24576
+- **RBAC แบบ Bitmask** — Admin (32768), Coordinator (16384), Lecturer (8192), Staff (4096), Student (2048)
 - **Dual Auth Guard** — `web` guard สำหรับ Staff/Admin/Lecturer, `student` guard สำหรับนักศึกษา
-- **Dynamic Evaluation Criteria** — เกณฑ์คะแนน (labels + max) เปลี่ยนตาม subject_code ผ่าน `EvaluationCriteria` model พร้อม CS303 fallback
-- **Subject-based Access Control** — แต่ละรายวิชา (CS303/CS403) มีช่วงเวลาเปิด-ปิดเป็นอิสระ
-- **Project Lecturers Pivot** — อาจารย์ที่ปรึกษาและกรรมการเก็บใน `project_lecturers` table รองรับ co-advisor
-- **PDF Submission** — นักศึกษา (หัวหน้ากลุ่ม) อัปโหลดรายงาน PDF
-- **XLSX Import/Export** — Coordinator นำเข้า/ส่งออกข้อมูลโครงงานด้วย Excel
+- **Dynamic Evaluation Criteria** — เกณฑ์คะแนนเปลี่ยนตาม subject_code (CS303 / CS403)
+- **Subject-based Access Control** — แต่ละรายวิชามีช่วงเวลาเปิด-ปิดเป็นอิสระ
+- **Project Lecturers Pivot** — รองรับ co-advisor, committee หลายคนต่อโครงงาน
+- **PDF Export** — ใบประเมินรายโครงงานและ export รวม
+- **XLSX Import/Export** — นำเข้า/ส่งออกข้อมูลโครงงานด้วย Excel
 
 ---
 
@@ -46,111 +72,61 @@
 ```
 CSTU_SPACE_PHASE1/
 ├── app/
-│   ├── Http/
-│   │   ├── Controllers/        # Admin, Coordinator, Lecturer, Staff, Student
-│   │   └── Middleware/         # CheckSubjectAccess, RedirectIfAuthenticated
+│   ├── Http/Controllers/       # Admin, Coordinator, Lecturer, Staff, Student
 │   ├── Models/                 # Eloquent Models (รวม EvaluationCriteria)
-│   └── Helpers/                # PermissionHelper, SubjectTimingHelper
+│   └── Helpers/
 ├── database/
-│   ├── migrations/             # 5 consolidated + evaluation_criteria migration
-│   └── seeders/                # User, Student, Subject, EvaluationCriteria, Role seeders
-├── resources/views/            # Blade templates (coordinator/lecturer/student/staff/admin)
+│   ├── migrations/
+│   └── seeders/
+├── resources/views/
 ├── docker/
-│   ├── docker-compose.yml
+│   ├── docker-compose.yml          # base config
+│   ├── docker-compose.prod.yml     # production overrides
 │   ├── Dockerfile
-│   ├── nginx/
-│   ├── php/
-│   └── mysql/
-├── routes/web.php
-└── ER_DIAGRAM.md               # ER Diagram (Mermaid) + คำอธิบาย schema
+│   ├── nginx/default.conf
+│   ├── php/local.ini
+│   └── mysql/my.cnf
+├── deploy.sh                   # one-command deploy script
+├── .env.docker                 # production env template
+└── ER_DIAGRAM.md
 ```
 
 ---
 
-## Quick Start (Dev)
-
-### Prerequisites
-- Docker Desktop (running)
-- Git
-
-### 1. Clone & Checkout Dev Branch
-
-```bash
-git clone https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1.git
-cd CSTU_SPACE_PHASE1
-git checkout CSTU-SPACE-dev
-
-# Windows
-copy .env.docker .env
-
-# Linux / macOS
-cp .env.docker .env
-```
-
-### 2. Install Dependencies
+## Docker (Manual)
 
 ```bash
 cd docker
-docker-compose run --rm app composer install
-```
 
-### 3. Generate App Key
+# Production mode (MySQL port ไม่ถูก expose)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-```bash
-docker-compose run --rm app php artisan key:generate
-```
-
-### 4. Start Containers
-
-```bash
+# Dev mode (MySQL port 3306 เปิด, phpMyAdmin พร้อมใช้)
 docker-compose up -d
+
+# phpMyAdmin บน production (เปิดเฉพาะเมื่อต้องการ)
+docker-compose --profile tools up -d phpmyadmin
 ```
-
-### 5. Run Migrations & Seed
-
-```bash
-# สร้างตารางทั้งหมดและใส่ข้อมูลเริ่มต้น (รวม evaluation_criteria)
-docker-compose exec app php artisan migrate:fresh --seed
-
-# Fix permissions
-docker-compose exec app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-```
-
-### 6. เข้าใช้งาน
-
-| Service | URL |
-|---|---|
-| Web App | http://localhost |
-| phpMyAdmin | http://localhost:8081 |
-| Vite Dev | http://localhost:5173 |
 
 ---
 
 ## Default Login Accounts
 
-> **หมายเหตุ:** บัญชีเหล่านี้สร้างโดย seeder สำหรับพัฒนาและทดสอบเท่านั้น
-
-### Staff / Admin / Lecturer
+> **หมายเหตุ:** สร้างโดย seeder สำหรับทดสอบเท่านั้น
 
 | Role | Username | Password |
 |---|---|---|
 | Admin | `admin` | `admin123` |
 | Coordinator | `coordinator` | `coordinator123` |
-| Lecturer (ตัวอย่าง) | `ckasidit` | `kdc2025` |
+| Lecturer | `ckasidit` | `kdc2025` |
 | Staff | `staff` | `staff123` |
-
-### นักศึกษา
-
-| Username | Password |
-|---|---|
-| `student` | `student123` |
+| Student | `student` | `student123` |
 
 ---
 
 ## Database
 
-### Schema (Migration Files)
+### Migration Files
 
 | ไฟล์ | Tables |
 |---|---|
@@ -159,103 +135,39 @@ docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstr
 | `100003_create_project_tables` | relationship_with_projects, projects, project_proposals, project_evaluations |
 | `100004_create_exam_and_lecturer_tables` | exam_schedule, project_lecturers |
 | `100005_create_subjects_table` | subjects |
-| `2026_05_17_000001_create_evaluation_criteria_table` | evaluation_criteria |
+| `2026_05_17_..._create_evaluation_criteria_table` | evaluation_criteria |
 
-ดู schema เต็มและ ER Diagram ได้ที่ [ER_DIAGRAM.md](./ER_DIAGRAM.md)
-
-### Migration Commands
+### Useful Commands
 
 ```bash
 cd docker
 
-# Fresh reset (ลบทุก table แล้วสร้างใหม่ + seed)
+# Fresh reset + seed
 docker-compose exec app php artisan migrate:fresh --seed
 
-# รัน migration ใหม่ที่ยังไม่ได้รัน
-docker-compose exec app php artisan migrate
-
-# ดูสถานะ migration
+# Migration status
 docker-compose exec app php artisan migrate:status
-```
 
-### Seeder Commands
-
-```bash
-cd docker
-
-# รัน seeder ทั้งหมด
-docker-compose exec app php artisan db:seed
-
-# รัน seeder เฉพาะตัว
-docker-compose exec app php artisan db:seed --class=UserTableSeeder
-docker-compose exec app php artisan db:seed --class=SubjectSeeder
+# Run specific seeder
 docker-compose exec app php artisan db:seed --class=EvaluationCriteriaSeeder
-```
 
-**Seeder ที่มี:**
+# Clear all cache
+docker-compose exec app php artisan optimize:clear
 
-| Seeder | ข้อมูลที่ใส่ |
-|---|---|
-| `RelationshipWithProjectsSeeder` | บทบาทอาจารย์ 4 ประเภท (Advisor, Committee, Co-Advisor-Int/Ext) |
-| `UserRoleSeeder` | Role definitions 8 รายการ |
-| `UserTableSeeder` | Admin, Coordinator, Staff + อาจารย์ 19 ท่าน |
-| `StudentTableSeeder` | นักศึกษาทดสอบ 9 คน |
-| `SubjectSeeder` | CS303 และ CS403 |
-| `EvaluationCriteriaSeeder` | เกณฑ์คะแนนสำหรับ CS303 และ CS403 |
-
----
-
-## Docker Commands
-
-```bash
-cd docker
-
-# Start / Stop / Restart
-docker-compose up -d
-docker-compose stop
-docker-compose restart app
-
-# ดู logs
+# View logs
 docker-compose logs -f app
 docker-compose logs -f webserver
 
-# เข้า shell ของ container
+# Enter shell
 docker-compose exec app bash
 
-# Stop + ลบ container (เก็บ data volume)
-docker-compose down
-
-# Stop + ลบทุกอย่างรวม data (⚠️ ข้อมูลหาย)
-docker-compose down -v
-```
-
----
-
-## Cache & Optimization
-
-```bash
-cd docker
-
-# Clear ทุก cache (ใช้บ่อยระหว่าง dev)
-docker-compose exec app php artisan optimize:clear
-
-# Cache สำหรับ production
-docker-compose exec app php artisan optimize
+# MySQL CLI
+docker-compose exec db mysql -u root -prootpassword cstu_space
 ```
 
 ---
 
 ## Troubleshooting
-
-### Error 500 / ไม่มี .env
-```bash
-copy .env.docker .env   # Windows
-cp .env.docker .env     # Linux/Mac
-cd docker
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan optimize:clear
-docker-compose restart app
-```
 
 ### Permission Denied (storage)
 ```bash
@@ -267,7 +179,7 @@ docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstr
 ### vendor/autoload.php not found
 ```bash
 cd docker
-docker-compose run --rm app composer install
+docker-compose run --rm app composer install --no-dev --optimize-autoloader
 ```
 
 ### Database error / ตาราง missing
@@ -276,64 +188,11 @@ cd docker
 docker-compose exec app php artisan migrate:fresh --seed
 ```
 
-### Port 80 ถูกใช้อยู่
-แก้ `docker/docker-compose.yml` บรรทัด `ports` ของ `webserver`:
-```yaml
-ports:
-  - "8080:80"   # เปลี่ยนเป็น port ที่ว่าง
-```
-
-### Reset ทุกอย่าง (Fresh Install)
+### Reset ทุกอย่าง
 ```bash
 cd docker
 docker-compose down -v
-docker-compose run --rm app composer install
-docker-compose up -d
-docker-compose exec app php artisan migrate:fresh --seed
-docker-compose exec app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-docker-compose exec app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-```
-
----
-
-## Default Configuration
-
-```env
-# App
-APP_ENV=local
-APP_DEBUG=true
-
-# Database (ตรงกับ docker-compose.yml)
-DB_HOST=db
-DB_PORT=3306
-DB_DATABASE=cstu_space
-DB_USERNAME=root
-DB_PASSWORD=rootpassword
-
-# Cache & Session (ไม่ต้องใช้ Redis)
-CACHE_STORE=file
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-```
-
----
-
-## Useful Commands
-
-```bash
-cd docker
-
-# Artisan tinker
-docker-compose exec app php artisan tinker
-
-# ดู routes ทั้งหมด
-docker-compose exec app php artisan route:list
-
-# Laravel version
-docker-compose exec app php artisan --version
-
-# เข้า MySQL โดยตรง
-docker-compose exec db mysql -u root -prootpassword cstu_space
+./deploy.sh
 ```
 
 ---
@@ -341,6 +200,6 @@ docker-compose exec db mysql -u root -prootpassword cstu_space
 ## Links
 
 - **Repository**: https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1
+- **Production**: http://203.131.208.27
 - **Dev Branch**: https://github.com/Phurinat-Musikanon-6509650658/CSTU_SPACE_PHASE1/tree/CSTU-SPACE-dev
-- **Laravel Docs**: https://laravel.com/docs/12.x
 - **ER Diagram**: [ER_DIAGRAM.md](./ER_DIAGRAM.md)

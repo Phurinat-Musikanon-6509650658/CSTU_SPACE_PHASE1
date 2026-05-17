@@ -1,0 +1,26 @@
+# Production overrides — use with:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Changes from dev:
+#   - MySQL port NOT exposed to host (internal only)
+#   - phpMyAdmin removed (use SSH tunnel if needed)
+#   - node builder runs once then exits (assets pre-built)
+#   - app + queue use --no-dev composer deps
+
+services:
+  app:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+
+  db:
+    ports: !reset []   # remove 3306 exposure
+
+  phpmyadmin:
+    profiles:
+      - tools   # only starts if: docker-compose --profile tools up
+
+  queue:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
