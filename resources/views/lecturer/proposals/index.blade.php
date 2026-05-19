@@ -4,501 +4,335 @@
 
 @push('styles')
 <style>
-    .page-header {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-light);
+    :root { --theme: #f6ad55; --theme-dark: #ed8936; --theme-rgb: 246,173,85; }
+    .page-banner {
+        background: linear-gradient(135deg, var(--theme) 0%, var(--theme-dark) 100%);
+        border-radius: 12px;
+        padding: 1.1rem 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 6px 20px rgba(var(--theme-rgb),.35);
     }
-
-    .page-header h2 {
-        color: #2c3e50;
-        font-weight: 700;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        box-shadow: var(--shadow-light);
-        transition: var(--transition);
-        border-left: 4px solid;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-medium);
-    }
-
-    .stat-card.warning {
-        border-left-color: #f6ad55;
-    }
-
-    .stat-card.success {
-        border-left-color: #48bb78;
-    }
-
-    .stat-card.info {
-        border-left-color: #4299e1;
-    }
-
-    .stat-card.danger {
-        border-left-color: #f56565;
-    }
-
-    .stat-card-icon {
-        position: absolute;
-        top: 50%;
-        right: 1rem;
-        transform: translateY(-50%);
-        font-size: 3rem;
-        opacity: 0.1;
-    }
-
-    .stat-card-title {
-        font-size: 0.875rem;
-        color: #718096;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-card-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 0;
-    }
-
-    .proposal-card {
-        background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-light);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-        transition: var(--transition);
-        border-left: 4px solid transparent;
-    }
-
-    .proposal-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-medium);
-    }
-
-    .proposal-card.pending {
-        border-left-color: #f6ad55;
-    }
-
-    .proposal-card.approved {
-        border-left-color: #48bb78;
-    }
-
-    .proposal-card.rejected {
-        border-left-color: #f56565;
-    }
-
-    .proposal-card.in-progress {
-        border-left-color: #4299e1;
-    }
-
-    .proposal-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #2c3e50;
-        margin-bottom: 0.75rem;
-    }
-
-    .proposal-description {
-        color: #718096;
-        font-size: 0.95rem;
-        line-height: 1.6;
+    .filter-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: .9rem 1.25rem;
         margin-bottom: 1rem;
+        box-shadow: 0 1px 8px rgba(0,0,0,.06);
+        border: 1px solid #f0e8d0;
+        border-left: 4px solid var(--theme);
     }
-
-    .proposal-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 0.75rem;
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-top: 1rem;
+    .filter-card .form-select-sm {
+        border-color: #e8dcc8;
+        font-size: .83rem;
     }
-
-    .proposal-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.9rem;
-        color: #4a5568;
+    .filter-card .form-select-sm:focus {
+        border-color: var(--theme);
+        box-shadow: 0 0 0 .2rem rgba(var(--theme-rgb),.2);
     }
-
-    .proposal-meta-item i {
-        color: #667eea;
-        font-size: 1rem;
+    .table-card {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        border: 1px solid #ede8e0;
     }
-
-    .badge-modern {
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .badge-pending {
-        background: linear-gradient(45deg, #f6ad55, #ed8936);
-        color: white;
-    }
-
-    .badge-approved {
-        background: linear-gradient(45deg, #48bb78, #38a169);
-        color: white;
-    }
-
-    .badge-rejected {
-        background: linear-gradient(45deg, #f56565, #e53e3e);
-        color: white;
-    }
-
-    .badge-in-progress {
-        background: linear-gradient(45deg, #4299e1, #3182ce);
-        color: white;
-    }
-
-    .empty-state {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 4rem 2rem;
-        text-align: center;
-        box-shadow: var(--shadow-light);
-    }
-
-    .empty-state i {
-        font-size: 5rem;
-        color: #cbd5e0;
-        margin-bottom: 1.5rem;
-    }
-
-    .empty-state h5 {
-        color: #4a5568;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .empty-state p {
-        color: #718096;
-        margin-bottom: 0;
-    }
-
-    .modern-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        border-radius: var(--border-radius);
-        font-weight: 600;
-        transition: var(--transition);
-        border: none;
-    }
-
-    .modern-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-medium);
-    }
-
-    .modern-btn.btn-primary {
-        background: var(--gradient-primary);
-        color: white;
-    }
-
-    .modern-btn.btn-success {
-        background: linear-gradient(135deg, #48bb78, #38a169);
-        color: white;
-    }
-
-    .modern-btn.btn-danger {
-        background: linear-gradient(135deg, #f56565, #e53e3e);
-        color: white;
-    }
-
-    .modern-btn.btn-light {
-        background: #f8f9fa;
-        color: #2c3e50;
-    }
-
-    .btn-action-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .btn-action-group .btn {
+    .table-compact thead th {
+        background: linear-gradient(135deg, #fff8ed 0%, #fef3dc 100%);
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #92600a;
+        padding: .7rem .75rem;
+        border-bottom: 2px solid #f6d98a;
         white-space: nowrap;
     }
-
-    @media (max-width: 768px) {
-        .proposal-card .row {
-            flex-direction: column;
-        }
-        
-        .btn-action-group {
-            flex-direction: row;
-            margin-top: 1rem;
-        }
+    .table-compact tbody td {
+        padding: .65rem .75rem;
+        vertical-align: middle;
+        font-size: .875rem;
+        border-bottom: 1px solid #faf5ec;
+    }
+    .table-compact tbody tr:last-child td { border-bottom: none; }
+    .table-compact tbody tr:hover { background: linear-gradient(90deg,#fff8ed,#fffcf5); }
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .9rem;
+        border-radius: 50px;
+        font-size: .8rem;
+        font-weight: 600;
+        border: 1.5px solid;
+    }
+    .stat-pill-total   { background:#f8f9fa; color:#6c757d; border-color:#dee2e6; }
+    .stat-pill-pending { background:#fff8e1; color:#d97706; border-color:#f6ad55; }
+    .stat-pill-ok      { background:#f0fdf4; color:#059669; border-color:#48bb78; }
+    .stat-pill-prog    { background:#eff6ff; color:#2563eb; border-color:#4299e1; }
+    .stat-pill-reject  { background:#fff1f2; color:#dc3545; border-color:#f56565; }
+    .project-code {
+        font-family: 'Courier New', monospace;
+        background: linear-gradient(135deg,#fff8ed,#fdeabc);
+        color: #92600a;
+        padding: .2rem .55rem;
+        border-radius: 5px;
+        font-size: .8rem;
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid #f6d98a;
+    }
+    .empty-row td {
+        padding: 3rem !important;
+        text-align: center;
+        color: #bbb;
+    }
+    .btn-icon {
+        padding: .28rem .55rem;
+        font-size: .78rem;
+        border-radius: 6px;
+        line-height: 1;
     }
 </style>
 @endpush
 
 @section('content')
-<div class="container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="mb-1">
-                    <i class="bi bi-file-earmark-text-fill me-2"></i>
-                    ข้อเสนอโครงงาน
-                </h2>
-                <p class="mb-0 opacity-75">รายการข้อเสนอหัวข้อโครงงานที่นักศึกษาส่งมาให้พิจารณา</p>
-            </div>
-            <a href="{{ route('lecturer.dashboard') }}" class="btn modern-btn btn-light">
-                <i class="bi bi-arrow-left"></i>
-                <span>กลับ Dashboard</span>
-            </a>
+<div class="container-fluid px-3">
+
+    {{-- Banner --}}
+    <div class="page-banner d-flex align-items-center justify-content-between">
+        <div>
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-file-earmark-text-fill me-2"></i>ข้อเสนอโครงงาน</h5>
+            <small style="color:rgba(255,255,255,.85);">รายการข้อเสนอหัวข้อโครงงานที่นักศึกษาส่งมา</small>
         </div>
+        <a href="{{ route('lecturer.dashboard') }}" class="btn btn-sm"
+           style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5);">
+            <i class="bi bi-arrow-left me-1"></i>กลับ
+        </a>
     </div>
 
-    <!-- Alerts -->
+    {{-- Alerts --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+            <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
+        <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <!-- Statistics Cards -->
-    <div class="stats-grid">
-        <div class="stat-card warning">
-            <i class="bi bi-clock-fill stat-card-icon"></i>
-            <div class="stat-card-title">รอพิจารณา</div>
-            <div class="stat-card-value">{{ $proposals->where('status', 'pending')->count() }}</div>
-        </div>
+    {{-- Stats pills --}}
+    @php
+        $total    = $proposals->count();
+        $pending  = $proposals->where('status','pending')->count();
+        $approved = $proposals->where('status','approved')->count();
+        $inprog   = $proposals->whereIn('status',['in_progress','submitted','late_submission'])->count();
+        $rejected = $proposals->where('status','rejected')->count();
+    @endphp
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <span class="stat-pill stat-pill-total"><i class="bi bi-list-ul"></i>ทั้งหมด {{ $total }}</span>
+        <span class="stat-pill stat-pill-pending"><i class="bi bi-clock-fill"></i>รอพิจารณา {{ $pending }}</span>
+        <span class="stat-pill stat-pill-ok"><i class="bi bi-check-circle-fill"></i>อนุมัติ {{ $approved }}</span>
+        <span class="stat-pill stat-pill-prog"><i class="bi bi-gear-fill"></i>ดำเนินการ {{ $inprog }}</span>
+        <span class="stat-pill stat-pill-reject"><i class="bi bi-x-circle-fill"></i>ปฏิเสธ {{ $rejected }}</span>
+    </div>
 
-        <div class="stat-card success">
-            <i class="bi bi-check-circle-fill stat-card-icon"></i>
-            <div class="stat-card-title">อนุมัติแล้ว</div>
-            <div class="stat-card-value">{{ $proposals->where('status', 'approved')->count() }}</div>
-        </div>
+    {{-- Filter --}}
+    <div class="filter-card">
+        <form method="GET" action="{{ route('lecturer.proposals.index') }}" class="row g-2 align-items-end">
+            <div class="col-6 col-md-3">
+                <label class="form-label mb-1 small fw-semibold text-muted">ปีการศึกษา</label>
+                <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">— ทั้งหมด —</option>
+                    @foreach($years as $y)
+                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small fw-semibold text-muted">ภาคเรียน</label>
+                <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">— ทั้งหมด —</option>
+                    @foreach($semesters as $sem)
+                        <option value="{{ $sem }}" {{ request('semester') == $sem ? 'selected' : '' }}>{{ $sem }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small fw-semibold text-muted">รายวิชา</label>
+                <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">— ทั้งหมด —</option>
+                    @foreach($subjects as $s)
+                        <option value="{{ $s }}" {{ request('subject') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small fw-semibold text-muted">สถานะ</label>
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">— ทั้งหมด —</option>
+                    <option value="pending"     {{ request('status') == 'pending'     ? 'selected' : '' }}>รอพิจารณา</option>
+                    <option value="approved"    {{ request('status') == 'approved'    ? 'selected' : '' }}>อนุมัติแล้ว</option>
+                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>กำลังดำเนินการ</option>
+                    <option value="rejected"    {{ request('status') == 'rejected'    ? 'selected' : '' }}>ปฏิเสธ</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                @if(request()->hasAny(['year','semester','subject','status']))
+                    <a href="{{ route('lecturer.proposals.index') }}" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle me-1"></i>ล้างตัวกรอง
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
 
-        <div class="stat-card info">
-            <i class="bi bi-gear-fill stat-card-icon"></i>
-            <div class="stat-card-title">กำลังดำเนินงาน</div>
-            <div class="stat-card-value">{{ $proposals->whereIn('status', ['in_progress', 'late_submission'])->count() }}</div>
-        </div>
-
-        <div class="stat-card danger">
-            <i class="bi bi-x-circle-fill stat-card-icon"></i>
-            <div class="stat-card-title">ปฏิเสธแล้ว</div>
-            <div class="stat-card-value">{{ $proposals->where('status', 'rejected')->count() }}</div>
+    {{-- Table --}}
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-compact mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:3%">#</th>
+                        <th style="width:30%">ชื่อหัวข้อ</th>
+                        <th style="width:8%">วิชา</th>
+                        <th style="width:8%">ปี/เทอม</th>
+                        <th style="width:18%">สมาชิก</th>
+                        <th style="width:10%">เสนอเมื่อ</th>
+                        <th style="width:10%">สถานะ</th>
+                        <th style="width:13%" class="text-center">การดำเนิน</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($proposals as $i => $proposal)
+                        <tr>
+                            <td class="text-muted small">{{ $i + 1 }}</td>
+                            <td>
+                                <div class="fw-semibold lh-sm">{{ $proposal->proposed_title }}</div>
+                                @if($proposal->description)
+                                    <small class="text-muted d-block mt-1">{{ Str::limit($proposal->description, 60) }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                <code class="small">{{ $proposal->group->subject_code ?? '-' }}</code>
+                            </td>
+                            <td class="small text-muted">
+                                {{ $proposal->group->year ?? '-' }}/{{ $proposal->group->semester ?? '-' }}
+                            </td>
+                            <td>
+                                @foreach($proposal->group->members as $member)
+                                    <div class="small lh-sm">
+                                        <i class="bi bi-person-fill text-muted me-1" style="font-size:.7rem;"></i>{{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}
+                                    </div>
+                                @endforeach
+                            </td>
+                            <td class="small text-muted" style="white-space:nowrap;">
+                                {{ $proposal->proposed_at->locale('th')->diffForHumans() }}
+                            </td>
+                            <td>
+                                @php
+                                    $badgeMap = [
+                                        'pending'         => ['bg-warning text-dark', 'รอพิจารณา'],
+                                        'approved'        => ['bg-success text-white', 'อนุมัติแล้ว'],
+                                        'rejected'        => ['bg-danger text-white', 'ปฏิเสธ'],
+                                        'in_progress'     => ['bg-primary text-white', 'ดำเนินการ'],
+                                        'submitted'       => ['bg-info text-dark', 'ส่งเล่มแล้ว'],
+                                        'late_submission' => ['bg-danger text-white', 'ส่งล่าช้า'],
+                                    ];
+                                    [$bc, $bl] = $badgeMap[$proposal->status] ?? ['bg-secondary', $proposal->status];
+                                @endphp
+                                <span class="badge {{ $bc }} small">{{ $bl }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                    <a href="{{ route('lecturer.proposals.show', $proposal->proposal_id) }}"
+                                       class="btn btn-icon btn-outline-primary" title="ดูรายละเอียด">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if($proposal->status === 'pending')
+                                        <button class="btn btn-icon btn-success" title="อนุมัติ"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#approveModal{{ $proposal->proposal_id }}">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-danger" title="ปฏิเสธ"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#rejectModal{{ $proposal->proposal_id }}">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr class="empty-row">
+                            <td colspan="8">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                ไม่มีข้อเสนอที่ตรงกับเงื่อนไข
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Proposals List -->
-    @if($proposals->isEmpty())
-        <div class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <h5>ยังไม่มีข้อเสนอโครงงาน</h5>
-            <p>เมื่อนักศึกษาส่งข้อเสนอมา จะแสดงที่นี่</p>
-        </div>
-    @else
-        @foreach($proposals as $proposal)
-            <div class="proposal-card 
-                @if($proposal->status === 'pending') pending
-                @elseif($proposal->status === 'approved') approved
-                @elseif($proposal->status === 'rejected') rejected
-                @else in-progress
-                @endif
-            ">
-                <div class="card-body p-4">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="proposal-title">{{ $proposal->proposed_title }}</div>
-                                <span class="badge-modern 
-                                    @if($proposal->status === 'pending') badge-pending
-                                    @elseif($proposal->status === 'approved') badge-approved
-                                    @elseif($proposal->status === 'rejected') badge-rejected
-                                    @else badge-in-progress
-                                    @endif
-                                ">
-                                    @if($proposal->status === 'pending') 
-                                        <i class="bi bi-clock"></i>รอพิจารณา
-                                    @elseif($proposal->status === 'approved') 
-                                        <i class="bi bi-check-circle"></i>อนุมัติแล้ว
-                                    @elseif($proposal->status === 'in_progress') 
-                                        <i class="bi bi-gear-fill"></i>กำลังดำเนินงาน
-                                    @elseif($proposal->status === 'late_submission') 
-                                        <i class="bi bi-exclamation-triangle"></i>ส่งเล่มล่าช้า
-                                    @elseif($proposal->status === 'submitted') 
-                                        <i class="bi bi-check-circle-fill"></i>ส่งเล่มแล้ว
-                                    @else 
-                                        <i class="bi bi-x-circle"></i>ปฏิเสธแล้ว
-                                    @endif
-                                </span>
-                            </div>
+</div>
 
-                            @if($proposal->description)
-                                <div class="proposal-description">
-                                    {{ Str::limit($proposal->description, 200) }}
-                                </div>
-                            @endif
-
-                            <div class="proposal-meta">
-                                <div class="proposal-meta-item">
-                                    <i class="bi bi-diagram-3-fill"></i>
-                                    <span><strong>กลุ่มที่:</strong> {{ $proposal->group->group_id }}</span>
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <i class="bi bi-book-fill"></i>
-                                    <span><strong>รหัสวิชา:</strong> {{ $proposal->group->subject_code }}</span>
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <i class="bi bi-people-fill"></i>
-                                    <span><strong>สมาชิก:</strong> {{ $proposal->group->members->count() }} คน</span>
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <i class="bi bi-clock-history"></i>
-                                    <span>เสนอเมื่อ {{ $proposal->proposed_at->locale('th')->diffForHumans() }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-4 d-flex align-items-center justify-content-end">
-                            <div class="btn-action-group w-100">
-                                <a href="{{ route('lecturer.proposals.show', $proposal->proposal_id) }}" 
-                                   class="btn modern-btn btn-primary">
-                                    <i class="bi bi-eye"></i>ดูรายละเอียด
-                                </a>
-                                
-                                @if($proposal->status === 'pending')
-                                    <button type="button" 
-                                            class="btn modern-btn btn-success" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#approveModal{{ $proposal->proposal_id }}">
-                                        <i class="bi bi-check-circle"></i>อนุมัติ
-                                    </button>
-                                    <button type="button" 
-                                            class="btn modern-btn btn-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#rejectModal{{ $proposal->proposal_id }}">
-                                        <i class="bi bi-x-circle"></i>ปฏิเสธ
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
+{{-- Approve / Reject Modals --}}
+@foreach($proposals as $proposal)
+    @if($proposal->status === 'pending')
+        <div class="modal fade" id="approveModal{{ $proposal->proposal_id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2" style="background:linear-gradient(135deg,#48bb78,#38a169);color:white;">
+                        <h6 class="modal-title mb-0"><i class="bi bi-check-circle-fill me-1"></i>ยืนยันอนุมัติ</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                </div>
-            </div>
-            </div>
-
-            <!-- Approve Modal -->
-            <div class="modal fade" id="approveModal{{ $proposal->proposal_id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header" style="background: linear-gradient(135deg, #48bb78, #38a169); color: white;">
-                            <h5 class="modal-title">
-                                <i class="bi bi-check-circle-fill me-2"></i>
-                                ยืนยันการอนุมัติ
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>คุณต้องการอนุมัติข้อเสนอ <strong>"{{ $proposal->proposed_title }}"</strong> หรือไม่?</p>
-                            <div class="alert alert-info mb-0">
-                                <small>
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    เมื่ออนุมัติแล้ว นักศึกษาจะได้รับแจ้งเตือน และข้อเสนอจะถูกนำไปสู่ขั้นตอนถัดไป
-                                </small>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                ยกเลิก
-                            </button>
-                            <form action="{{ route('lecturer.proposals.approve', $proposal->proposal_id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn modern-btn btn-success">
-                                    <i class="bi bi-check-circle"></i>ยืนยันการอนุมัติ
-                                </button>
-                            </form>
-                        </div>
+                    <div class="modal-body small">
+                        อนุมัติ <strong>"{{ Str::limit($proposal->proposed_title,60) }}"</strong>?
                     </div>
-                </div>
-            </div>
-
-            <!-- Reject Modal -->
-            <div class="modal fade" id="rejectModal{{ $proposal->proposal_id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header" style="background: linear-gradient(135deg, #f56565, #e53e3e); color: white;">
-                            <h5 class="modal-title">
-                                <i class="bi bi-x-circle-fill me-2"></i>
-                                ปฏิเสธข้อเสนอ
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="{{ route('lecturer.proposals.reject', $proposal->proposal_id) }}" method="POST">
+                    <div class="modal-footer py-2 gap-1">
+                        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <form action="{{ route('lecturer.proposals.approve', $proposal->proposal_id) }}" method="POST">
                             @csrf
-                            <div class="modal-body">
-                                <p>กรุณาระบุเหตุผลที่ปฏิเสธข้อเสนอ <strong>"{{ $proposal->proposed_title }}"</strong></p>
-                                <div class="mb-3">
-                                    <label for="rejection_reason{{ $proposal->proposal_id }}" class="form-label">
-                                        เหตุผล <span class="text-danger">*</span>
-                                    </label>
-                                    <textarea class="form-control" 
-                                              id="rejection_reason{{ $proposal->proposal_id }}" 
-                                              name="rejection_reason" 
-                                              rows="4" 
-                                              placeholder="เช่น หัวข้อซ้ำกับโครงงานอื่น, ขอบเขตกว้างเกินไป..."
-                                              required></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    ยกเลิก
-                                </button>
-                                <button type="submit" class="btn modern-btn btn-danger">
-                                    <i class="bi bi-x-circle"></i>ยืนยันการปฏิเสธ
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg me-1"></i>อนุมัติ
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
-        @endforeach
+        </div>
+
+        <div class="modal fade" id="rejectModal{{ $proposal->proposal_id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header py-2" style="background:linear-gradient(135deg,#f56565,#e53e3e);color:white;">
+                        <h6 class="modal-title mb-0"><i class="bi bi-x-circle-fill me-1"></i>ปฏิเสธข้อเสนอ</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ route('lecturer.proposals.reject', $proposal->proposal_id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <p class="small mb-2">ระบุเหตุผลที่ปฏิเสธ <strong>"{{ Str::limit($proposal->proposed_title,60) }}"</strong></p>
+                            <textarea class="form-control form-control-sm" name="rejection_reason" rows="3"
+                                      placeholder="เช่น หัวข้อซ้ำ, ขอบเขตกว้างเกินไป..." required></textarea>
+                        </div>
+                        <div class="modal-footer py-2 gap-1">
+                            <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="bi bi-x-lg me-1"></i>ยืนยันปฏิเสธ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     @endif
-</div>
+@endforeach
+
 @endsection

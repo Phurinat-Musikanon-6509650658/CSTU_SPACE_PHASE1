@@ -85,25 +85,11 @@
         <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
             <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
         </a>
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-1">
-            <div>
-                <h1 class="h3 fw-bold mb-0">
-                    <i class="bi bi-table me-2 text-primary"></i>สรุปข้อมูลรายวิชา
-                </h1>
-                <p class="text-muted small mb-0">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม export{{ (\App\Helpers\PermissionHelper::isCoordinator() || \App\Helpers\PermissionHelper::isAdmin()) ? ' / import' : '' }}</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                @if(\App\Helpers\PermissionHelper::isCoordinator() || \App\Helpers\PermissionHelper::isAdmin())
-                <a href="{{ route('coordinator.subject-summary.import.form') }}"
-                   class="btn btn-outline-primary export-btn">
-                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Import
-                </a>
-                @endif
-                <a href="{{ route('coordinator.subject-summary.template') }}"
-                   class="btn btn-outline-secondary export-btn">
-                    <i class="bi bi-download me-1"></i>ดาวน์โหลด Template
-                </a>
-            </div>
+        <div class="mt-1">
+            <h1 class="h3 fw-bold mb-0">
+                <i class="bi bi-table me-2 text-primary"></i>สรุปข้อมูลรายวิชา
+            </h1>
+            <p class="text-muted small mb-0">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม export / import</p>
         </div>
     </div>
 
@@ -116,77 +102,114 @@
     @endif
 
     {{-- ── Filter bar ──────────────────────────────────────── --}}
-    <div class="filter-bar d-flex align-items-center gap-3 flex-wrap">
-        <form method="GET" action="{{ route('coordinator.subject-summary.index') }}"
-              class="d-flex align-items-center gap-2 flex-wrap">
-            <label class="fw-semibold text-secondary small mb-0">ปีการศึกษา</label>
-            <select name="year" class="form-select form-select-sm" style="width:110px;" onchange="this.form.submit()">
-                @foreach($years as $y)
-                    <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
-                @endforeach
-            </select>
+    <div class="filter-bar">
+        {{-- Row 1: ปีการศึกษา / เทอม (server-side reload) + Export --}}
+        <div class="d-flex align-items-center gap-3 flex-wrap mb-2">
+            <form method="GET" action="{{ route('coordinator.subject-summary.index') }}"
+                  class="d-flex align-items-center gap-2 flex-wrap">
+                <label class="fw-semibold text-secondary small mb-0">ปีการศึกษา</label>
+                <select name="year" class="form-select form-select-sm" style="width:110px;" onchange="this.form.submit()">
+                    @foreach($years as $y)
+                        <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+                <label class="fw-semibold text-secondary small mb-0">เทอม</label>
+                <select name="semester" class="form-select form-select-sm" style="width:80px;" onchange="this.form.submit()">
+                    @foreach($semesters as $s)
+                        <option value="{{ $s }}" {{ $s == $semester ? 'selected' : '' }}>{{ $s }}</option>
+                    @endforeach
+                </select>
+            </form>
 
-            <label class="fw-semibold text-secondary small mb-0">เทอม</label>
-            <select name="semester" class="form-select form-select-sm" style="width:80px;" onchange="this.form.submit()">
-                @foreach($semesters as $s)
-                    <option value="{{ $s }}" {{ $s == $semester ? 'selected' : '' }}>{{ $s }}</option>
-                @endforeach
-            </select>
-        </form>
-
-        <div class="ms-auto d-flex gap-2 flex-wrap">
-            {{-- Export buttons --}}
-            <div class="dropdown">
-                <button class="btn btn-success export-btn dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-file-earmark-excel me-1"></i>Export XLSX
+            <div class="ms-auto d-flex gap-2 flex-wrap">
+                @if(\App\Helpers\PermissionHelper::isCoordinator() || \App\Helpers\PermissionHelper::isAdmin())
+                <a href="{{ route('coordinator.subject-summary.import.form') }}"
+                   class="btn btn-outline-primary export-btn">
+                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Import
+                </a>
+                @endif
+                <a href="{{ route('coordinator.subject-summary.template') }}"
+                   class="btn btn-outline-secondary export-btn">
+                    <i class="bi bi-download me-1"></i>Template
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-success export-btn dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-file-earmark-excel me-1"></i>Export XLSX
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'CS303']) }}">CS303</a></li>
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'CS403']) }}">CS403</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'all']) }}">ทุกวิชา</a></li>
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary export-btn dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-filetype-csv me-1"></i>Export CSV
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'CS303']) }}">CS303</a></li>
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'CS403']) }}">CS403</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'all']) }}">ทุกวิชา</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-outline-danger export-btn" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i>พิมพ์
                 </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'CS303']) }}">
-                            CS303 เท่านั้น
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'CS403']) }}">
-                            CS403 เท่านั้น
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'xlsx','year'=>$year,'semester'=>$semester,'subject'=>'all']) }}">
-                            ทุกวิชา
-                        </a>
-                    </li>
-                </ul>
             </div>
+        </div>
 
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary export-btn dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-filetype-csv me-1"></i>Export CSV
+        {{-- Row 2: Search / filter (client-side JS) --}}
+        <div class="row g-2 align-items-end pt-2 border-top">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </label>
+                <input type="text" id="ss-search" class="form-control form-control-sm"
+                       placeholder="รหัสโครงงาน / ชื่อโครงงาน / นักศึกษา / ที่ปรึกษา">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-flag me-1"></i>สถานะโครงงาน
+                </label>
+                <select id="ss-status" class="form-select form-select-sm">
+                    <option value="">ทั้งหมด</option>
+                    <option value="in_progress">กำลังดำเนินการ</option>
+                    <option value="submitted">ส่งงานแล้ว</option>
+                    <option value="late_submission">ส่งงานล่าช้า</option>
+                    <option value="approved">อนุมัติแล้ว</option>
+                    <option value="pending">รออนุมัติ</option>
+                    <option value="not_proposed">ยังไม่เสนอ</option>
+                    <option value="rejected">ถูกปฏิเสธ</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-tag me-1"></i>ประเภท
+                </label>
+                <select id="ss-type" class="form-select form-select-sm">
+                    <option value="">ทั้งหมด</option>
+                    <option value="r">ปกติ (r)</option>
+                    <option value="s">พิเศษ (s)</option>
+                    <option value="m">ผสม (m)</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-calendar-event me-1"></i>วันสอบ
+                </label>
+                <select id="ss-exam" class="form-select form-select-sm">
+                    <option value="">ทั้งหมด</option>
+                    <option value="1">กำหนดแล้ว</option>
+                    <option value="0">ยังไม่กำหนด</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="button" id="ss-clear" class="btn btn-outline-secondary btn-sm flex-fill">
+                    <i class="bi bi-x-lg me-1"></i>ล้างตัวกรอง
                 </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'CS303']) }}">
-                            CS303
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'CS403']) }}">
-                            CS403
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item" href="{{ route('coordinator.subject-summary.export', ['format'=>'csv','year'=>$year,'semester'=>$semester,'subject'=>'all']) }}">
-                            ทุกวิชา
-                        </a>
-                    </li>
-                </ul>
             </div>
-
-            <button class="btn btn-outline-danger export-btn" onclick="window.print()">
-                <i class="bi bi-printer me-1"></i>พิมพ์ / PDF
-            </button>
         </div>
     </div>
 
@@ -266,4 +289,65 @@
     body { background: white !important; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+(function () {
+    const searchEl  = document.getElementById('ss-search');
+    const statusEl  = document.getElementById('ss-status');
+    const typeEl    = document.getElementById('ss-type');
+    const examEl    = document.getElementById('ss-exam');
+    const clearBtn  = document.getElementById('ss-clear');
+
+    // Tab badge elements
+    const badge303 = document.querySelector('#subjectTab [data-bs-target="#cs303panel"] .badge');
+    const badge403 = document.querySelector('#subjectTab [data-bs-target="#cs403panel"] .badge');
+
+    function applyFilter() {
+        const q      = searchEl.value.toLowerCase().trim();
+        const status = statusEl.value;
+        const type   = typeEl.value;
+        const exam   = examEl.value;
+
+        ['cs303panel', 'cs403panel'].forEach(panelId => {
+            const panel   = document.getElementById(panelId);
+            if (!panel) return;
+            const rows    = panel.querySelectorAll('tbody tr');
+            const countEl = panel.querySelector('.visible-count');
+            let visible   = 0;
+
+            rows.forEach(row => {
+                const matchQ      = !q      || [row.dataset.code, row.dataset.name, row.dataset.members, row.dataset.advisor].some(v => v && v.includes(q));
+                const matchStatus = !status || row.dataset.status === status;
+                const matchType   = !type   || (row.dataset.type && row.dataset.type.includes(type));
+                const matchExam   = !exam   || row.dataset.hasExam === exam;
+
+                const show = matchQ && matchStatus && matchType && matchExam;
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            if (countEl) countEl.textContent = visible;
+
+            // Update tab badge
+            if (panelId === 'cs303panel' && badge303) badge303.textContent = visible;
+            if (panelId === 'cs403panel' && badge403) badge403.textContent = visible;
+        });
+    }
+
+    searchEl.addEventListener('input',  applyFilter);
+    statusEl.addEventListener('change', applyFilter);
+    typeEl.addEventListener('change',   applyFilter);
+    examEl.addEventListener('change',   applyFilter);
+
+    clearBtn.addEventListener('click', function () {
+        searchEl.value = '';
+        statusEl.value = '';
+        typeEl.value   = '';
+        examEl.value   = '';
+        applyFilter();
+    });
+})();
+</script>
 @endpush

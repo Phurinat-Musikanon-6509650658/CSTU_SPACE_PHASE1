@@ -32,12 +32,24 @@
             </h1>
             <p class="text-muted mb-0">โครงงานที่คุณเป็นอาจารย์ที่ปรึกษาหรือคณะกรรมการ</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
             <a href="{{ route('lecturer.evaluations.export-all') }}" target="_blank"
-               class="btn btn-outline-secondary">
+               class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-printer me-2"></i>Export รวม PDF
             </a>
-            <a href="{{ route('menu') }}" class="btn btn-outline-primary">
+            {{-- Sort toggle --}}
+            @php
+                $nextSort  = $sortBy === 'exam' ? 'code' : 'exam';
+                $sortIcon  = $sortBy === 'exam' ? 'bi-calendar-event'  : 'bi-sort-alpha-down';
+                $sortLabel = $sortBy === 'exam' ? 'เรียงตามวันเวลาสอบ' : 'เรียงตามรหัสโครงงาน';
+            @endphp
+            <a href="{{ request()->fullUrlWithQuery(['sort' => $nextSort, 'page' => 1]) }}"
+               class="btn btn-sm {{ $sortBy === 'exam' ? 'btn-warning text-dark' : 'btn-outline-secondary' }}"
+               title="สลับการเรียง">
+                <i class="bi {{ $sortIcon }} me-1"></i>{{ $sortLabel }}
+                <i class="bi bi-arrow-left-right ms-1 opacity-75"></i>
+            </a>
+            <a href="{{ route('menu') }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-house me-2"></i>กลับหน้าหลัก
             </a>
         </div>
@@ -167,9 +179,8 @@
                         <div class="col-md-2">
                             <label class="small text-muted d-block mb-1">วันเวลาสอบ</label>
                             @if($project->exam_datetime)
-                                <strong class="text-success">
-                                    <i class="bi bi-calendar-event me-1"></i>
-                                    {{ $project->exam_datetime->format('d/m/Y H:i') }}
+                                <strong class="text-success" style="white-space:nowrap;">
+                                    <i class="bi bi-calendar-event me-1"></i>{{ thaiDateTime($project->exam_datetime) }}
                                 </strong>
                             @else
                                 <span class="text-muted">ยังไม่กำหนด</span>

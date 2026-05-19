@@ -170,14 +170,12 @@ class GroupController extends Controller
         }
         
         $group->load([
-            'members.student', 
-            'invitations.invitee', 
-            'invitations.inviter', 
+            'members.student',
+            'invitations.invitee',
+            'invitations.inviter',
             'latestProposal.lecturer',
-            'project.advisor',
-            'project.committee1',
-            'project.committee2',
-            'project.committee3'
+            'project.advisorLecturer.user',
+            'project.committeeLecturers.user',
         ]);
         
         // ตรวจสอบสถานะ proposal ล่าสุดและแจ้งเตือน

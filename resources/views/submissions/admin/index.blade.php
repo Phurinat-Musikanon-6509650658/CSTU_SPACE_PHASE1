@@ -183,7 +183,7 @@
                                             </td>
                                             <td>
                                                 @if($project->submitted_at)
-                                                    <small>{{ $project->submitted_at->format('d/m/Y H:i') }}</small>
+                                                    <small>{{ thaiDateTime($project->submitted_at) }}</small>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif

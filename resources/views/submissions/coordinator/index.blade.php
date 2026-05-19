@@ -191,23 +191,15 @@
                                                 @endswitch
                                             </td>
                                             <td>
-                                                @switch($project->status_project)
-                                                    @case('pending')
-                                                        <span class="badge bg-warning">รออนุมัติ</span>
-                                                        @break
-                                                    @case('approved')
-                                                        <span class="badge bg-success">อนุมัติ</span>
-                                                        @break
-                                                    @case('rejected')
-                                                        <span class="badge bg-danger">ปฏิเสธ</span>
-                                                        @break
-                                                    @default
-                                                        <span class="badge bg-secondary">{{ $project->status_project }}</span>
-                                                @endswitch
+                                                @php
+                                                    $sl = ['not_proposed'=>['secondary','ยังไม่เสนอ'],'pending'=>['warning','รออนุมัติ'],'approved'=>['info','อนุมัติแล้ว'],'rejected'=>['danger','ถูกปฏิเสธ'],'in_progress'=>['primary','กำลังดำเนินการ'],'submitted'=>['success','ส่งงานแล้ว'],'late_submission'=>['warning','ส่งงานล่าช้า'],'passed'=>['success','ผ่าน'],'failed'=>['danger','ไม่ผ่าน']];
+                                                    [$sc,$st] = $sl[$project->status_project] ?? ['secondary',$project->status_project];
+                                                @endphp
+                                                <span class="badge bg-{{ $sc }}">{{ $st }}</span>
                                             </td>
                                             <td>
                                                 @if($project->submitted_at)
-                                                    <small>{{ $project->submitted_at->format('d/m/Y H:i') }}</small>
+                                                    <small>{{ thaiDateTime($project->submitted_at) }}</small>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif

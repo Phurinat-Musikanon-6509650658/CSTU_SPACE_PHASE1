@@ -41,6 +41,29 @@
         </div>
     @endif
 
+    {{-- ── Export Card ───────────────────────────────────────────────────── --}}
+    <a href="{{ route('coordinator.evaluations.export-preview') }}"
+       class="text-decoration-none">
+        <div class="card border-0 shadow-sm mb-4" style="cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(28,200,138,.25)'" onmouseout="this.style.boxShadow=''">
+            <div class="card-body d-flex align-items-center gap-3 py-3"
+                 style="background:linear-gradient(135deg,#1cc88a15,#13855c08);border-radius:12px;border:1px solid #bbf7d0;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1cc88a,#13855c);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-file-earmark-spreadsheet text-white" style="font-size:1.4rem;"></i>
+                </div>
+                <div class="flex-fill">
+                    <div class="fw-bold text-success">สรุปคะแนนและส่งออกคะแนน</div>
+                    <div class="small text-muted">ดูตัวอย่างแบบ real-time · Export .xlsx 2 sheet (แยกตามอาจารย์ / สรุปรวมเฉลี่ย)</div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.72rem;">
+                        <i class="bi bi-activity me-1"></i>Real-time
+                    </span>
+                    <i class="bi bi-chevron-right text-success"></i>
+                </div>
+            </div>
+        </div>
+    </a>
+
     {{-- Stats --}}
     @php
         $total         = $projects->count();
@@ -228,6 +251,7 @@
         </div>
         @endif
     </div>
+
 
 </div>
 @endsection

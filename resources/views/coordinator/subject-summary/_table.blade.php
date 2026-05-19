@@ -7,6 +7,8 @@
         'in_progress'    => 'กำลังดำเนินการ',
         'submitted'      => 'ส่งงานแล้ว',
         'late_submission'=> 'ส่งงานล่าช้า',
+        'passed'         => 'ผ่าน',
+        'failed'         => 'ไม่ผ่าน',
     ];
     $typeLabels = ['s'=>'พิเศษ','r'=>'ปกติ','m'=>'ผสม'];
 @endphp
@@ -43,11 +45,19 @@
                 @php
                     $m1  = $p->first_member;
                     $m2  = $p->second_member;
-                    $edt = $p->exam_datetime;   // Carbon|null — source of truth
-                    $eet = $p->exam_end_time;   // Carbon|null
+                    $edt = $p->exam_datetime;
+                    $eet = $p->exam_end_time;
                     $rowBg = $no % 2 === 1 ? 'style="background:#f9fbff;"' : '';
+                    $memberText = collect([$m1, $m2])->filter()->map(fn($m) => $m->firstname_std.' '.$m->lastname_std.' '.$m->username_std)->implode(' ');
                 @endphp
-                <tr {!! $rowBg !!}>
+                <tr {!! $rowBg !!}
+                    data-code="{{ strtolower($p->project_code) }}"
+                    data-name="{{ strtolower($p->project_name) }}"
+                    data-members="{{ strtolower($memberText) }}"
+                    data-advisor="{{ strtolower($p->advisorLecturer?->user_code ?? '') }}"
+                    data-status="{{ $p->status_project }}"
+                    data-type="{{ $p->project_type }}"
+                    data-has-exam="{{ $edt ? '1' : '0' }}">
                     <td class="text-center text-muted">{{ $no + 1 }}</td>
                     <td>
                         <code class="small text-primary">{{ $p->project_code }}</code>
@@ -122,7 +132,7 @@
                     {{-- Exam --}}
                     <td>
                         @if($edt)
-                            <span style="font-size:.79rem;">{{ $edt->format('d/m/Y') }}</span>
+                            <span style="font-size:.79rem;">{{ thaiDate($edt) }}</span>
                         @else
                             <span class="text-danger small">ยังไม่กำหนด</span>
                         @endif
@@ -151,7 +161,7 @@
             </tbody>
         </table>
     </div>
-    <div class="text-end text-muted small p-2">
-        รวม {{ $projects->count() }} โครงงาน
+    <div class="text-end text-muted small p-2 summary-count" data-total="{{ $projects->count() }}">
+        รวม <span class="visible-count">{{ $projects->count() }}</span> / {{ $projects->count() }} โครงงาน
     </div>
 @endif

@@ -157,11 +157,11 @@
                 <div class="detail-card-body">
                     <div class="detail-row">
                         <div class="detail-label">สร้างเมื่อ</div>
-                        <div class="detail-value"><small>{{ $log->created_at->format('d/m/Y H:i:s') }}</small></div>
+                        <div class="detail-value"><small>{{ thaiDateTimeSec($log->created_at) }}</small></div>
                     </div>
                     <div class="detail-row last">
                         <div class="detail-label">อัพเดทเมื่อ</div>
-                        <div class="detail-value"><small>{{ $log->updated_at->format('d/m/Y H:i:s') }}</small></div>
+                        <div class="detail-value"><small>{{ thaiDateTimeSec($log->updated_at) }}</small></div>
                     </div>
                 </div>
             </div>

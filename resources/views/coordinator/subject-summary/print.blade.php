@@ -39,13 +39,19 @@
 </div>
 
 <h1>สรุปข้อมูลโครงงาน — {{ $subject === 'all' ? 'ทุกรายวิชา' : $subject }}</h1>
-<div class="subtitle">เทอม {{ $semester }} ปีการศึกษา {{ $year }} &nbsp;|&nbsp; พิมพ์เมื่อ {{ now()->format('d/m/Y H:i') }}</div>
+<div class="subtitle">เทอม {{ $semester }} ปีการศึกษา {{ $year }} &nbsp;|&nbsp; พิมพ์เมื่อ {{ thaiDateTime(now()) }}</div>
 
 @php
     $statusLabels = [
-        'not_proposed'=>'ยังไม่เสนอ','pending'=>'รออนุมัติ','approved'=>'อนุมัติแล้ว',
-        'rejected'=>'ถูกปฏิเสธ','in_progress'=>'กำลังดำเนิน','submitted'=>'ส่งงานแล้ว',
-        'late_submission'=>'ส่งล่าช้า',
+        'not_proposed'   => 'ยังไม่เสนอ',
+        'pending'        => 'รออนุมัติ',
+        'approved'       => 'อนุมัติแล้ว',
+        'rejected'       => 'ถูกปฏิเสธ',
+        'in_progress'    => 'กำลังดำเนินการ',
+        'submitted'      => 'ส่งงานแล้ว',
+        'late_submission' => 'ส่งงานล่าช้า',
+        'passed'         => 'ผ่าน',
+        'failed'         => 'ไม่ผ่าน',
     ];
 @endphp
 
@@ -89,7 +95,7 @@
             <td class="code">{{ $comms ?: '-' }}</td>
             <td>
                 @if($es)
-                    {{ $es->ex_start_time->format('d/m/Y') }}<br>
+                    {{ thaiDate($es->ex_start_time) }}<br>
                     <span style="font-size:9pt;">{{ $es->ex_start_time->format('H:i') }}–{{ $es->ex_end_time->format('H:i') }}</span>
                 @else
                     <span class="no-exam">ยังไม่กำหนด</span>

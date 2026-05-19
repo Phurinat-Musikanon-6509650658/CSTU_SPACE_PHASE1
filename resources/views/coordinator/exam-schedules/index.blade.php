@@ -116,13 +116,13 @@
                                 </td>
                                 <td>
                                     <div class="time-block">
-                                        <div class="date">{{ $schedule->ex_start_time->format('d/m/Y') }}</div>
+                                        <div class="date">{{ thaiDate($schedule->ex_start_time) }}</div>
                                         <div class="time"><i class="bi bi-clock me-1"></i>{{ $schedule->ex_start_time->format('H:i') }}</div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="time-block">
-                                        <div class="date">{{ $schedule->ex_end_time->format('d/m/Y') }}</div>
+                                        <div class="date">{{ thaiDate($schedule->ex_end_time) }}</div>
                                         <div class="time"><i class="bi bi-clock me-1"></i>{{ $schedule->ex_end_time->format('H:i') }}</div>
                                     </div>
                                 </td>

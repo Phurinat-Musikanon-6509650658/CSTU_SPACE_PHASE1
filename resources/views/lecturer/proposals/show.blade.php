@@ -371,21 +371,11 @@
                     <div class="info-item">
                         <span class="info-label">สถานะโครงงาน</span>
                         <span class="info-value">
-                            @if($proposal->group->project->status_project === 'approved')
-                                <span class="badge bg-success">อนุมัติแล้ว</span>
-                            @elseif($proposal->group->project->status_project === 'pending')
-                                <span class="badge bg-warning">รอพิจารณา</span>
-                            @elseif($proposal->group->project->status_project === 'rejected')
-                                <span class="badge bg-danger">ปฏิเสธ</span>
-                            @elseif($proposal->group->project->status_project === 'in_progress')
-                                <span class="badge bg-info">กำลังดำเนินการ</span>
-                            @elseif($proposal->group->project->status_project === 'submitted')
-                                <span class="badge bg-success">ส่งเล่มแล้ว</span>
-                            @elseif($proposal->group->project->status_project === 'late_submission')
-                                <span class="badge bg-warning">ส่งเล่มล่าช้า</span>
-                            @else
-                                <span class="badge bg-secondary">{{ $proposal->group->project->status_project }}</span>
-                            @endif
+                            @php
+                                $sl = ['not_proposed'=>['secondary','ยังไม่เสนอ'],'pending'=>['warning','รออนุมัติ'],'approved'=>['info','อนุมัติแล้ว'],'rejected'=>['danger','ถูกปฏิเสธ'],'in_progress'=>['primary','กำลังดำเนินการ'],'submitted'=>['success','ส่งงานแล้ว'],'late_submission'=>['warning','ส่งงานล่าช้า'],'passed'=>['success','ผ่าน'],'failed'=>['danger','ไม่ผ่าน']];
+                                [$sc,$st] = $sl[$proposal->group->project->status_project] ?? ['secondary',$proposal->group->project->status_project];
+                            @endphp
+                            <span class="badge bg-{{ $sc }}">{{ $st }}</span>
                         </span>
                     </div>
                     <div class="info-item">
@@ -400,7 +390,7 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">วันที่สร้างโครงงาน</span>
-                        <span class="info-value">{{ $proposal->group->project->created_at->format('d/m/Y') }}</span>
+                        <span class="info-value">{{ thaiDate($proposal->group->project->created_at) }}</span>
                     </div>
                 </div>
             </div>
@@ -418,7 +408,7 @@
                         <h5 class="mb-2">{{ $proposal->group->project->submission_original_name ?? 'รายงานโครงงาน.pdf' }}</h5>
                         <p class="text-muted mb-3">
                             <i class="bi bi-calendar me-1"></i>
-                            ส่งเมื่อ: {{ $proposal->group->project->submitted_at ? $proposal->group->project->submitted_at->format('d/m/Y H:i') : 'N/A' }}
+                            ส่งเมื่อ: {{ thaiDateTime($proposal->group->project->submitted_at) }}
                         </p>
                         <p class="text-muted mb-3">
                             <i class="bi bi-person me-1"></i>
@@ -470,7 +460,7 @@
                         </div>
                         <div class="timeline-content">
                             <strong>เสนอหัวข้อโครงงาน</strong>
-                            <p class="mb-0 text-muted small">{{ $proposal->proposed_at->format('d/m/Y H:i') }}</p>
+                            <p class="mb-0 text-muted small">{{ thaiDateTime($proposal->proposed_at) }}</p>
                         </div>
                     </div>
 
@@ -482,7 +472,7 @@
                         </div>
                         <div class="timeline-content">
                             <strong>{{ $proposal->status === 'approved' ? 'อนุมัติข้อเสนอ' : 'ปฏิเสธข้อเสนอ' }}</strong>
-                            <p class="mb-0 text-muted small">{{ $proposal->responded_at->format('d/m/Y H:i') }}</p>
+                            <p class="mb-0 text-muted small">{{ thaiDateTime($proposal->responded_at) }}</p>
                         </div>
                     </div>
                     @endif
@@ -494,7 +484,7 @@
                         </div>
                         <div class="timeline-content">
                             <strong>ส่งรายงานโครงงาน</strong>
-                            <p class="mb-0 text-muted small">{{ $proposal->group->project->submitted_at->format('d/m/Y H:i') }}</p>
+                            <p class="mb-0 text-muted small">{{ thaiDateTime($proposal->group->project->submitted_at) }}</p>
                         </div>
                     </div>
                     @endif

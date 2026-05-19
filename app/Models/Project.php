@@ -11,6 +11,7 @@ class Project extends Model
 
     protected $fillable = [
         'group_id',
+        'parent_project_id',
         'project_name',
         'project_code',
         'exam_datetime',
@@ -37,6 +38,16 @@ class Project extends Model
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id', 'group_id');
+    }
+
+    public function parentProject()
+    {
+        return $this->belongsTo(Project::class, 'parent_project_id', 'project_id');
+    }
+
+    public function childProjects()
+    {
+        return $this->hasMany(Project::class, 'parent_project_id', 'project_id');
     }
 
     public function examSchedule()
@@ -214,6 +225,30 @@ class Project extends Model
     // ──────────────────────────────────────────
     // Other helpers
     // ──────────────────────────────────────────
+
+    /**
+     * Returns late submission info if project was submitted late.
+     * Deadline = exam_datetime - 1 day.
+     * @return array{days:int,penalty_pct:int,deadline:\Carbon\Carbon}|null
+     */
+    public function getLateSubmissionInfo(): ?array
+    {
+        if ($this->status_project !== 'late_submission') return null;
+        if (!$this->submitted_at || !$this->exam_datetime) return null;
+
+        $deadline = $this->exam_datetime->copy()->subDay();
+
+        if (!$this->submitted_at->gt($deadline)) return null;
+
+        $seconds = $deadline->diffInSeconds($this->submitted_at);
+        $days    = max(1, (int) ceil($seconds / 86400));
+
+        return [
+            'days'        => $days,
+            'penalty_pct' => min($days * 20, 100),
+            'deadline'    => $deadline,
+        ];
+    }
 
     public function getDisplayIdAttribute()
     {

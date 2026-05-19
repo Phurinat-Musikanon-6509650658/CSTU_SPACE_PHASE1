@@ -228,4 +228,20 @@ class SubjectController extends Controller
         return redirect()->route('admin.subjects.index')
             ->with('success', 'ลบรายวิชา ' . $name . ' สำเร็จ');
     }
+
+    /** ลบรายวิชาทั้งหมดในเทอมที่กำหนด */
+    public function destroyTerm(int $year, int $semester)
+    {
+        $count = Subject::where('year', $year)->where('semester', $semester)->count();
+
+        if ($count === 0) {
+            return redirect()->route('admin.subjects.index')
+                ->with('error', "ไม่พบรายวิชาในปีการศึกษา {$year} เทอม {$semester}");
+        }
+
+        Subject::where('year', $year)->where('semester', $semester)->delete();
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "ลบปีการศึกษา {$year} เทอม {$semester} สำเร็จ ({$count} รายวิชา)");
+    }
 }

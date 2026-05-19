@@ -90,18 +90,26 @@ class LecturerController extends Controller
     /**
      * แสดงรายการโครงงานของอาจารย์
      */
-    public function myProjects()
+    public function myProjects(Request $request)
     {
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
 
-        // ดึงโครงงานที่เป็น advisor
-        $projects = Project::with(['group.members.student', 'advisorLecturer.user', 'group.latestProposal'])
-            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Project::with(['group.members.student', 'advisorLecturer.user', 'group.latestProposal'])
+            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode));
 
-        return view('lecturer.projects.index', compact('projects'));
+        if ($request->filled('year'))     $query->whereHas('group', fn($q) => $q->where('year', $request->year));
+        if ($request->filled('semester')) $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
+        if ($request->filled('subject'))  $query->whereHas('group', fn($q) => $q->where('subject_code', $request->subject));
+
+        $projects = $query->orderBy('created_at', 'desc')->get();
+
+        $groupIds  = Project::whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))->pluck('group_id');
+        $years     = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('year', 'desc')->pluck('year');
+        $semesters = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('semester')->pluck('semester');
+        $subjects  = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('subject_code')->pluck('subject_code');
+
+        return view('lecturer.projects.index', compact('projects', 'years', 'semesters', 'subjects'));
     }
 
     /**
@@ -132,18 +140,24 @@ class LecturerController extends Controller
             }
         }
 
-        $projects = $query
-            ->join('groups', 'projects.group_id', '=', 'groups.group_id')
-            ->orderBy('groups.year', 'desc')
-            ->orderBy('groups.semester', 'desc')
-            ->orderBy('groups.group_id', 'asc')
-            ->select('projects.*')
-            ->paginate(20)
-            ->withQueryString();
+        $sortBy = $request->input('sort', 'code');
+
+        $baseQuery = $query->join('groups', 'projects.group_id', '=', 'groups.group_id')
+                           ->select('projects.*');
+
+        if ($sortBy === 'exam') {
+            $baseQuery->orderBy('projects.exam_datetime', 'asc');
+        } else {
+            $baseQuery->orderBy('groups.year', 'desc')
+                      ->orderBy('groups.semester', 'desc')
+                      ->orderBy('projects.project_code', 'asc');
+        }
+
+        $projects = $baseQuery->paginate(20)->withQueryString();
 
         $years = \Illuminate\Support\Facades\DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 
-        return view('lecturer.evaluations.index', compact('projects', 'years'));
+        return view('lecturer.evaluations.index', compact('projects', 'years', 'sortBy'));
     }
 
     /**
@@ -247,7 +261,8 @@ class LecturerController extends Controller
                 ];
             }
 
-            $entry = compact('project', 'role', 'students', 'scores', 'criteria');
+            $comment = $eval?->comments ?? '';
+            $entry = compact('project', 'role', 'students', 'scores', 'criteria', 'comment');
 
             if ($eval) {
                 $evaluated[] = $entry;
@@ -297,7 +312,12 @@ class LecturerController extends Controller
 
         $criteria = EvaluationCriteria::forSubject($project->group->subject_code ?? '');
 
-        return view('lecturer.evaluations.export', compact('project', 'role', 'students', 'scores', 'user', 'criteria'));
+        $comment = $project->evaluations
+            ->where('evaluator_code', $userCode)
+            ->where('evaluator_role', $role)
+            ->first()?->comments ?? '';
+
+        return view('lecturer.evaluations.export', compact('project', 'role', 'students', 'scores', 'user', 'criteria', 'comment'));
     }
 
     /**
@@ -382,12 +402,14 @@ class LecturerController extends Controller
 
         // บันทึกคะแนนสำหรับแต่ละนักศึกษา
         $successCount = 0;
+        $comments = $request->input('comments', '');
         foreach ($students as $index => $student) {
             $evalData = [
                 'part2_score'  => (float)$request->input("student_{$index}_part2_score", 0),
                 'part3a_score' => (float)$request->input("student_{$index}_part3a_score", 0),
                 'part3b_score' => (float)$request->input("student_{$index}_part3b_score", 0),
                 'part3c_score' => (float)$request->input("student_{$index}_part3c_score", 0),
+                'comments'     => $comments,
                 'submitted_at' => now()
             ];
 

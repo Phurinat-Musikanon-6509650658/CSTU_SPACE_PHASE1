@@ -57,9 +57,6 @@
                 <a href="{{ route('coordinator.schedules.import.form') }}" class="btn btn-primary">
                     <i class="bi bi-file-earmark-arrow-up me-1"></i>Import CSV
                 </a>
-                <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-success">
-                    <i class="bi bi-calendar-week me-1"></i>ดูตารางสอบ
-                </a>
             </div>
         </div>
     </div>
@@ -218,6 +215,9 @@
             $hasCommittee = $project->committee1_code && $project->committee2_code;
             $isComplete   = $hasExam && $hasAdvisor && $hasCommittee;
             $cardStatus   = $isComplete ? 'complete' : ($hasExam || $hasAdvisor ? 'partial' : 'empty');
+            $isToday      = $hasExam && $project->exam_datetime->isToday();
+            $isPast       = $hasExam && $project->exam_datetime->isPast() && !$isToday;
+            $isUpcoming   = $hasExam && $project->exam_datetime->isFuture();
         @endphp
         <div class="project-row {{ $cardStatus }}">
             <div class="px-3 py-2">
@@ -247,8 +247,19 @@
                     <div class="col-md-2">
                         <div class="text-muted mb-1" style="font-size:.72rem;"><i class="bi bi-clock me-1"></i>วันเวลาสอบ</div>
                         @if($project->exam_datetime)
-                            <div class="fw-semibold text-success small">{{ $project->exam_datetime->format('d/m/Y') }}</div>
+                            <div class="fw-semibold text-success small">
+                                {{ $project->exam_datetime->locale('th')->translatedFormat('j M') }} {{ $project->exam_datetime->year + 543 }}
+                            </div>
                             <div class="text-muted" style="font-size:.75rem;">{{ $project->exam_datetime->format('H:i น.') }}</div>
+                            <div class="mt-1">
+                                @if($isToday)
+                                    <span class="badge" style="background:#ffc107;color:#212529;font-size:.68rem;"><i class="bi bi-star-fill me-1"></i>วันนี้</span>
+                                @elseif($isPast)
+                                    <span class="badge bg-secondary" style="font-size:.68rem;">สอบแล้ว</span>
+                                @else
+                                    <span class="badge bg-success" style="font-size:.68rem;">กำลังจะถึง</span>
+                                @endif
+                            </div>
                         @else
                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.72rem;">
                                 <i class="bi bi-x-circle me-1"></i>ยังไม่กำหนด

@@ -151,7 +151,7 @@
                     </p>
                     <p class="mb-0"><strong>วันเวลาสอบ:</strong>
                         @if($project->exam_datetime)
-                            <span class="text-danger">{{ $project->exam_datetime->format('d/m/Y H:i น.') }}</span>
+                            <span class="text-danger">{{ thaiDateTime($project->exam_datetime) }}</span>
                         @else
                             <span class="text-muted">ยังไม่กำหนด</span>
                         @endif
@@ -201,52 +201,27 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
-                    {{-- คอลัมน์ซ้าย: ช่วงเวลาสอบ --}}
-                    <div class="col-md-6">
-                        <div class="rounded-3 p-3 h-100" style="background:#f0f4ff;border:1px solid #c7d2fe;">
-                            <div class="fw-semibold text-primary mb-2" style="font-size:.85rem;">
-                                <i class="bi bi-clock me-1"></i>ช่วงเวลาสอบ (โดยประมาณ)
-                            </div>
-                            <div class="d-flex flex-column gap-1" style="font-size:.85rem;">
-                                @foreach([
-                                    ['นักศึกษาเตรียมตัวสอบ',        '10 นาที'],
-                                    ['นำเสนอผลงาน',                   '30–40 นาที'],
-                                    ['ตอบคำถาม',                      '30 นาที'],
-                                    ['กรรมการสรุปผลการสอบ',           '10 นาที'],
-                                ] as [$label, $time])
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-secondary">{{ $label }}</span>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold" style="font-size:.78rem;">{{ $time }}</span>
-                                </div>
-                                @endforeach
-                            </div>
+                <div class="mb-4">
+                    <div class="rounded-3 p-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                        <div class="fw-semibold text-success mb-2" style="font-size:.85rem;">
+                            <i class="bi bi-bar-chart-steps me-1"></i>เกณฑ์การวัดผล
                         </div>
-                    </div>
-
-                    {{-- คอลัมน์ขวา: เกณฑ์เกรด --}}
-                    <div class="col-md-6">
-                        <div class="rounded-3 p-3 h-100" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-                            <div class="fw-semibold text-success mb-2" style="font-size:.85rem;">
-                                <i class="bi bi-bar-chart-steps me-1"></i>เกณฑ์การวัดผล
+                        <div class="d-flex flex-wrap gap-2" style="font-size:.82rem;">
+                            @foreach([
+                                ['90–100', 'A',  '#28a745'],
+                                ['85–89',  'B+', '#20c997'],
+                                ['80–84',  'B',  '#17a2b8'],
+                                ['70–79',  'C+', '#4e73df'],
+                                ['60–69',  'C',  '#6f42c1'],
+                                ['55–59',  'D+', '#fd7e14'],
+                                ['50–54',  'D',  '#e67e22'],
+                                ['0–49',   'F',  '#dc3545'],
+                            ] as [$range, $grade, $color])
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge fw-bold" style="background:{{ $color }};color:#fff;min-width:2.2rem;font-size:.8rem;">{{ $grade }}</span>
+                                <span class="text-secondary">{{ $range }}</span>
                             </div>
-                            <div class="row row-cols-2 g-1" style="font-size:.82rem;">
-                                @foreach([
-                                    ['90–100', 'A',  '#28a745'],
-                                    ['85–89',  'B+', '#20c997'],
-                                    ['80–84',  'B',  '#17a2b8'],
-                                    ['70–79',  'C+', '#4e73df'],
-                                    ['60–69',  'C',  '#6f42c1'],
-                                    ['55–59',  'D+', '#fd7e14'],
-                                    ['50–54',  'D',  '#e67e22'],
-                                    ['0–49',   'F',  '#dc3545'],
-                                ] as [$range, $grade, $color])
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge fw-bold" style="background:{{ $color }};color:#fff;min-width:2.2rem;font-size:.8rem;">{{ $grade }}</span>
-                                    <span class="text-secondary">{{ $range }}</span>
-                                </div>
-                                @endforeach
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -389,6 +364,20 @@
 
                         </tbody>
                     </table>
+                </div>
+
+                {{-- ความเห็นเพิ่มเติมจากอาจารย์ --}}
+                @php $existingComment = $evaluation?->comments ?? ''; @endphp
+                <div class="mt-4 rounded-3 p-3" style="background:#fffbeb;border:1px solid #fde68a;">
+                    <label class="fw-semibold mb-2 d-block" style="font-size:.88rem;color:#92400e;">
+                        <i class="bi bi-chat-left-text me-1"></i>ความเห็นเพิ่มเติม / ข้อเสนอแนะจากอาจารย์
+                        <span class="fw-normal text-muted ms-1">(ไม่บังคับ)</span>
+                    </label>
+                    <textarea name="comments"
+                              class="form-control"
+                              rows="3"
+                              placeholder="เช่น ข้อดี ข้อควรปรับปรุง หรือข้อเสนอแนะเพิ่มเติม..."
+                              style="resize:vertical;font-size:.9rem;">{{ old('comments', $existingComment) }}</textarea>
                 </div>
 
                 <div class="d-grid gap-2 mt-4">

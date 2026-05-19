@@ -183,14 +183,6 @@ class MenuController extends Controller
                     'btn_class' => 'danger-btn'
                 ],
                 [
-                    'title' => 'ตารางสอบโครงงาน',
-                    'description' => 'ดูและจัดการตารางสอบของโครงงาน',
-                    'icon' => 'bi-calendar-event-fill',
-                    'url' => route('coordinator.exam-schedules.index'),
-                    'class' => 'info-card',
-                    'btn_class' => 'info-btn'
-                ],
-                [
                     'title' => 'เล่มโครงงาน',
                     'description' => 'ดูและดาวน์โหลดเล่มโครงงาน',
                     'icon' => 'bi-file-pdf-fill',
@@ -311,14 +303,6 @@ class MenuController extends Controller
                     'btn_class' => 'primary-btn'
                 ],
                 [
-                    'title' => 'ตารางสอบโครงงาน',
-                    'description' => 'ดูและจัดการตารางสอบโครงงาน',
-                    'icon' => 'bi-calendar-event-fill',
-                    'url' => route('coordinator.exam-schedules.index'),
-                    'class' => 'success-card',
-                    'btn_class' => 'success-btn'
-                ],
-                [
                     'title' => 'ประเมินและให้คะแนน',
                     'description' => 'จัดการแบบฟอร์มประเมินและดูคะแนน',
                     'icon' => 'bi-clipboard-check-fill',
@@ -386,14 +370,6 @@ class MenuController extends Controller
                     'class' => 'info-card',
                     'btn_class' => 'info-btn'
                 ],
-                [
-                    'title' => 'รายงานโครงงาน',
-                    'description' => 'สร้างรายงานโครงงานของฉัน',
-                    'icon' => 'bi-file-earmark-text',
-                    'url' => '#',
-                    'class' => 'info-card',
-                    'btn_class' => 'info-btn'
-                ]
             ]
         ];
     }

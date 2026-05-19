@@ -98,12 +98,14 @@
 
         $psBadge = [
             'not_proposed'    => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',               'ยังไม่เสนอ'],
-            'pending'         => ['bg-warning-subtle  text-warning  border-warning-subtle',     'clock',                'รออนุมัติ'],
-            'approved'        => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle',         'อนุมัติแล้ว'],
-            'rejected'        => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',             'ปฏิเสธ'],
-            'in_progress'     => ['bg-info-subtle     text-info     border-info-subtle',        'gear-fill',            'กำลังดำเนินการ'],
-            'submitted'       => ['bg-primary-subtle  text-primary  border-primary-subtle',     'check-circle-fill',    'ส่งแล้ว'],
-            'late_submission' => ['bg-danger-subtle   text-danger   border-danger-subtle',      'exclamation-triangle', 'ส่งล่าช้า'],
+            'pending'         => ['bg-warning-subtle   text-warning  border-warning-subtle',    'clock',                'รออนุมัติ'],
+            'approved'        => ['bg-info-subtle      text-info     border-info-subtle',        'check-circle',         'อนุมัติแล้ว'],
+            'rejected'        => ['bg-danger-subtle    text-danger   border-danger-subtle',      'x-circle',             'ถูกปฏิเสธ'],
+            'in_progress'     => ['bg-primary-subtle   text-primary  border-primary-subtle',    'gear-fill',            'กำลังดำเนินการ'],
+            'submitted'       => ['bg-info-subtle      text-info     border-info-subtle',        'check-circle-fill',    'ส่งงานแล้ว'],
+            'late_submission' => ['bg-warning-subtle   text-warning  border-warning-subtle',    'exclamation-triangle', 'ส่งงานล่าช้า'],
+            'passed'          => ['bg-success-subtle   text-success  border-success-subtle',    'trophy-fill',          'ผ่าน'],
+            'failed'          => ['bg-danger-subtle    text-danger   border-danger-subtle',      'x-octagon-fill',       'ไม่ผ่าน'],
         ][$group->project->status_project ?? ''] ?? ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle', '—'];
 
         $getLec  = fn($code) => $code ? ($lecturers->firstWhere('user_code', $code) ?? null) : null;
@@ -146,7 +148,7 @@
                         <span class="text-muted">·</span>
                         <span class="text-muted small"><i class="bi bi-people me-1"></i>{{ $group->members->count() }} สมาชิก</span>
                         <span class="text-muted">·</span>
-                        <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ $group->created_at->format('d/m/Y') }}</span>
+                        <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ thaiDate($group->created_at) }}</span>
                     </div>
                 </div>
             </div>
@@ -229,6 +231,19 @@
                         </div>
                     </div>
 
+                    @if($group->project->parentProject)
+                    <div class="info-row">
+                        <div class="info-icon bg-purple-subtle" style="background:#f3e8ff;color:#7c3aed;"><i class="bi bi-diagram-2-fill"></i></div>
+                        <div>
+                            <div class="info-label">ต่อยอดจากโครงงาน (CS303)</div>
+                            <div class="info-value">
+                                <code class="text-primary fw-bold" style="font-size:.8rem;">{{ $group->project->parentProject->project_code }}</code>
+                                <div class="text-muted small">{{ $group->project->parentProject->project_name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <div class="info-row">
                         <div class="info-icon {{ $group->project->exam_datetime ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
                             <i class="bi bi-{{ $group->project->exam_datetime ? 'calendar-check-fill' : 'calendar-x-fill' }}"></i>
@@ -238,7 +253,7 @@
                             <div class="info-value">
                                 @if($group->project->exam_datetime)
                                     <span class="text-success fw-semibold">
-                                        {{ \Carbon\Carbon::parse($group->project->exam_datetime)->format('d/m/Y') }}
+                                        {{ thaiDate($group->project->exam_datetime) }}
                                     </span>
                                     <span class="text-muted small ms-1">{{ \Carbon\Carbon::parse($group->project->exam_datetime)->format('H:i น.') }}</span>
                                 @else
@@ -338,7 +353,7 @@
                 <div class="text-end" style="min-width:140px;">
                     <div class="text-muted small text-truncate">{{ $member->student->email_std ?? '—' }}</div>
                     <div class="text-muted" style="font-size:.72rem;">
-                        <i class="bi bi-calendar3 me-1"></i>{{ $member->created_at ? $member->created_at->format('d/m/Y') : '—' }}
+                        <i class="bi bi-calendar3 me-1"></i>{{ $member->created_at ? thaiDate($member->created_at) : '—' }}
                     </div>
                 </div>
             </div>
@@ -383,7 +398,7 @@
                         <div class="col-md-4">
                             <label class="form-label fw-semibold small">สถานะโครงงาน</label>
                             <select name="status_project" class="form-select form-select-sm">
-                                @foreach(['not_proposed'=>'ยังไม่เสนอ','pending'=>'รออนุมัติ','approved'=>'อนุมัติแล้ว','rejected'=>'ปฏิเสธ','in_progress'=>'กำลังดำเนินการ','late_submission'=>'ส่งล่าช้า','submitted'=>'ส่งแล้ว'] as $v => $l)
+                                @foreach(['not_proposed'=>'ยังไม่เสนอ','pending'=>'รออนุมัติ','approved'=>'อนุมัติแล้ว','rejected'=>'ถูกปฏิเสธ','in_progress'=>'กำลังดำเนินการ','submitted'=>'ส่งงานแล้ว','late_submission'=>'ส่งงานล่าช้า','passed'=>'ผ่าน','failed'=>'ไม่ผ่าน'] as $v => $l)
                                     <option value="{{ $v }}" {{ $group->project->status_project == $v ? 'selected' : '' }}>{{ $l }}</option>
                                 @endforeach
                             </select>
@@ -399,6 +414,19 @@
                             <input type="text" class="form-control form-control-sm bg-light" value="{{ $group->project->project_code }}" readonly>
                             <div class="form-text">ไม่สามารถแก้ไขได้</div>
                         </div>
+                        @if($group->subject_code === 'CS403' && $parentProjects->isNotEmpty())
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">ต่อยอดจากโครงงาน CS303 <span class="text-muted fw-normal">(ถ้ามี)</span></label>
+                            <select name="parent_project_id" class="form-select form-select-sm">
+                                <option value="">— ไม่มี / เริ่มใหม่ —</option>
+                                @foreach($parentProjects as $pp)
+                                    <option value="{{ $pp->project_id }}" {{ $group->project->parent_project_id == $pp->project_id ? 'selected' : '' }}>
+                                        {{ $pp->project_code }} – {{ $pp->project_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Section: ตารางสอบและคณะกรรมการ -->
@@ -497,6 +525,20 @@
                             <option value="s">ภาคพิเศษ</option>
                         </select>
                     </div>
+                    @if($group->subject_code === 'CS403' && $parentProjects->isNotEmpty())
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">ต่อยอดจากโครงงาน CS303 <span class="text-muted fw-normal">(ถ้ามี)</span></label>
+                        <select name="parent_project_id" class="form-select form-select-sm">
+                            <option value="">— ไม่มี / เริ่มใหม่ —</option>
+                            @foreach($parentProjects as $pp)
+                                <option value="{{ $pp->project_id }}">
+                                    {{ $pp->project_code }} – {{ $pp->project_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">เลือกถ้านักศึกษากลุ่มนี้ต่อยอดโครงงานจาก CS303</div>
+                    </div>
+                    @endif
                 </div>
                 <div class="mt-4 pt-2 border-top d-flex justify-content-end">
                     <button type="submit" class="btn btn-success btn-sm px-4">

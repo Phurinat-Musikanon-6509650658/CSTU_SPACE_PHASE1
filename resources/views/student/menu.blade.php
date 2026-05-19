@@ -866,7 +866,7 @@
                         <p class="card-description">
                             <span class="badge bg-success">ส่งแล้ว</span><br>
                             <small class="text-muted mt-2 d-block">
-                                ส่งเมื่อ: {{ \Carbon\Carbon::parse($myGroup->project->submitted_at)->locale('th')->translatedFormat('j M Y H:i') }} น.
+                                ส่งเมื่อ: {{ thaiDateTime($myGroup->project->submitted_at) }}
                             </small>
                         </p>
                         <div class="d-flex gap-2 justify-content-center mt-2">

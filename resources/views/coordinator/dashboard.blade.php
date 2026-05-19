@@ -383,7 +383,7 @@
                                 </td>
                                 <td>
                                     <i class="bi bi-clock me-1"></i>
-                                    {{ $group->created_at->format('d/m/Y H:i') }}
+                                    {{ thaiDateTime($group->created_at) }}
                                 </td>
                                 <td style="text-align: center;">
                                     <a href="{{ route('coordinator.groups.show', $group->group_id) }}" class="btn btn-sm modern-btn btn-primary">

@@ -160,8 +160,8 @@
                 <div class="card page-card">
                     <div class="card-body py-3">
                         <div class="info-row text-muted">
-                            <div><i class="bi bi-clock-history me-1"></i>สร้างเมื่อ: {{ $examSchedule->created_at->format('d/m/Y H:i') }}</div>
-                            <div><i class="bi bi-pencil me-1"></i>แก้ไขล่าสุด: {{ $examSchedule->updated_at->format('d/m/Y H:i') }}</div>
+                            <div><i class="bi bi-clock-history me-1"></i>สร้างเมื่อ: {{ thaiDateTime($examSchedule->created_at) }}</div>
+                            <div><i class="bi bi-pencil me-1"></i>แก้ไขล่าสุด: {{ thaiDateTime($examSchedule->updated_at) }}</div>
                         </div>
                     </div>
                 </div>
