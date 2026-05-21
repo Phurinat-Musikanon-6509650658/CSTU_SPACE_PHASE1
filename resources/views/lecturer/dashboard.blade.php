@@ -374,28 +374,17 @@
             </div>
         </a>
 
-        <!-- 4. ตารางสอบโครงงาน -->
-        <a href="{{ route('lecturer.evaluations.index') }}" class="menu-card">
-            <div class="menu-card-icon">
-                <i class="bi bi-calendar-event-fill"></i>
-            </div>
-            <div class="menu-card-title">ตารางสอบโครงงาน</div>
-            <div class="menu-card-description">
-                ตรวจสอบตารางสอบโครงงานที่คุณต้องเข้าร่วมประเมิน
-            </div>
-        </a>
-
-        <!-- 5. ประเมินโครงงาน -->
+        <!-- 4. ตารางสอบและการประเมินโครงงาน -->
         <a href="{{ route('lecturer.evaluations.index') }}" class="menu-card">
             @if($stats['pending_evaluations'] > 0)
                 <span class="menu-card-badge">{{ $stats['pending_evaluations'] }}</span>
             @endif
             <div class="menu-card-icon">
-                <i class="bi bi-clipboard-check-fill"></i>
+                <i class="bi bi-calendar-check-fill"></i>
             </div>
-            <div class="menu-card-title">ประเมินโครงงาน</div>
+            <div class="menu-card-title">ตารางสอบและการประเมินโครงงาน</div>
             <div class="menu-card-description">
-                ให้คะแนนและประเมินผลโครงงานที่คุณเป็นที่ปรึกษาหรือกรรมการ
+                ตรวจสอบตารางสอบและให้คะแนนประเมินผลโครงงานที่คุณเป็นที่ปรึกษาหรือกรรมการ
             </div>
         </a>
 

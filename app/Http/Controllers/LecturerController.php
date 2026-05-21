@@ -95,8 +95,14 @@ class LecturerController extends Controller
         $user = Auth::guard('web')->user();
         $userCode = $user->user_code;
 
-        $query = Project::with(['group.members.student', 'advisorLecturer.user', 'group.latestProposal'])
-            ->whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode));
+        // Query ทั้ง advisor และ committee (ใช้ projectLecturers ซึ่งเป็น pivot ที่รวมทั้งคู่)
+        $query = Project::with([
+                'group.members.student',
+                'advisorLecturer.user',
+                'committeeLecturers.user',
+                'group.latestProposal',
+            ])
+            ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode));
 
         if ($request->filled('year'))     $query->whereHas('group', fn($q) => $q->where('year', $request->year));
         if ($request->filled('semester')) $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
@@ -104,12 +110,12 @@ class LecturerController extends Controller
 
         $projects = $query->orderBy('created_at', 'desc')->get();
 
-        $groupIds  = Project::whereHas('advisorLecturer', fn($q) => $q->where('user_code', $userCode))->pluck('group_id');
+        $groupIds  = Project::whereHas('projectLecturers', fn($q) => $q->where('user_code', $userCode))->pluck('group_id');
         $years     = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('year', 'desc')->pluck('year');
         $semesters = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('semester')->pluck('semester');
         $subjects  = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('subject_code')->pluck('subject_code');
 
-        return view('lecturer.projects.index', compact('projects', 'years', 'semesters', 'subjects'));
+        return view('lecturer.projects.index', compact('projects', 'years', 'semesters', 'subjects', 'userCode'));
     }
 
     /**
@@ -153,7 +159,7 @@ class LecturerController extends Controller
                       ->orderBy('projects.project_code', 'asc');
         }
 
-        $projects = $baseQuery->paginate(20)->withQueryString();
+        $projects = $baseQuery->get();
 
         $years = \Illuminate\Support\Facades\DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 

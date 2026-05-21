@@ -63,9 +63,6 @@ class GroupController extends Controller
         }
 
         $request->validate([
-            'subject_code' => 'required|string|in:CS303,CS403',
-            'year' => 'required|integer',
-            'semester' => 'required|integer|in:1,2',
             'invite_username' => 'nullable|string|exists:student,username_std',
         ]);
 
@@ -147,13 +144,14 @@ class GroupController extends Controller
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollback();
-            // กรณี duplicate key (เผื่อมีปัญหา race condition)
+            \Log::error('GroupController::store QueryException', ['msg' => $e->getMessage(), 'code' => $e->getCode()]);
             if ($e->getCode() == 23000) {
                 return back()->with('error', 'มีคนสร้างกลุ่มพร้อมกันกับคุณ กรุณาลองใหม่อีกครั้ง');
             }
             return back()->with('error', 'เกิดข้อผิดพลาดในการสร้างกลุ่ม: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollback();
+            \Log::error('GroupController::store Exception', ['msg' => $e->getMessage()]);
             return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
     }

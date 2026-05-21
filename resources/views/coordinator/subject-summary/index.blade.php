@@ -4,6 +4,11 @@
 
 @push('styles')
 <style>
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
     .page-card {
         border: none;
         border-radius: 14px;
@@ -78,18 +83,21 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    {{-- ── Page header ─────────────────────────────────────── --}}
-    <div class="mb-3">
-        <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
-            <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
-        </a>
-        <div class="mt-1">
-            <h1 class="h3 fw-bold mb-0">
-                <i class="bi bi-table me-2 text-primary"></i>สรุปข้อมูลรายวิชา
-            </h1>
-            <p class="text-muted small mb-0">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม export / import</p>
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-table me-2"></i>สรุปข้อมูลรายวิชา
+                </h2>
+                <p class="mb-0 opacity-75">ภาพรวมโครงงานแยกตามรหัสวิชา พร้อม Export / Import</p>
+            </div>
+            <a href="{{ route('coordinator.dashboard') }}" class="btn modern-btn btn-light">
+                <i class="bi bi-arrow-left"></i>
+                <span>กลับ Dashboard</span>
+            </a>
         </div>
     </div>
 

@@ -4,54 +4,65 @@
 
 @push('styles')
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
-    .project-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-    }
-    .project-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    }
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-light); margin-bottom: 2rem; overflow: hidden; }
+    .modern-card-header { padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; }
+    .modern-card-header h4 { margin: 0; color: #2c3e50; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); border-left: 4px solid; position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-medium); }
+    .stat-card.primary { border-left-color: #667eea; }
+    .stat-card.warning { border-left-color: #f6ad55; }
+    .stat-card.success { border-left-color: #48bb78; }
+    .stat-card.info    { border-left-color: #4299e1; }
+    .stat-card-icon { position: absolute; top: 50%; right: 1.5rem; transform: translateY(-50%); font-size: 4rem; opacity: 0.1; }
+    .stat-card-title { font-size: 0.875rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .stat-card-value { font-size: 2.5rem; font-weight: 700; color: #2d3748; margin-bottom: 0; }
+    .project-card { background: white; border-radius: var(--border-radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-light); transition: var(--transition); }
+    .project-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
+    .empty-state { padding: 3rem; text-align: center; color: #718096; }
+    .empty-state i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h2 mb-1 fw-bold">
-                <i class="bi bi-clipboard-check me-2 text-primary"></i>ประเมินและให้คะแนนโครงงาน
-            </h1>
-            <p class="text-muted mb-0">โครงงานที่คุณเป็นอาจารย์ที่ปรึกษาหรือคณะกรรมการ</p>
-        </div>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <a href="{{ route('lecturer.evaluations.export-all') }}" target="_blank"
-               class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-printer me-2"></i>Export รวม PDF
-            </a>
-            {{-- Sort toggle --}}
-            @php
-                $nextSort  = $sortBy === 'exam' ? 'code' : 'exam';
-                $sortIcon  = $sortBy === 'exam' ? 'bi-calendar-event'  : 'bi-sort-alpha-down';
-                $sortLabel = $sortBy === 'exam' ? 'เรียงตามวันเวลาสอบ' : 'เรียงตามรหัสโครงงาน';
-            @endphp
-            <a href="{{ request()->fullUrlWithQuery(['sort' => $nextSort, 'page' => 1]) }}"
-               class="btn btn-sm {{ $sortBy === 'exam' ? 'btn-warning text-dark' : 'btn-outline-secondary' }}"
-               title="สลับการเรียง">
-                <i class="bi {{ $sortIcon }} me-1"></i>{{ $sortLabel }}
-                <i class="bi bi-arrow-left-right ms-1 opacity-75"></i>
-            </a>
-            <a href="{{ route('menu') }}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-house me-2"></i>กลับหน้าหลัก
-            </a>
+<div class="container">
+
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-clipboard-check me-2"></i>ประเมินและให้คะแนนโครงงาน
+                </h2>
+                <p class="mb-0 opacity-75">โครงงานที่คุณเป็นอาจารย์ที่ปรึกษาหรือคณะกรรมการ</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <a href="{{ route('lecturer.evaluations.export-all') }}" target="_blank"
+                   class="btn modern-btn btn-light">
+                    <i class="bi bi-printer"></i>Export รวม PDF
+                </a>
+                {{-- Sort toggle --}}
+                @php
+                    $nextSort  = $sortBy === 'exam' ? 'code' : 'exam';
+                    $sortIcon  = $sortBy === 'exam' ? 'bi-calendar-event'  : 'bi-sort-alpha-down';
+                    $sortLabel = $sortBy === 'exam' ? 'เรียงตามวันเวลาสอบ' : 'เรียงตามรหัสโครงงาน';
+                @endphp
+                <a href="{{ request()->fullUrlWithQuery(['sort' => $nextSort, 'page' => 1]) }}"
+                   class="btn modern-btn {{ $sortBy === 'exam' ? 'btn-warning text-dark' : 'btn-light' }}"
+                   title="สลับการเรียง">
+                    <i class="bi {{ $sortIcon }}"></i>{{ $sortLabel }}
+                    <i class="bi bi-arrow-left-right opacity-75"></i>
+                </a>
+                <a href="{{ route('lecturer.dashboard') }}" class="btn modern-btn btn-light">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>กลับ Dashboard</span>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -69,13 +80,30 @@
         </div>
     @endif
 
-    <!-- Filter -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body py-2">
+    {{-- Filter --}}
+    <div class="modern-card mb-3">
+        <div class="modern-card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4><i class="bi bi-funnel"></i>ตัวกรอง</h4>
+                <span class="badge bg-primary rounded-pill">{{ $projects->count() }} โครงงาน</span>
+            </div>
+        </div>
+        <div class="p-3">
+            {{-- Text search (client-side) --}}
+            <div class="mb-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="evalSearch" class="form-control"
+                           placeholder="ค้นหา ชื่อโครงงาน / รหัส / ชื่อนักศึกษา...">
+                    <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('evalSearch').value='';filterEvalCards()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </div>
             <form method="GET" action="{{ route('lecturer.evaluations.index') }}">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold small mb-1">ปีการศึกษา</label>
+                    <div class="col-sm-6 col-md-2">
+                        <label class="form-label">ปีการศึกษา</label>
                         <select name="year" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
                             @foreach($years as $yr)
@@ -83,66 +111,56 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold small mb-1">เทอม</label>
+                    <div class="col-sm-6 col-md-2">
+                        <label class="form-label">ภาคเรียน</label>
                         <select name="semester" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
                             <option value="1" {{ request('semester') == '1' ? 'selected' : '' }}>เทอม 1</option>
                             <option value="2" {{ request('semester') == '2' ? 'selected' : '' }}>เทอม 2</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold small mb-1">รหัสวิชา</label>
+                    <div class="col-sm-6 col-md-2">
+                        <label class="form-label">รหัสวิชา</label>
                         <select name="subject" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
                             <option value="CS303" {{ request('subject') == 'CS303' ? 'selected' : '' }}>CS303</option>
                             <option value="CS403" {{ request('subject') == 'CS403' ? 'selected' : '' }}>CS403</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold small mb-1">สถานะ</label>
+                    <div class="col-sm-6 col-md-2">
+                        <label class="form-label">สถานะ</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">ทั้งหมด</option>
-                            <option value="done"   {{ request('status') == 'done'    ? 'selected' : '' }}>ให้คะแนนแล้ว</option>
+                            <option value="done"    {{ request('status') == 'done'    ? 'selected' : '' }}>ให้คะแนนแล้ว</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>ยังไม่ให้คะแนน</option>
                         </select>
                     </div>
                     <div class="col-auto d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">
+                        <button type="submit" class="btn btn-primary btn-sm px-3">
                             <i class="bi bi-search me-1"></i>ค้นหา
                         </button>
-                        <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-secondary btn-sm" title="ล้างตัวกรอง">
                             <i class="bi bi-x-lg"></i>
                         </a>
                     </div>
-                    <div class="col-auto ms-auto text-muted small">{{ $projects->total() }} โครงงาน</div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Projects List -->
+    {{-- Projects List --}}
     <div class="row">
         @forelse($projects as $project)
             @php
-                $myRole = null;
-                if ($project->advisor_code === Auth::user()->user_code) $myRole = 'advisor';
-                elseif ($project->committee1_code === Auth::user()->user_code) $myRole = 'committee1';
-                elseif ($project->committee2_code === Auth::user()->user_code) $myRole = 'committee2';
-                elseif ($project->committee3_code === Auth::user()->user_code) $myRole = 'committee3';
-
+                $myUserCode   = Auth::guard('web')->user()->user_code;
+                $isAdvisor    = $project->advisorLecturer?->user_code == $myUserCode;
+                $roleLabel    = $isAdvisor ? 'อาจารย์ที่ปรึกษา' : 'กรรมการ';
+                $roleBadge    = $isAdvisor ? 'primary' : 'success';
                 $myEvaluation = $project->evaluations->first();
                 $hasEvaluated = $myEvaluation !== null;
-
-                $roleLabels = [
-                    'advisor' => 'อาจารย์ที่ปรึกษา',
-                    'committee1' => 'กรรมการคนที่ 1',
-                    'committee2' => 'กรรมการคนที่ 2',
-                    'committee3' => 'กรรมการคนที่ 3'
-                ];
             @endphp
-            
-            <div class="col-12">
+
+            <div class="col-12 eval-card-wrap">
                 <div class="project-card">
                     <div class="row align-items-center">
                         <!-- Project Info -->
@@ -162,17 +180,7 @@
                         <!-- Your Role -->
                         <div class="col-md-2">
                             <label class="small text-muted d-block mb-1">ตำแหน่งของคุณ</label>
-                            @php
-                                $roleColors = [
-                                    'advisor' => 'primary',
-                                    'committee1' => 'success',
-                                    'committee2' => 'success',
-                                    'committee3' => 'success'
-                                ];
-                            @endphp
-                            <span class="badge bg-{{ $roleColors[$myRole] ?? 'secondary' }}">
-                                {{ $roleLabels[$myRole] ?? '-' }}
-                            </span>
+                            <span class="badge bg-{{ $roleBadge }}">{{ $roleLabel }}</span>
                         </div>
 
                         <!-- Exam DateTime -->
@@ -221,17 +229,33 @@
             </div>
         @empty
             <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>ไม่พบโครงงานที่ต้องประเมิน
+                <div class="modern-card">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>ไม่พบโครงงานที่ต้องประเมิน</p>
+                    </div>
                 </div>
             </div>
         @endforelse
     </div>
 
-    <!-- Pagination -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 gap-2">
-        <small class="text-muted">แสดง {{ $projects->firstItem() ?? 0 }}–{{ $projects->lastItem() ?? 0 }} จาก {{ $projects->total() }} โครงงาน</small>
-        <div>{{ $projects->links('pagination::bootstrap-4') }}</div>
-    </div>
 </div>
+
+@push('scripts')
+<script>
+function filterEvalCards() {
+    const q = document.getElementById('evalSearch').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.eval-card-wrap');
+    let visible = 0;
+    cards.forEach(function(card) {
+        const show = !q || card.innerText.toLowerCase().includes(q);
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    const badge = document.querySelector('.badge.bg-primary.rounded-pill');
+    if (badge) badge.textContent = visible + ' โครงงาน';
+}
+document.getElementById('evalSearch').addEventListener('input', filterEvalCards);
+</script>
+@endpush
 @endsection

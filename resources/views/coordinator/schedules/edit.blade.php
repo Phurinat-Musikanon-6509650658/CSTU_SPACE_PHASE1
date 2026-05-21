@@ -4,6 +4,11 @@
 
 @push('styles')
 <style>
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
     .page-card {
         border: none;
         border-radius: 12px;
@@ -46,16 +51,28 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    {{-- Header --}}
-    <div class="mb-4">
-        <a href="{{ route('coordinator.schedules.index') }}" class="btn btn-link text-decoration-none ps-0">
-            <i class="bi bi-chevron-left me-1"></i>กลับรายการ
-        </a>
-        <h1 class="h2 fw-bold mt-2">
-            <i class="bi bi-calendar-check me-2 text-primary"></i>แก้ไขตารางสอบและคณะกรรมการ
-        </h1>
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-calendar-check me-2"></i>แก้ไขตารางสอบและคณะกรรมการ
+                </h2>
+                <p class="mb-0 opacity-75">กำหนดวันเวลาสอบและมอบหมายคณะกรรมการสอบโครงงาน</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.schedules.index') }}" class="btn modern-btn btn-light">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>กลับรายการ</span>
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn modern-btn btn-light">
+                    <i class="bi bi-house"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     @if($errors->any())

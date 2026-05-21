@@ -253,27 +253,30 @@
                 <p class="mb-0 opacity-75">ดูข้อมูลและพิจารณาข้อเสนอหัวข้อโครงงาน</p>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                <span class="status-badge 
+                <span class="status-badge
                     @if($proposal->status === 'pending') status-pending
                     @elseif($proposal->status === 'approved') status-approved
                     @else status-rejected
                     @endif
                 ">
-                    @if($proposal->status === 'pending') 
+                    @if($proposal->status === 'pending')
                         <i class="bi bi-clock"></i>รอพิจารณา
-                    @elseif($proposal->status === 'approved') 
+                    @elseif($proposal->status === 'approved')
                         <i class="bi bi-check-circle"></i>อนุมัติแล้ว
-                    @else 
+                    @else
                         <i class="bi bi-x-circle"></i>ปฏิเสธแล้ว
                     @endif
                 </span>
                 <a href="{{ route('lecturer.proposals.index') }}" class="btn modern-btn btn-light">
                     <i class="bi bi-arrow-left"></i>
-                    <span>ย้อนกลับ</span>
+                    <span>รายการข้อเสนอ</span>
+                </a>
+                <a href="{{ route('lecturer.dashboard') }}" class="btn modern-btn btn-light">
+                    <i class="bi bi-house"></i>
+                    <span>Dashboard</span>
                 </a>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- Alerts -->

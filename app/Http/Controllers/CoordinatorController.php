@@ -48,8 +48,7 @@ class CoordinatorController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('semester', 'desc')
             ->orderBy('group_id', 'asc')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
         $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 
@@ -240,8 +239,7 @@ class CoordinatorController extends Controller
             ->orderBy('groups.group_id', 'asc')
             ->orderBy('projects.project_code', 'asc')
             ->select('projects.*')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
         $statuses  = ['pending', 'approved', 'in_progress', 'submitted', 'late_submission', 'passed', 'failed', 'rejected'];
         $years     = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
@@ -409,8 +407,7 @@ class CoordinatorController extends Controller
             ->orderBy('groups.semester', 'desc')
             ->orderBy('groups.group_id', 'asc')
             ->select('projects.*')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
         $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 

@@ -107,7 +107,7 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid px-4 py-4">
+    <div class="container py-4">
         <!-- Back Button -->
         <div class="mb-4">
             <a href="{{ route('student.menu') }}" class="btn btn-back">

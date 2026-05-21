@@ -355,6 +355,10 @@
     .warning-btn { background: var(--gradient-warning); }
     .info-btn { background: var(--gradient-info); }
     .admin-btn { background: var(--gradient-admin); }
+    .danger-btn { background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%); }
+
+    .danger-card::before { background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%); }
+    .danger-card .card-icon { background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
     .card-overlay {
         position: absolute;

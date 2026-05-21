@@ -56,6 +56,7 @@
             background: radial-gradient(circle, rgba(220, 20, 60, 0.1) 0%, transparent 70%);
             animation: rotate 30s linear infinite;
             z-index: 0;
+            pointer-events: none;
         }
         
         @keyframes rotate {
@@ -63,7 +64,8 @@
             to { transform: rotate(360deg); }
         }
         
-        .container-fluid {
+        .container-fluid,
+        .container {
             position: relative;
             z-index: 1;
         }
@@ -313,7 +315,7 @@
     @stack('styles')
 </head>
 <body>
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <!-- Back Button -->
         <div class="row mb-3">
             <div class="col-12">

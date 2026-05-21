@@ -80,20 +80,35 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-2">
 
-    <!-- Back -->
-    <a href="{{ route('coordinator.groups.index') }}" class="btn btn-link text-decoration-none ps-0 text-muted mb-3 d-inline-flex align-items-center">
-        <i class="bi bi-chevron-left me-1"></i><span class="small">กลับรายการกลุ่ม</span>
-    </a>
+    <div style="background:white;border-radius:var(--border-radius);padding:1.5rem 2rem;margin-bottom:1.5rem;box-shadow:var(--shadow-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+        <div>
+            <h2 style="color:#2c3e50;font-weight:700;font-size:1.75rem;margin-bottom:.25rem;">
+                <i class="bi bi-people-fill me-2"></i>รายละเอียดกลุ่มที่ {{ sprintf('%02d', $group->group_id) }}
+            </h2>
+            <p class="mb-0 text-muted small">ข้อมูลกลุ่ม สมาชิก และข้อเสนอโครงงาน</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('coordinator.groups.index') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                <i class="bi bi-arrow-left"></i><span>รายการกลุ่ม</span>
+            </a>
+            <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                <i class="bi bi-house"></i><span>Dashboard</span>
+            </a>
+        </div>
+    </div>
 
     @php
         $gsBadge = [
-            'not_created'  => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',       'ยังไม่สร้าง'],
-            'created'      => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle', 'สร้างแล้ว'],
-            'member_left'  => ['bg-warning-subtle  text-warning  border-warning-subtle',     'person-dash',  'สมาชิกออก'],
-            'member_added' => ['bg-info-subtle     text-info     border-info-subtle',        'person-plus',  'เพิ่มสมาชิก'],
-            'disbanded'    => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',     'ยุบกลุ่ม'],
+            'not_created'  => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',            'ยังไม่สร้าง'],
+            'created'      => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle',      'สร้างแล้ว'],
+            'member_added' => ['bg-info-subtle     text-info     border-info-subtle',        'person-plus',       'เพิ่มสมาชิก'],
+            'member_left'  => ['bg-warning-subtle  text-warning  border-warning-subtle',     'person-dash',       'สมาชิกออก'],
+            'pending'      => ['bg-warning-subtle  text-warning  border-warning-subtle',     'clock',             'รออนุมัติ'],
+            'approved'     => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle-fill', 'อนุมัติแล้ว'],
+            'rejected'     => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle-fill',     'ปฏิเสธ'],
+            'disbanded'    => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',          'ยุบกลุ่ม'],
         ][$group->status_group] ?? ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle', $group->status_group];
 
         $psBadge = [

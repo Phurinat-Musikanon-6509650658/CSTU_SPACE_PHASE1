@@ -40,23 +40,25 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    {{-- Back + Header --}}
-    <div class="mb-4">
-        <a href="{{ route('menu') }}" class="btn btn-link text-decoration-none ps-0 text-muted">
-            <i class="bi bi-chevron-left me-1"></i>กลับหน้าเมนู
-        </a>
-        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+    {{-- Page Header --}}
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h2 fw-bold mb-0">
-                    <i class="bi bi-clipboard-check me-2 text-primary"></i>ตรวจสอบโครงงาน
-                </h1>
-                <p class="text-muted small mb-0">ดูรายละเอียดโครงงาน คณะกรรมการ และสถานะทั้งหมด</p>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-clipboard-check me-2"></i>ตรวจสอบโครงงาน
+                </h2>
+                <p class="mb-0 opacity-75">ดูรายละเอียดโครงงาน คณะกรรมการ และสถานะทั้งหมด</p>
             </div>
-            <a href="{{ route('coordinator.projects.export.csv') }}" class="btn btn-success">
-                <i class="bi bi-download me-2"></i>Export CSV
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.projects.export.csv') }}" class="btn btn-success">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-arrow-left"></i><span>กลับ Dashboard</span>
+                </a>
+            </div>
         </div>
     </div>
 

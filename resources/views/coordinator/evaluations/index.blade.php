@@ -4,34 +4,58 @@
 
 @push('styles')
 <style>
-.eval-row { transition: background .12s; }
-.eval-row:hover { background: #fafbff; }
-.eval-row:last-child { border-bottom: none !important; }
-.eval-row .accent-strip { width: 5px; flex-shrink: 0; background: #e3e6f0; }
-.eval-row.complete .accent-strip { background: linear-gradient(180deg,#1cc88a,#13855c); }
-.eval-row.partial  .accent-strip { background: linear-gradient(180deg,#f6c23e,#d4a017); }
-.eval-row.empty    .accent-strip { background: #e3e6f0; }
-.eval-progress-bar { height: 6px; border-radius: 6px; background:#e9ecef; overflow:hidden; }
-.eval-progress-bar .fill { height:100%; border-radius:6px; transition:width .4s ease; background:#e9ecef; }
-.eval-progress-bar .fill.complete { background: linear-gradient(90deg,#1cc88a,#38ef7d); }
-.eval-progress-bar .fill.partial  { background: linear-gradient(90deg,#f6c23e,#ffd461); }
-.info-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; }
-.stat-card { border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.07); }
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-light); margin-bottom: 2rem; overflow: hidden; }
+    .modern-card-header { padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; }
+    .modern-card-header h4 { margin: 0; color: #2c3e50; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); border-left: 4px solid; position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-medium); }
+    .stat-card.primary   { border-left-color: #667eea; }
+    .stat-card.success   { border-left-color: #48bb78; }
+    .stat-card.warning   { border-left-color: #f6ad55; }
+    .stat-card.secondary { border-left-color: #a0aec0; }
+    .stat-card-icon { position: absolute; top: 50%; right: 1.5rem; transform: translateY(-50%); font-size: 4rem; opacity: 0.1; }
+    .stat-card-title { font-size: 0.875rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .stat-card-value { font-size: 2.5rem; font-weight: 700; color: #2d3748; margin-bottom: 0; }
+    .eval-row { transition: background .12s; }
+    .eval-row:hover { background: #fafbff; }
+    .eval-row:last-child { border-bottom: none !important; }
+    .eval-row .accent-strip { width: 5px; flex-shrink: 0; background: #e3e6f0; }
+    .eval-row.complete .accent-strip { background: linear-gradient(180deg,#1cc88a,#13855c); }
+    .eval-row.partial  .accent-strip { background: linear-gradient(180deg,#f6c23e,#d4a017); }
+    .eval-row.empty    .accent-strip { background: #e3e6f0; }
+    .eval-progress-bar { height: 6px; border-radius: 6px; background:#e9ecef; overflow:hidden; }
+    .eval-progress-bar .fill { height:100%; border-radius:6px; transition:width .4s ease; background:#e9ecef; }
+    .eval-progress-bar .fill.complete { background: linear-gradient(90deg,#1cc88a,#38ef7d); }
+    .eval-progress-bar .fill.partial  { background: linear-gradient(90deg,#f6c23e,#ffd461); }
+    .info-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; }
+    .empty-state { padding: 3rem; text-align: center; color: #718096; }
+    .empty-state i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    {{-- Header --}}
-    <div class="mb-4">
-        <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0 text-muted">
-            <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
-        </a>
-        <h1 class="h2 fw-bold mb-0 mt-1">
-            <i class="bi bi-clipboard-check me-2 text-primary"></i>การให้คะแนนโครงงาน
-        </h1>
-        <p class="text-muted small mb-0">ติดตามสถานะการให้คะแนนจากอาจารย์ที่ปรึกษาและคณะกรรมการ</p>
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-clipboard-check me-2"></i>การให้คะแนนโครงงาน
+                </h2>
+                <p class="mb-0 opacity-75">ติดตามสถานะการให้คะแนนจากอาจารย์ที่ปรึกษาและคณะกรรมการ</p>
+            </div>
+            <a href="{{ route('coordinator.dashboard') }}" class="btn modern-btn btn-light">
+                <i class="bi bi-arrow-left"></i>
+                <span>กลับ Dashboard</span>
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -77,34 +101,37 @@
             $done = $p->evaluations->pluck('evaluator_role')->unique()->count();
             return $done > 0 && $done < $exp;
         })->count();
-        $emptyCount    = $total - $completeCount - $partialCount;
+        $emptyCount = $total - $completeCount - $partialCount;
     @endphp
-    <div class="row g-3 mb-4">
-        @foreach([
-            ['โครงงานทั้งหมด',   $total,         'primary',   'bi-folder2'],
-            ['ครบทุกคนแล้ว',     $completeCount, 'success',   'bi-check-circle-fill'],
-            ['ให้คะแนนบางส่วน', $partialCount,  'warning',   'bi-hourglass-split'],
-            ['ยังไม่มีคะแนน',    $emptyCount,    'secondary', 'bi-clock'],
-        ] as [$label, $val, $color, $icon])
-        <div class="col-6 col-md-3">
-            <div class="stat-card card">
-                <div class="card-body py-3 d-flex align-items-center gap-3">
-                    <div style="width:44px;height:44px;border-radius:10px;background:var(--bs-{{ $color }}-bg-subtle);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi {{ $icon }} text-{{ $color }}" style="font-size:1.2rem;"></i>
-                    </div>
-                    <div>
-                        <div class="h4 fw-bold mb-0 text-{{ $color }}">{{ $val }}</div>
-                        <div class="small text-muted">{{ $label }}</div>
-                    </div>
-                </div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-card-icon"><i class="bi bi-folder2"></i></div>
+            <div class="stat-card-title">โครงงานทั้งหมด</div>
+            <div class="stat-card-value">{{ $total }}</div>
         </div>
-        @endforeach
+        <div class="stat-card success">
+            <div class="stat-card-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-card-title">ครบทุกคนแล้ว</div>
+            <div class="stat-card-value">{{ $completeCount }}</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-card-title">ให้คะแนนบางส่วน</div>
+            <div class="stat-card-value">{{ $partialCount }}</div>
+        </div>
+        <div class="stat-card secondary">
+            <div class="stat-card-icon"><i class="bi bi-clock"></i></div>
+            <div class="stat-card-title">ยังไม่มีคะแนน</div>
+            <div class="stat-card-value">{{ $emptyCount }}</div>
+        </div>
     </div>
 
     {{-- Filter --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body py-3">
+    <div class="modern-card mb-3">
+        <div class="modern-card-header">
+            <h4><i class="bi bi-funnel"></i>ตัวกรอง</h4>
+        </div>
+        <div class="p-3">
             <form method="GET" action="{{ route('coordinator.evaluations.index') }}" id="filterForm">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-4">
@@ -155,10 +182,12 @@
     </div>
 
     {{-- List --}}
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2">
-            <span class="fw-semibold small"><i class="bi bi-table me-2 text-primary"></i>รายการโครงงาน</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:.72rem;">{{ $total }} โครงงาน</span>
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h4>
+                <i class="bi bi-table"></i>รายการโครงงาน
+                <span class="badge bg-primary ms-auto" style="font-size:.75rem;">{{ $total }} โครงงาน</span>
+            </h4>
         </div>
         <div class="card-body p-0">
             @forelse($projects as $project)
@@ -239,14 +268,14 @@
                 </div>
             </div>
             @empty
-            <div class="text-center py-5">
-                <i class="bi bi-clipboard-x display-4 text-muted d-block mb-2" style="opacity:.3;"></i>
-                <p class="text-muted small mb-0">ไม่พบข้อมูลโครงงาน</p>
+            <div class="empty-state">
+                <i class="bi bi-clipboard-x"></i>
+                <p>ไม่พบข้อมูลโครงงาน</p>
             </div>
             @endforelse
         </div>
         @if($total > 0)
-        <div class="card-footer bg-white border-top text-muted small">
+        <div class="p-3 border-top text-muted small">
             แสดงทั้งหมด <strong>{{ $total }}</strong> โครงงาน
         </div>
         @endif

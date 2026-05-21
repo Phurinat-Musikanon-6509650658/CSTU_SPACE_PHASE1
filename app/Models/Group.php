@@ -68,8 +68,8 @@ class Group extends Model
     // ตรวจสอบว่าสามารถเสนอหัวข้อโครงงานได้หรือไม่
     public function canProposeProject()
     {
-        // ต้อง status_group = 'created' หรือ 'member_added'
-        if (!in_array($this->status_group, ['created', 'member_added'])) {
+        // ต้อง status_group = 'created', 'member_added' หรือ 'member_left'
+        if (!in_array($this->status_group, ['created', 'member_added', 'member_left'])) {
             return false;
         }
 
@@ -78,8 +78,10 @@ class Group extends Model
             return false;
         }
 
-        // ถ้าโครงงานได้รับการอนุมัติแล้ว → ไม่สามารถเสนอใหม่ได้
-        if ($this->project && $this->project->status_project === 'approved') {
+        // ถ้าโครงงานได้รับการอนุมัติหรืออยู่ระหว่างดำเนินการแล้ว → ไม่สามารถเสนอใหม่ได้
+        if ($this->project && in_array($this->project->status_project, [
+            'approved', 'in_progress', 'submitted', 'late_submission', 'passed', 'failed'
+        ])) {
             return false;
         }
 

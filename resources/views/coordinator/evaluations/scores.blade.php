@@ -52,11 +52,26 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    <a href="{{ route('coordinator.evaluations.index') }}" class="btn btn-link text-decoration-none ps-0 text-muted mb-3 d-inline-flex align-items-center">
-        <i class="bi bi-chevron-left me-1"></i><span class="small">กลับรายการ</span>
-    </a>
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-clipboard-data me-2"></i>คะแนนประเมินโครงงาน
+                </h2>
+                <p class="mb-0 opacity-75">{{ $project->project_code }} — {{ $project->project_name ?? 'ยังไม่ระบุชื่อ' }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.evaluations.index') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                    <i class="bi bi-arrow-left"></i><span>กลับรายการ</span>
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                    <i class="bi bi-house"></i><span>Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     @php $lateInfo = $project->getLateSubmissionInfo(); @endphp
     @if($lateInfo)

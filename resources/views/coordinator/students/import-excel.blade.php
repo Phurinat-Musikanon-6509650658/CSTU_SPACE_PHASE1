@@ -40,21 +40,24 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-2">
 
-    {{-- Header --}}
-    <div class="mb-3">
-        <a href="{{ route('users.index') }}" class="btn btn-link text-decoration-none ps-0 text-secondary">
-            <i class="bi bi-chevron-left me-1"></i>กลับ Users & Students
-        </a>
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-1">
+    {{-- Page Header --}}
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h3 fw-bold mb-0">
-                    <i class="bi bi-people-fill me-2 text-success"></i>Import นักศึกษาจาก Excel
-                </h1>
-                <p class="text-muted small mb-0">
-                    รองรับไฟล์ Excel ที่มี sheet ชื่อ <code>CS303--Students</code> และ <code>CS403--Students</code>
-                </p>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-people-fill me-2"></i>Import นักศึกษาจาก Excel
+                </h2>
+                <p class="mb-0 opacity-75">รองรับไฟล์ Excel ที่มี sheet ชื่อ <code>CS303--Students</code> และ <code>CS403--Students</code></p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('users.index') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-arrow-left"></i><span>Users & Students</span>
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-house"></i><span>Dashboard</span>
+                </a>
             </div>
         </div>
     </div>

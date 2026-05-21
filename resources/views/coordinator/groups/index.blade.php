@@ -3,23 +3,25 @@
 @section('title', 'จัดการกลุ่มโครงงาน | CSTU SPACE')
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-2">
 
     <!-- Header -->
-    <div class="mb-4">
-        <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0">
-            <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
-        </a>
-        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h2 fw-bold mb-0">
-                    <i class="bi bi-people-fill me-2 text-primary"></i>จัดการกลุ่มโครงงาน
-                </h1>
-                <p class="text-muted mb-0">ดูและจัดการกลุ่มโครงงานทั้งหมด</p>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-people-fill me-2"></i>จัดการกลุ่มโครงงาน
+                </h2>
+                <p class="mb-0 opacity-75">ดูและจัดการกลุ่มโครงงานทั้งหมด</p>
             </div>
-            <a href="{{ route('coordinator.projects.export.csv', request()->all()) }}" class="btn btn-outline-success">
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('coordinator.projects.export.csv', request()->all()) }}" class="btn btn-outline-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:var(--border-radius);">
+                    <i class="bi bi-arrow-left"></i><span>กลับ Dashboard</span>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -89,7 +91,7 @@
             <span class="fw-semibold">
                 <i class="bi bi-table me-2 text-success"></i>รายการกลุ่มทั้งหมด
             </span>
-            <span class="badge bg-primary rounded-pill">{{ $groups->total() }} กลุ่ม</span>
+            <span class="badge bg-primary rounded-pill">{{ $groups->count() }} กลุ่ม</span>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" style="font-size:.88rem;">
@@ -110,7 +112,7 @@
                     @forelse($groups as $group)
                     <tr>
                         <td class="ps-3 text-center text-muted" style="font-size:.82rem;">
-                            {{ ($groups->currentPage() - 1) * $groups->perPage() + $loop->iteration }}
+                            {{ $loop->iteration }}
                         </td>
                         <td>
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $group->subject_code }}</span>
@@ -139,11 +141,14 @@
                         <td>
                             @php
                                 $gsBadge = [
-                                    'not_created'  => ['bg-secondary-subtle text-secondary border-secondary-subtle',  'circle',           'ยังไม่สร้าง'],
-                                    'created'      => ['bg-success-subtle  text-success  border-success-subtle',      'check-circle',     'สร้างแล้ว'],
-                                    'member_left'  => ['bg-warning-subtle  text-warning  border-warning-subtle',      'person-dash',      'สมาชิกออก'],
-                                    'member_added' => ['bg-info-subtle     text-info     border-info-subtle',         'person-plus',      'เพิ่มสมาชิก'],
-                                    'disbanded'    => ['bg-danger-subtle   text-danger   border-danger-subtle',       'x-circle',         'ยุบกลุ่ม'],
+                                    'not_created'  => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',              'ยังไม่สร้าง'],
+                                    'created'      => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle',        'สร้างแล้ว'],
+                                    'member_added' => ['bg-info-subtle     text-info     border-info-subtle',        'person-plus',         'เพิ่มสมาชิก'],
+                                    'member_left'  => ['bg-warning-subtle  text-warning  border-warning-subtle',     'person-dash',         'สมาชิกออก'],
+                                    'pending'      => ['bg-warning-subtle  text-warning  border-warning-subtle',     'clock',               'รออนุมัติ'],
+                                    'approved'     => ['bg-success-subtle  text-success  border-success-subtle',     'check-circle-fill',   'อนุมัติแล้ว'],
+                                    'rejected'     => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle-fill',       'ปฏิเสธ'],
+                                    'disbanded'    => ['bg-danger-subtle   text-danger   border-danger-subtle',      'x-circle',            'ยุบกลุ่ม'],
                                 ][$group->status_group] ?? ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle', $group->status_group];
                             @endphp
                             <span class="badge {{ $gsBadge[0] }} border" style="font-size:.75rem;">
@@ -209,14 +214,7 @@
         </div>
 
         <div class="card-footer bg-white border-top">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <small class="text-muted">
-                    แสดง {{ $groups->firstItem() ?? 0 }}–{{ $groups->lastItem() ?? 0 }} จาก {{ $groups->total() }} กลุ่ม
-                </small>
-                <div>
-                    {{ $groups->links('pagination::bootstrap-4') }}
-                </div>
-            </div>
+            <small class="text-muted">พบ {{ $groups->count() }} กลุ่ม</small>
         </div>
     </div>
 

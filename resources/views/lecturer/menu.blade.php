@@ -249,19 +249,8 @@
             </div>
         </a>
 
-        <!-- 4. ประเมินโครงงาน -->
-        <a href="{{ route('lecturer.evaluations.index') }}" class="menu-card info">
-            <div class="menu-card-icon">
-                <i class="bi bi-clipboard-check-fill"></i>
-            </div>
-            <div class="menu-card-title">ประเมินโครงงาน</div>
-            <div class="menu-card-description">
-                ให้คะแนนและประเมินผลโครงงานที่คุณเป็นที่ปรึกษาหรือกรรมการ
-            </div>
-        </a>
-
-        <!-- 5. รายงานโครงงาน -->
-        <a href="{{ route('lecturer.projects.index') }}" class="menu-card primary">
+        <!-- 4. รายงานโครงงาน -->
+        <a href="{{ route('lecturer.submissions.index') }}" class="menu-card primary">
             <div class="menu-card-icon">
                 <i class="bi bi-file-earmark-pdf-fill"></i>
             </div>
@@ -271,14 +260,14 @@
             </div>
         </a>
 
-        <!-- 6. ตารางสอบโครงงาน -->
-        <a href="{{ route('lecturer.evaluations.index') }}" class="menu-card warning">
+        <!-- 5. ตารางสอบและการประเมินโครงงาน -->
+        <a href="{{ route('lecturer.evaluations.index') }}" class="menu-card info">
             <div class="menu-card-icon">
-                <i class="bi bi-calendar-event-fill"></i>
+                <i class="bi bi-calendar-check-fill"></i>
             </div>
-            <div class="menu-card-title">ตารางสอบโครงงาน</div>
+            <div class="menu-card-title">ตารางสอบและการประเมินโครงงาน</div>
             <div class="menu-card-description">
-                ตรวจสอบตารางสอบโครงงานที่คุณต้องเข้าร่วมประเมิน
+                ตรวจสอบตารางสอบและให้คะแนนประเมินผลโครงงานที่คุณเป็นที่ปรึกษาหรือกรรมการ
             </div>
         </a>
     </div>

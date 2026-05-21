@@ -4,188 +4,174 @@
 
 @push('styles')
 <style>
-    :root { --theme: #667eea; --theme-dark: #764ba2; --theme-rgb: 102,126,234; }
-    .page-banner {
-        background: linear-gradient(135deg, var(--theme) 0%, var(--theme-dark) 100%);
-        border-radius: 12px;
-        padding: 1.1rem 1.75rem;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 6px 20px rgba(var(--theme-rgb),.35);
-    }
-    .filter-card {
-        background: #fff;
-        border-radius: 10px;
-        padding: .9rem 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 1px 8px rgba(0,0,0,.06);
-        border: 1px solid #e6e3f5;
-        border-left: 4px solid var(--theme);
-    }
-    .filter-card .form-select-sm {
-        border-color: #d9d4f0;
-        font-size: .83rem;
-    }
-    .filter-card .form-select-sm:focus {
-        border-color: var(--theme);
-        box-shadow: 0 0 0 .2rem rgba(var(--theme-rgb),.2);
-    }
-    .table-card {
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,.07);
-        border: 1px solid #e6e3f5;
-    }
-    .table-compact thead th {
-        background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-        font-size: .75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        color: #5b21b6;
-        padding: .7rem .75rem;
-        border-bottom: 2px solid #c4b5fd;
-        white-space: nowrap;
-    }
-    .table-compact tbody td {
-        padding: .65rem .75rem;
-        vertical-align: middle;
-        font-size: .875rem;
-        border-bottom: 1px solid #f5f3ff;
-    }
-    .table-compact tbody tr:last-child td { border-bottom: none; }
-    .table-compact tbody tr:hover { background: linear-gradient(90deg,#f5f3ff,#fdfcff); }
-    .stat-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .3rem .9rem;
-        border-radius: 50px;
-        font-size: .8rem;
-        font-weight: 600;
-        border: 1.5px solid;
-    }
-    .stat-pill-total   { background:#f8f9fa; color:#6c757d; border-color:#dee2e6; }
-    .stat-pill-ok      { background:#f0fdf4; color:#059669; border-color:#48bb78; }
-    .stat-pill-prog    { background:#eff6ff; color:#2563eb; border-color:#4299e1; }
-    .stat-pill-submit  { background:#fff8e1; color:#d97706; border-color:#f6ad55; }
-    .project-code {
-        font-family: 'Courier New', monospace;
-        background: linear-gradient(135deg,#f5f3ff,#ede9fe);
-        color: #5b21b6;
-        padding: .2rem .55rem;
-        border-radius: 5px;
-        font-size: .8rem;
-        font-weight: 600;
-        white-space: nowrap;
-        border: 1px solid #c4b5fd;
-    }
-    .empty-row td {
-        padding: 3rem !important;
-        text-align: center;
-        color: #bbb;
-    }
-    .btn-icon {
-        padding: .28rem .55rem;
-        font-size: .78rem;
-        border-radius: 6px;
-        line-height: 1;
-    }
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-light); margin-bottom: 2rem; overflow: hidden; }
+    .modern-card-header { padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; }
+    .modern-card-header h4 { margin: 0; color: #2c3e50; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+    .table-modern { margin-bottom: 0; }
+    .table-modern thead th { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); font-weight: 600; color: #2c3e50; border: none; padding: 1rem 0.75rem; white-space: nowrap; }
+    .table-modern tbody tr { transition: var(--transition); }
+    .table-modern tbody tr:hover { background-color: rgba(102, 126, 234, 0.05); }
+    .table-modern td { vertical-align: middle; padding: .75rem 0.75rem; border-bottom: 1px solid #f0f0f0; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); border-left: 4px solid; position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-medium); }
+    .stat-card.primary { border-left-color: #667eea; }
+    .stat-card.warning { border-left-color: #f6ad55; }
+    .stat-card.success { border-left-color: #48bb78; }
+    .stat-card.info    { border-left-color: #4299e1; }
+    .stat-card-icon { position: absolute; top: 50%; right: 1.5rem; transform: translateY(-50%); font-size: 4rem; opacity: 0.1; }
+    .stat-card-title { font-size: 0.875rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .stat-card-value { font-size: 2.5rem; font-weight: 700; color: #2d3748; margin-bottom: 0; }
+    .empty-state { padding: 3rem; text-align: center; color: #718096; }
+    .empty-state i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+    .btn-icon { padding: .28rem .55rem; font-size: .78rem; border-radius: 6px; line-height: 1; }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid px-3">
+<div class="container">
 
-    {{-- Banner --}}
-    <div class="page-banner d-flex align-items-center justify-content-between">
-        <div>
-            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-folder-fill me-2"></i>โครงงานของฉัน</h5>
-            <small style="color:rgba(255,255,255,.85);">รายการโครงงานที่คุณเป็นอาจารย์ที่ปรึกษา</small>
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-folder-fill me-2"></i>โครงงานของฉัน
+                </h2>
+                <p class="mb-0 opacity-75">รายการโครงงานที่คุณเป็นอาจารย์ที่ปรึกษาหรือกรรมการ</p>
+            </div>
+            <a href="{{ route('lecturer.dashboard') }}" class="btn modern-btn btn-light">
+                <i class="bi bi-arrow-left"></i>
+                <span>กลับ Dashboard</span>
+            </a>
         </div>
-        <a href="{{ route('lecturer.dashboard') }}" class="btn btn-sm"
-           style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5);">
-            <i class="bi bi-arrow-left me-1"></i>กลับ
-        </a>
     </div>
 
-    {{-- Stats pills --}}
+    {{-- Stats --}}
     @php
-        $total    = $projects->count();
-        $approved = $projects->where('status_project','approved')->count();
-        $inprog   = $projects->where('status_project','in_progress')->count();
-        $submitted= $projects->whereIn('status_project',['submitted','late_submission'])->count();
+        $total     = $projects->count();
+        $advisorCt = $projects->filter(fn($p) => $p->advisorLecturer?->user_code == $userCode)->count();
+        $commitCt  = $total - $advisorCt;
+        $submitted = $projects->whereIn('status_project',['submitted','late_submission'])->count();
     @endphp
-    <div class="d-flex flex-wrap gap-2 mb-2">
-        <span class="stat-pill stat-pill-total"><i class="bi bi-list-ul"></i>ทั้งหมด {{ $total }}</span>
-        <span class="stat-pill stat-pill-ok"><i class="bi bi-check-circle-fill"></i>อนุมัติแล้ว {{ $approved }}</span>
-        <span class="stat-pill stat-pill-prog"><i class="bi bi-gear-fill"></i>ดำเนินการ {{ $inprog }}</span>
-        <span class="stat-pill stat-pill-submit"><i class="bi bi-file-earmark-check-fill"></i>ส่งเล่มแล้ว {{ $submitted }}</span>
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-card-icon"><i class="bi bi-folder"></i></div>
+            <div class="stat-card-title">โครงงานทั้งหมด</div>
+            <div class="stat-card-value">{{ $total }}</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-card-icon"><i class="bi bi-person-fill"></i></div>
+            <div class="stat-card-title">อาจารย์ที่ปรึกษา</div>
+            <div class="stat-card-value">{{ $advisorCt }}</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-card-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-card-title">กรรมการ</div>
+            <div class="stat-card-value">{{ $commitCt }}</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-card-icon"><i class="bi bi-file-earmark-check"></i></div>
+            <div class="stat-card-title">ส่งเล่มแล้ว</div>
+            <div class="stat-card-value">{{ $submitted }}</div>
+        </div>
     </div>
 
     {{-- Filter --}}
-    <div class="filter-card">
-        <form method="GET" action="{{ route('lecturer.projects.index') }}" class="row g-2 align-items-end">
-            <div class="col-6 col-md-3">
-                <label class="form-label mb-1 small fw-semibold text-muted">ปีการศึกษา</label>
-                <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— ทั้งหมด —</option>
-                    @foreach($years as $y)
-                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                    @endforeach
-                </select>
+    <div class="modern-card mb-3">
+        <div class="modern-card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4><i class="bi bi-funnel"></i>ตัวกรอง</h4>
+                <span class="badge bg-primary rounded-pill" id="proj-count">{{ $projects->count() }} รายการ</span>
             </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label mb-1 small fw-semibold text-muted">ภาคเรียน</label>
-                <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— ทั้งหมด —</option>
-                    @foreach($semesters as $sem)
-                        <option value="{{ $sem }}" {{ request('semester') == $sem ? 'selected' : '' }}>{{ $sem }}</option>
-                    @endforeach
-                </select>
+        </div>
+        <div class="p-3">
+            {{-- Text search (client-side) --}}
+            <div class="mb-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="projSearch" class="form-control"
+                           placeholder="ค้นหา ชื่อโครงงาน / รหัส / ชื่อนักศึกษา...">
+                    <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('projSearch').value='';filterProjTable()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
             </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label mb-1 small fw-semibold text-muted">รายวิชา</label>
-                <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— ทั้งหมด —</option>
-                    @foreach($subjects as $s)
-                        <option value="{{ $s }}" {{ request('subject') == $s ? 'selected' : '' }}>{{ $s }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-5 d-flex gap-2 align-items-end">
-                @if(request()->hasAny(['year','semester','subject']))
-                    <a href="{{ route('lecturer.projects.index') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-x-circle me-1"></i>ล้างตัวกรอง
-                    </a>
-                @endif
-            </div>
-        </form>
+            {{-- Dropdown filters (server-side) --}}
+            <form method="GET" action="{{ route('lecturer.projects.index') }}" class="row g-2 align-items-end">
+                <div class="col-6 col-md-3">
+                    <label class="form-label mb-1 small fw-semibold text-muted">ปีการศึกษา</label>
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">— ทั้งหมด —</option>
+                        @foreach($years as $y)
+                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label mb-1 small fw-semibold text-muted">ภาคเรียน</label>
+                    <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">— ทั้งหมด —</option>
+                        @foreach($semesters as $sem)
+                            <option value="{{ $sem }}" {{ request('semester') == $sem ? 'selected' : '' }}>{{ $sem }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label mb-1 small fw-semibold text-muted">รายวิชา</label>
+                    <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">— ทั้งหมด —</option>
+                        @foreach($subjects as $s)
+                            <option value="{{ $s }}" {{ request('subject') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-5 d-flex gap-2 align-items-end">
+                    @if(request()->hasAny(['year','semester','subject']))
+                        <a href="{{ route('lecturer.projects.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>ล้างตัวกรอง
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Table --}}
-    <div class="table-card">
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h4><i class="bi bi-table"></i>รายการโครงงาน</h4>
+        </div>
         <div class="table-responsive">
-            <table class="table table-compact mb-0">
+            <table class="table table-modern mb-0" id="projTable">
                 <thead>
                     <tr>
-                        <th style="width:3%">#</th>
+                        <th style="width:3%">ลำดับ</th>
                         <th style="width:10%">รหัสโครงงาน</th>
-                        <th style="width:28%">ชื่อโครงงาน</th>
-                        <th style="width:7%">วิชา</th>
-                        <th style="width:7%">ปี/เทอม</th>
-                        <th style="width:18%">สมาชิก</th>
-                        <th style="width:12%">วันสอบ</th>
+                        <th style="width:9%">ตำแหน่ง</th>
+                        <th style="width:24%">ชื่อโครงงาน</th>
+                        <th style="width:6%">วิชา</th>
+                        <th style="width:6%">ปี/เทอม</th>
+                        <th style="width:16%">สมาชิก</th>
+                        <th style="width:11%">วันสอบ</th>
                         <th style="width:8%">สถานะ</th>
-                        <th style="width:7%" class="text-center">การดำเนิน</th>
+                        <th style="width:7%" class="text-center">การดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($projects as $i => $project)
                         @php
+                            $isAdvisor = $project->advisorLecturer?->user_code == $userCode;
+                            $roleLabel = $isAdvisor ? 'อาจารย์ที่ปรึกษา' : 'กรรมการ';
+                            $roleBadge = $isAdvisor ? 'bg-primary' : 'bg-success';
                             $statusMap = [
                                 'approved'        => ['bg-success text-white',  'อนุมัติแล้ว'],
-                                'in_progress'     => ['bg-primary text-white',  'ดำเนินการ'],
+                                'in_progress'     => ['bg-primary text-white',  'กำลังดำเนินการ'],
                                 'submitted'       => ['bg-warning text-dark',   'ส่งเล่มแล้ว'],
                                 'late_submission' => ['bg-danger text-white',   'ส่งล่าช้า'],
                                 'passed'          => ['bg-success text-white',  'ผ่าน'],
@@ -193,9 +179,10 @@
                             ];
                             [$bc, $bl] = $statusMap[$project->status_project] ?? ['bg-secondary text-white', $project->status_project];
                         @endphp
-                        <tr>
+                        <tr class="proj-row">
                             <td class="text-muted small">{{ $i + 1 }}</td>
-                            <td><span class="project-code">{{ $project->project_code }}</span></td>
+                            <td><code class="small">{{ $project->project_code }}</code></td>
+                            <td><span class="badge {{ $roleBadge }} small">{{ $roleLabel }}</span></td>
                             <td>
                                 <div class="fw-semibold lh-sm">{{ $project->project_name ?? 'ยังไม่ระบุ' }}</div>
                             </td>
@@ -234,10 +221,12 @@
                             </td>
                         </tr>
                     @empty
-                        <tr class="empty-row">
-                            <td colspan="9">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                ไม่มีโครงงานที่ตรงกับเงื่อนไข
+                        <tr>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>ไม่มีโครงงานที่ตรงกับเงื่อนไข</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -247,4 +236,23 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function filterProjTable() {
+    const q = document.getElementById('projSearch').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#projTable .proj-row');
+    let visible = 0;
+    rows.forEach(function(row) {
+        const text = row.innerText.toLowerCase();
+        const show = !q || text.includes(q);
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    const badge = document.getElementById('proj-count');
+    if (badge) badge.textContent = visible + ' รายการ';
+}
+document.getElementById('projSearch').addEventListener('input', filterProjTable);
+</script>
+@endpush
 @endsection

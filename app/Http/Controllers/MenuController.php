@@ -139,7 +139,7 @@ class MenuController extends Controller
         }
 
         // Coordinator Project Management
-        if ($hasCoordinator || $hasAdmin) {
+        if ($hasCoordinator) {
             $menuGroups[] = $this->getProjectManagementMenu();
         }
 
@@ -149,7 +149,7 @@ class MenuController extends Controller
         }
 
         // Lecturer/Advisor Advisory Work
-        if ($hasLecturer || $hasCoordinator || $hasAdmin) {
+        if ($hasLecturer || $hasCoordinator) {
             $menuGroups[] = $this->getAdvisoryWorkMenu();
         }
 

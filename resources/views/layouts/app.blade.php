@@ -94,16 +94,51 @@
             box-shadow: var(--shadow-light);
         }
 
-        .form-control {
-            border-radius: 15px;
-            border: 2px solid #e9ecef;
-            padding: 0.75rem 1rem;
-            transition: var(--transition);
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #2d3748;
+            background-color: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .form-control:focus {
+        /* padding แยกเพราะ form-select ต้องการ padding-right มากพอสำหรับลูกศร */
+        .form-control {
+            padding: 0.55rem 0.85rem;
+        }
+        .form-select {
+            padding-top: 0.55rem;
+            padding-bottom: 0.55rem;
+            padding-left: 0.85rem;
+        }
+
+        .form-control-sm {
+            border-radius: 8px;
+            padding: 0.38rem 0.65rem;
+            font-size: 0.82rem;
+        }
+        .form-select-sm {
+            border-radius: 8px;
+            padding-top: 0.38rem;
+            padding-bottom: 0.38rem;
+            padding-left: 0.65rem;
+            font-size: 0.82rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            outline: none;
+        }
+
+        .form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.3rem;
         }
 
         .table-modern {

@@ -123,16 +123,16 @@
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="page-header">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0 text-muted mb-1">
-                    <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
-                </a>
                 <h2 class="mb-0">
                     <i class="bi bi-file-pdf-fill" style="color: #667eea;"></i> จัดการเล่มโครงงานที่ส่ง
                 </h2>
                 <p class="text-muted mb-0"><i class="bi bi-archive-fill"></i> ทั้งหมด <strong>{{ $totalSubmissions }}</strong> เล่ม</p>
             </div>
+            <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:8px;">
+                <i class="bi bi-arrow-left"></i><span>กลับ Dashboard</span>
+            </a>
         </div>
     </div>
 

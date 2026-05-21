@@ -91,24 +91,30 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-2">
 
-    {{-- Header --}}
-    <div class="d-flex align-items-start justify-content-between mb-3 flex-wrap gap-2">
-        <div>
-            <a href="{{ route('coordinator.evaluations.index') }}" class="btn btn-link text-decoration-none ps-0 text-muted">
-                <i class="bi bi-chevron-left me-1"></i>กลับ การให้คะแนนโครงงาน
-            </a>
-            <h1 class="h2 fw-bold mb-0 mt-1">
-                <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>สรุปคะแนนและส่งออกคะแนน
-            </h1>
-            <p class="text-muted small mb-0">Preview real-time · 4 sheet แยก CS303 / CS403 แยกตามอาจารย์ / สรุปรวม</p>
-        </div>
-        <div class="d-flex flex-column align-items-end gap-2 pt-1">
-            <a href="{{ route('coordinator.evaluations.export', request()->query()) }}"
-               id="exportBtn" class="btn btn-success fw-bold shadow-sm">
-                <i class="bi bi-download me-2"></i>Export .xlsx
-            </a>
+    {{-- Page Header --}}
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>สรุปคะแนนและส่งออกคะแนน
+                </h2>
+                <p class="mb-0 opacity-75">Preview real-time · 4 sheet แยก CS303 / CS403 แยกตามอาจารย์ / สรุปรวม</p>
+            </div>
+        <div class="d-flex flex-column align-items-end gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('coordinator.evaluations.export', request()->query()) }}"
+                   id="exportBtn" class="btn btn-success fw-bold">
+                    <i class="bi bi-download me-2"></i>Export .xlsx
+                </a>
+                <a href="{{ route('coordinator.evaluations.index') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-arrow-left"></i><span>กลับรายการ</span>
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-house"></i><span>Dashboard</span>
+                </a>
+            </div>
             <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                 <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle refresh-badge" id="lastUpdated">
                     <i class="bi bi-clock me-1"></i>โหลดครั้งแรก

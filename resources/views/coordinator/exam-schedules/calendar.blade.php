@@ -25,25 +25,27 @@
 @endpush
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid px-4 py-2">
     <div id="toast-container" style="position:fixed;top:1.25rem;right:1.25rem;z-index:9999;min-width:280px;"></div>
 
-    <!-- Header -->
-    <div class="mb-4">
-        <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-link text-decoration-none ps-0">
-            <i class="bi bi-chevron-left me-1"></i>กลับรายการตารางสอบ
-        </a>
-        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+    {{-- Page Header --}}
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h2 fw-bold mb-0"><i class="bi bi-calendar3 me-2 text-success"></i>ปฏิทินตารางสอบ</h1>
-                <p class="text-muted mb-0">แสดงตารางสอบในรูปแบบ Timeline</p>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-calendar3 me-2"></i>ปฏิทินตารางสอบ
+                </h2>
+                <p class="mb-0 opacity-75">แสดงตารางสอบในรูปแบบ Timeline</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('coordinator.exam-schedules.create') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-1"></i>เพิ่มตารางสอบ
                 </a>
                 <a href="{{ route('coordinator.exam-schedules.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-list-ul me-1"></i>มุมมองรายการ
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;border-radius:10px;">
+                    <i class="bi bi-house"></i><span>Dashboard</span>
                 </a>
             </div>
         </div>

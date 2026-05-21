@@ -4,58 +4,56 @@
 
 @push('styles')
 <style>
-    .stat-pill {
-        border-radius: 14px; padding: .9rem 1.2rem;
-        display: flex; align-items: center; gap: .75rem;
-    }
-    .stat-pill .stat-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-    .stat-pill .stat-lbl { font-size: .78rem; opacity: .85; }
-
-    .project-row {
-        background: #fff; border-radius: 10px;
-        box-shadow: 0 1px 4px rgba(0,0,0,.07);
-        margin-bottom: .5rem;
-        border-left: 4px solid transparent;
-        transition: box-shadow .15s, transform .15s;
-    }
+    .page-header { background: white; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-light); }
+    .page-header h2 { color: #2c3e50; font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; }
+    .modern-card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-light); margin-bottom: 2rem; overflow: hidden; }
+    .modern-card-header { padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; }
+    .modern-card-header h4 { margin: 0; color: #2c3e50; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+    .modern-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600; transition: var(--transition); border: none; }
+    .modern-btn.btn-light { background: #f8f9fa; color: #2c3e50; }
+    .modern-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-medium); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--shadow-light); transition: var(--transition); border-left: 4px solid; position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-medium); }
+    .stat-card.primary { border-left-color: #667eea; }
+    .stat-card.warning { border-left-color: #f6ad55; }
+    .stat-card.success { border-left-color: #48bb78; }
+    .stat-card.danger  { border-left-color: #fc5c7d; }
+    .stat-card-icon { position: absolute; top: 50%; right: 1.5rem; transform: translateY(-50%); font-size: 4rem; opacity: 0.1; }
+    .stat-card-title { font-size: 0.875rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .stat-card-value { font-size: 2.5rem; font-weight: 700; color: #2d3748; margin-bottom: 0; }
+    .project-row { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: .5rem; border-left: 4px solid transparent; transition: box-shadow .15s, transform .15s; }
     .project-row:hover { box-shadow: 0 3px 12px rgba(0,0,0,.11); transform: translateY(-1px); }
     .project-row.complete { border-left-color: #198754; }
     .project-row.partial  { border-left-color: #ffc107; }
     .project-row.empty    { border-left-color: #dc3545; }
-
     .badge-code { font-size: .75rem; font-family: monospace; background: #e8eeff; color: #3730a3; border-radius: 6px; padding: .2rem .5rem; }
     .badge-person { font-size: .72rem; padding: .2rem .5rem; border-radius: 20px; font-weight: 500; }
-
-    .filter-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
-
-    .unscheduled-banner {
-        background: linear-gradient(135deg,#fff5f5,#ffe4e4);
-        border: 1.5px solid #fca5a5; border-radius: 12px;
-        padding: .75rem 1.25rem;
-        display: flex; align-items: center; gap: .6rem;
-        color: #b91c1c; font-weight: 600;
-    }
+    .unscheduled-banner { background: linear-gradient(135deg,#fff5f5,#ffe4e4); border: 1.5px solid #fca5a5; border-radius: 12px; padding: .75rem 1.25rem; display: flex; align-items: center; gap: .6rem; color: #b91c1c; font-weight: 600; }
+    .empty-state { padding: 3rem; text-align: center; color: #718096; }
+    .empty-state i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
-    {{-- Header --}}
-    <div class="mb-4">
-        <a href="{{ route('coordinator.dashboard') }}" class="btn btn-link text-decoration-none ps-0">
-            <i class="bi bi-chevron-left me-1"></i>กลับ Dashboard
-        </a>
-        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h2 fw-bold mb-0">
-                    <i class="bi bi-calendar-check me-2 text-primary"></i>จัดตารางสอบและคณะกรรมการ
-                </h1>
-                <p class="text-muted mb-0">กำหนดวันเวลาสอบและมอบหมายคณะกรรมการสอบโครงงาน</p>
+                <h2 class="mb-1">
+                    <i class="bi bi-calendar-check me-2"></i>จัดตารางสอบและคณะกรรมการ
+                </h2>
+                <p class="mb-0 opacity-75">กำหนดวันเวลาสอบและมอบหมายคณะกรรมการสอบโครงงาน</p>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('coordinator.schedules.import.form') }}" class="btn btn-primary">
-                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Import CSV
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('coordinator.schedules.import.form') }}" class="btn modern-btn btn-primary">
+                    <i class="bi bi-file-earmark-arrow-up"></i>Import CSV
+                </a>
+                <a href="{{ route('coordinator.dashboard') }}" class="btn modern-btn btn-light">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>กลับ Dashboard</span>
                 </a>
             </div>
         </div>
@@ -86,47 +84,30 @@
     @endif
 
     {{-- Stats --}}
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="stat-pill bg-primary text-white">
-                <i class="bi bi-folder2 fs-4 opacity-75"></i>
-                <div>
-                    <div class="stat-num">{{ $totalCount }}</div>
-                    <div class="stat-lbl">โครงงานทั้งหมด</div>
-                </div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-card-icon"><i class="bi bi-folder2"></i></div>
+            <div class="stat-card-title">โครงงานทั้งหมด</div>
+            <div class="stat-card-value">{{ $totalCount }}</div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-pill bg-success text-white">
-                <i class="bi bi-calendar-check fs-4 opacity-75"></i>
-                <div>
-                    <div class="stat-num">{{ $withExam }}</div>
-                    <div class="stat-lbl">กำหนดวันสอบแล้ว</div>
-                </div>
-            </div>
+        <div class="stat-card success">
+            <div class="stat-card-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-card-title">กำหนดวันสอบแล้ว</div>
+            <div class="stat-card-value">{{ $withExam }}</div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-pill bg-danger text-white">
-                <i class="bi bi-calendar-x fs-4 opacity-75"></i>
-                <div>
-                    <div class="stat-num">{{ $withoutExam }}</div>
-                    <div class="stat-lbl">ยังไม่กำหนดวันสอบ</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-pill bg-info text-white">
-                <i class="bi bi-file-earmark-text fs-4 opacity-75"></i>
-                <div>
-                    <div class="stat-num">{{ $projects->lastPage() }}</div>
-                    <div class="stat-lbl">หน้าทั้งหมด ({{ $projects->perPage() }}/หน้า)</div>
-                </div>
-            </div>
+        <div class="stat-card danger">
+            <div class="stat-card-icon"><i class="bi bi-calendar-x"></i></div>
+            <div class="stat-card-title">ยังไม่กำหนดวันสอบ</div>
+            <div class="stat-card-value">{{ $withoutExam }}</div>
         </div>
     </div>
 
     {{-- Filters --}}
-    <div class="filter-card mb-4 p-3">
+    <div class="modern-card mb-4">
+        <div class="modern-card-header">
+            <h4><i class="bi bi-funnel"></i>ตัวกรอง</h4>
+        </div>
+        <div class="p-3">
         <form method="GET" action="{{ route('coordinator.schedules.index') }}">
             <div class="row g-2 align-items-end">
                 <div class="col-sm-6 col-md-3">
@@ -179,6 +160,7 @@
             </div>
         </form>
     </div>
+</div>
 
     {{-- Active filter badge --}}
     @if(request()->hasAny(['search','has_exam','semester','year','course_code']))
@@ -299,19 +281,14 @@
             </div>
         </div>
     @empty
-        <div class="text-center py-5">
-            <i class="bi bi-folder-x display-1 text-muted"></i>
-            <h5 class="mt-3 text-muted">ไม่พบข้อมูลโครงงาน</h5>
+        <div class="modern-card">
+            <div class="empty-state">
+                <i class="bi bi-folder-x"></i>
+                <p>ไม่พบข้อมูลโครงงาน</p>
+            </div>
         </div>
     @endforelse
 
-    {{-- Pagination --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 gap-2">
-        <small class="text-muted">
-            แสดง {{ $projects->firstItem() ?? 0 }}–{{ $projects->lastItem() ?? 0 }} จาก {{ $projects->total() }} โครงงาน
-        </small>
-        <div>{{ $projects->links('pagination::bootstrap-4') }}</div>
-    </div>
 
 </div>
 @endsection

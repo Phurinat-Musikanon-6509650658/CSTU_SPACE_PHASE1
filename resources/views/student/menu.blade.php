@@ -59,6 +59,7 @@
             background: radial-gradient(circle, rgba(220, 20, 60, 0.1) 0%, transparent 70%);
             animation: rotate 30s linear infinite;
             z-index: 0;
+            pointer-events: none;
         }
         
         @keyframes rotate {
@@ -66,7 +67,7 @@
             to { transform: rotate(360deg); }
         }
         
-        .container-fluid {
+        .container {
             position: relative;
             z-index: 1;
         }
@@ -76,11 +77,11 @@
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             border-radius: var(--border-radius);
-            padding: 2.5rem;
+            padding: 1.5rem 2rem;
             box-shadow: var(--shadow-light);
             position: relative;
             overflow: hidden;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         
         .welcome-header::before {
@@ -102,33 +103,34 @@
         }
         
         .welcome-avatar {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--gradient-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 2rem;
             color: white;
             box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+            flex-shrink: 0;
         }
         
         .welcome-text h2 {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--color-black);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
-        
+
         .welcome-text h4 {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
         
         .role-badge {
@@ -201,14 +203,14 @@
         }
         
         .feature-card .card-icon {
-            width: 80px;
-            height: 80px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2.5rem;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
             transition: var(--transition);
         }
         
@@ -243,8 +245,8 @@
         .feature-card .card-title {
             font-weight: 700;
             color: var(--color-black);
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
         }
         
         .feature-card .card-description {
@@ -434,7 +436,7 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -472,74 +474,93 @@
             </div>
         @endif
 
-        @if(session('member_accepted'))
-            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-person-check-fill me-2"></i>สมาชิกใหม่เข้าร่วมกลุ่ม!
-                </h5>
-                <hr>
-                <p class="mb-0">{{ session('member_accepted') }}</p>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+        @php
+        // Build notification list from current data state (no time-window, localStorage-dismissible)
+        $notifs = [];
+        if ($myGroup) {
+            // 1. Member joined (group leader only)
+            if ($isGroupLeader) {
+                $otherMembers = $myGroup->members->filter(fn($m) => $m->username_std !== $student->username_std);
+                if ($otherMembers->isNotEmpty()) {
+                    $names = $otherMembers->map(fn($m) => $m->student
+                        ? "{$m->student->firstname_std} {$m->student->lastname_std}"
+                        : $m->username_std)->join(', ');
+                    $notifs[] = [
+                        'key'   => 'member_' . $myGroup->group_id . '_' . $otherMembers->pluck('username_std')->sort()->implode('_'),
+                        'type'  => 'info', 'icon' => 'bi-person-check-fill',
+                        'title' => 'สมาชิกใหม่เข้าร่วมกลุ่ม!',
+                        'body'  => "🎉 {$names} ได้เข้าร่วมกลุ่มแล้ว!",
+                        'hint'  => null,
+                    ];
+                }
+            }
+            // 2. Proposal approved / rejected
+            $latestProp = $myGroup->latestProposal;
+            if ($latestProp && $latestProp->responded_at) {
+                $lName = $latestProp->lecturer
+                    ? "{$latestProp->lecturer->firstname_user} {$latestProp->lecturer->lastname_user}"
+                    : 'อาจารย์';
+                if ($latestProp->status === 'approved') {
+                    $notifs[] = [
+                        'key'   => 'proposal_' . $latestProp->proposal_id . '_approved',
+                        'type'  => 'success', 'icon' => 'bi-check-circle-fill',
+                        'title' => 'ข้อเสนอโครงงานได้รับการอนุมัติ!',
+                        'body'  => "🎉 {$lName} ตอบรับเป็นอาจารย์ที่ปรึกษาโครงงาน &ldquo;{$latestProp->proposed_title}&rdquo; เรียบร้อยแล้ว!",
+                        'hint'  => null,
+                    ];
+                } elseif ($latestProp->status === 'rejected') {
+                    $reason = $latestProp->rejection_reason ? " เหตุผล: {$latestProp->rejection_reason}" : '';
+                    $notifs[] = [
+                        'key'   => 'proposal_' . $latestProp->proposal_id . '_rejected',
+                        'type'  => 'danger', 'icon' => 'bi-x-circle-fill',
+                        'title' => 'ข้อเสนอโครงงานถูกปฏิเสธ',
+                        'body'  => "❌ {$lName} ปฏิเสธข้อเสนอโครงงาน &ldquo;{$latestProp->proposed_title}&rdquo;{$reason}",
+                        'hint'  => 'คุณสามารถเสนอโครงงานใหม่หรือติดต่ออาจารย์ท่านอื่นได้',
+                    ];
+                }
+            }
+            // 3. Exam scheduled
+            if ($myGroup->project && $myGroup->project->exam_datetime) {
+                $examDate = \Carbon\Carbon::parse($myGroup->project->exam_datetime)->locale('th');
+                $notifs[] = [
+                    'key'   => 'exam_' . $myGroup->project->project_id . '_' . strtotime($myGroup->project->exam_datetime),
+                    'type'  => 'primary', 'icon' => 'bi-calendar-check-fill',
+                    'title' => '📅 กำหนดการสอบโครงงาน',
+                    'body'  => '<strong>โครงงาน:</strong> ' . e($myGroup->project->project_name) .
+                               '<br><strong>วันเวลาสอบ:</strong> ' . $examDate->translatedFormat('d F Y เวลา H:i น.'),
+                    'hint'  => 'กรุณาเตรียมตัวสอบให้พร้อม',
+                ];
+            }
+            // 4. Report submitted (non-leader)
+            if (!$isGroupLeader && $myGroup->project && $myGroup->project->submission_file) {
+                $submitter = \App\Models\Student::where('username_std', $myGroup->project->submitted_by)->first();
+                $submitterName = $submitter
+                    ? "{$submitter->firstname_std} {$submitter->lastname_std}"
+                    : 'หัวหน้ากลุ่ม';
+                $notifs[] = [
+                    'key'   => 'report_' . $myGroup->project->project_id . '_' . ($myGroup->project->submitted_at ? strtotime($myGroup->project->submitted_at) : 0),
+                    'type'  => 'info', 'icon' => 'bi-file-earmark-check-fill',
+                    'title' => 'เล่มรายงานถูกส่งแล้ว!',
+                    'body'  => "📄 {$submitterName} ได้ส่งเล่มรายงานโครงงานเรียบร้อยแล้ว!",
+                    'hint'  => 'คุณสามารถดาวน์โหลดเล่มรายงานได้จากการ์ด "เล่มรายงาน"',
+                ];
+            }
+        }
+        @endphp
 
-        @if(session('proposal_approved'))
-            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-check-circle-fill me-2"></i>ข้อเสนอโครงงานได้รับการอนุมัติ!
-                </h5>
-                <hr>
-                <p class="mb-0">{{ session('proposal_approved') }}</p>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('proposal_rejected'))
-            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-x-circle-fill me-2"></i>ข้อเสนอโครงงานถูกปฏิเสธ
-                </h5>
-                <hr>
-                <p class="mb-0">{{ session('proposal_rejected') }}</p>
-                <small class="d-block mt-2 text-muted">
-                    <i class="bi bi-info-circle me-1"></i>คุณสามารถเสนอโครงงานใหม่หรือติดต่ออาจารย์ท่านอื่นได้
-                </small>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('report_submitted'))
-            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-file-earmark-check-fill me-2"></i>เล่มรายงานถูกส่งแล้ว!
-                </h5>
-                <hr>
-                <p class="mb-0">{{ session('report_submitted') }}</p>
-                <small class="d-block mt-2 text-muted">
-                    <i class="bi bi-info-circle me-1"></i>คุณสามารถดาวน์โหลดเล่มรายงานได้จากการ์ด "เล่มรายงาน"
-                </small>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('exam_scheduled'))
-            <div class="alert alert-primary alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <h5 class="alert-heading">
-                    <i class="bi bi-calendar-check-fill me-2"></i>📅 กำหนดการสอบโครงงาน
-                </h5>
-                <hr>
-                <p class="mb-2">
-                    <strong>โครงงาน:</strong> {{ session('exam_scheduled')['project_name'] }}
-                </p>
-                <p class="mb-0">
-                    <strong>วันเวลาสอบ:</strong> {{ session('exam_scheduled')['exam_datetime'] }}
-                </p>
-                <small class="d-block mt-2 text-muted">
-                    <i class="bi bi-info-circle me-1"></i>กรุณาเตรียมตัวสอบให้พร้อม
-                </small>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+        @foreach($notifs as $_n)
+        <div class="alert alert-{{ $_n['type'] }} alert-dismissible fade show border-0 shadow-sm mb-3 notif-banner"
+             data-notif-key="{{ $_n['key'] }}" role="alert">
+            <h5 class="alert-heading"><i class="bi {{ $_n['icon'] }} me-2"></i>{{ $_n['title'] }}</h5>
+            <hr>
+            <p class="mb-0">{!! $_n['body'] !!}</p>
+            @if($_n['hint'])
+            <small class="d-block mt-2 text-muted"><i class="bi bi-info-circle me-1"></i>{{ $_n['hint'] }}</small>
+            @endif
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    onclick="dismissNotif('{{ $_n['key'] }}')"></button>
+        </div>
+        @endforeach
 
         <!-- Pending Invitations -->
         @if($pendingInvitations->count() > 0)
@@ -564,7 +585,7 @@
                                     </h6>
                                     <p class="card-text small">
                                         <strong>ผู้เชิญ:</strong> {{ $invitation->inviter->full_name }}<br>
-                                        <strong>รหัสโครงงาน:</strong> {{ $invitation->group->project_code }}<br>
+                                        <strong>รหัสโครงงาน:</strong> {{ $invitation->group->project->project_code ?? '-' }}<br>
                                         <strong>วิชา:</strong> {{ $invitation->group->subject_code }}
                                     </p>
                                     <div class="d-flex gap-2">
@@ -615,7 +636,7 @@
                             </h5>
                             <div class="mb-2">
                                 <i class="bi bi-code-square me-2"></i>
-                                <strong>รหัสโครงงาน:</strong> {{ $myGroup->project_code }}
+                                <strong>รหัสโครงงาน:</strong> {{ $myGroup->project->project_code ?? '-' }}
                             </div>
                             <div class="mb-2">
                                 <i class="bi bi-book me-2"></i>
@@ -759,7 +780,7 @@
             @endif
             
             <!-- 4. เสนอหัวข้อโครงงาน (หัวหน้ากลุ่ม) -->
-            @if(isset($myGroup) && $myGroup && isset($isGroupLeader) && $isGroupLeader && !$myGroup->hasPendingInvitation())
+            @if(isset($myGroup) && $myGroup && isset($isGroupLeader) && $isGroupLeader && $myGroup->canProposeProject())
                 @php
                     $latestProposal = $myGroup->latestProposal;
                     $projectApproved = $latestProposal && $latestProposal->status === 'approved';
@@ -807,8 +828,8 @@
             @endif
             
             <!-- 5. โครงงานอนุมัติแล้ว -->
-            @if(isset($myGroup) && $myGroup && $myGroup->project && 
-                $myGroup->project->status_project === 'approved' && 
+            @if(isset($myGroup) && $myGroup && $myGroup->project &&
+                in_array($myGroup->project->status_project, ['approved', 'in_progress']) &&
                 !$myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-green);">
@@ -831,8 +852,8 @@
             @endif
             
             <!-- 6. ส่งเล่มรายงาน -->
-            @if(isset($myGroup) && $myGroup && $myGroup->project && 
-                $myGroup->project->status_project === 'approved' &&
+            @if(isset($myGroup) && $myGroup && $myGroup->project &&
+                in_array($myGroup->project->status_project, ['approved', 'in_progress']) &&
                 !$myGroup->project->submission_file)
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card feature-card p-4 text-center h-100" style="border-left: 4px solid var(--color-orange);">
@@ -987,10 +1008,21 @@
         modal.show();
     }
 
-    // Logout function
     function logout() {
         window.location.href = '/logout';
     }
+
+    // Persistent notifications: hide already-dismissed ones, save dismissed ones
+    function dismissNotif(key) {
+        try { localStorage.setItem('notif_seen_' + key, '1'); } catch(e) {}
+    }
+    document.querySelectorAll('.notif-banner[data-notif-key]').forEach(function(el) {
+        try {
+            if (localStorage.getItem('notif_seen_' + el.dataset.notifKey)) {
+                el.remove();
+            }
+        } catch(e) {}
+    });
     </script>
 
     <script>

@@ -21,7 +21,7 @@ class ExamScheduleController extends Controller
             'project.advisorLecturer.user',
             'project.committeeLecturers.user',
             'project.group.members.student',
-        ])->orderBy('ex_start_time', 'desc')->paginate(20);
+        ])->orderBy('ex_start_time', 'desc')->get();
 
         $lecturers = User::where('role', '&', 8192)->orderBy('firstname_user')->get();
 

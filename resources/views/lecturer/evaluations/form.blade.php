@@ -78,7 +78,7 @@
 @endpush
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="container">
 
     @php
         $roleLabels = [
@@ -114,24 +114,31 @@
         }
     @endphp
 
-    <!-- Header -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-            <a href="{{ route('lecturer.evaluations.index') }}" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left me-2"></i>กลับรายการ
-            </a>
-            <a href="{{ route('lecturer.evaluations.export', $project->project_id) }}" target="_blank"
-               class="btn btn-outline-secondary">
-                <i class="bi bi-printer me-2"></i>Export ใบประเมิน (ลายเซ็น)
-            </a>
+    {{-- Page Header --}}
+    <div style="background:white;border-radius:var(--border-radius);padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow-light);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 style="color:#2c3e50;font-weight:700;font-size:2rem;margin-bottom:.5rem;">
+                    <i class="bi bi-clipboard-check me-2"></i>ให้คะแนนโครงงาน
+                </h2>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-{{ $roleColors[$role] ?? 'secondary' }}">{{ $roleLabels[$role] ?? $role }}</span>
+                    <span class="text-muted small">— คะแนนเต็ม: {{ $maxScore }} คะแนน</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('lecturer.evaluations.export', $project->project_id) }}" target="_blank"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-printer me-1"></i>Export ใบประเมิน
+                </a>
+                <a href="{{ route('lecturer.evaluations.index') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                    <i class="bi bi-arrow-left"></i><span>กลับรายการ</span>
+                </a>
+                <a href="{{ route('lecturer.dashboard') }}" class="btn" style="background:#f8f9fa;color:#2c3e50;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;">
+                    <i class="bi bi-house"></i><span>Dashboard</span>
+                </a>
+            </div>
         </div>
-        <h1 class="h2 fw-bold">
-            <i class="bi bi-clipboard-check me-2 text-primary"></i>ให้คะแนนโครงงาน
-        </h1>
-        <small class="text-muted">
-            <span class="badge bg-{{ $roleColors[$role] ?? 'secondary' }}">{{ $roleLabels[$role] ?? $role }}</span>
-            — คะแนนเต็ม: {{ $maxScore }} คะแนน
-        </small>
     </div>
 
     <!-- Project Info -->
