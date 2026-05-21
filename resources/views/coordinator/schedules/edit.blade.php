@@ -99,6 +99,15 @@
                                 {{ $member->student->firstname_std ?? '' }} {{ $member->student->lastname_std ?? '' }}@if(!$loop->last), @endif
                             @endforeach
                         </div>
+                        @if($project->exam_datetime)
+                        <div class="mt-2 small">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                {{ $project->exam_datetime->locale('th')->translatedFormat('j M') }} {{ $project->exam_datetime->year + 543 }}
+                                เวลา {{ $project->exam_datetime->format('H:i') }} น.
+                            </span>
+                        </div>
+                        @endif
                     </div>
                 </div>
 

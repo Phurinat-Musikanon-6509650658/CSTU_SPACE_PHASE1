@@ -12,24 +12,29 @@ class LecturerSubmissionController extends Controller
     {
         $user = Auth::user();
 
-        // Show submitted projects where user is advisor OR any committee member
-        $submissions = Project::whereNotNull('submission_file')
+        $query = Project::whereNotNull('submission_file')
             ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $user->user_code))
-            ->with(['group', 'advisorLecturer.user', 'committeeLecturers.user'])
-            ->get();
+            ->with(['group.members.student', 'advisorLecturer.user', 'committeeLecturers.user']);
 
-        // Group by year and semester
-        $grouped = $submissions->groupBy(function($item) {
-            return $item->group->year;
-        })->map(function($yearGroup) {
-            return $yearGroup->groupBy(function($item) {
-                return $item->group->semester;
-            })->sortKeys()->reverse();
-        })->sortKeys()->reverse();
+        if ($request->filled('year'))     $query->whereHas('group', fn($q) => $q->where('year', $request->year));
+        if ($request->filled('semester')) $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
+        if ($request->filled('subject'))  $query->whereHas('group', fn($q) => $q->where('subject_code', $request->subject));
+
+        $submissions = $query->get();
+
+        $groupIds  = Project::whereNotNull('submission_file')
+            ->whereHas('projectLecturers', fn($q) => $q->where('user_code', $user->user_code))
+            ->pluck('group_id');
+        $years     = \Illuminate\Support\Facades\DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('year', 'desc')->pluck('year');
+        $semesters = \Illuminate\Support\Facades\DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('semester')->pluck('semester');
+        $subjects  = \Illuminate\Support\Facades\DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('subject_code')->pluck('subject_code');
 
         return view('submissions.lecturer.index', [
-            'grouped' => $grouped,
-            'totalSubmissions' => $submissions->count()
+            'submissions'      => $submissions,
+            'totalSubmissions' => $submissions->count(),
+            'years'            => $years,
+            'semesters'        => $semesters,
+            'subjects'         => $subjects,
         ]);
     }
 

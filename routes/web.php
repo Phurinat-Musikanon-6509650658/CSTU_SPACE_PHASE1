@@ -170,6 +170,9 @@ Route::middleware('session.timeout')->group(function () {
         // Evaluation
         Route::prefix('evaluations')->name('evaluations.')->group(function () {
             Route::get('/', [CoordinatorController::class, 'evaluationsIndex'])->name('index');
+            Route::get('export', [CoordinatorController::class, 'exportScores'])->name('export');
+            Route::get('export-preview', [CoordinatorController::class, 'exportPreview'])->name('export-preview');
+            Route::get('export-data', [CoordinatorController::class, 'exportData'])->name('export-data');
             Route::get('{project}/scores', [CoordinatorController::class, 'viewScores'])->name('scores');
         });
         
@@ -336,6 +339,7 @@ Route::middleware('session.timeout')->group(function () {
             Route::put('{subject}', [SubjectController::class, 'update'])->name('update');
             Route::post('{subject}/toggle', [SubjectController::class, 'toggle'])->name('toggle');
             Route::delete('{subject}', [SubjectController::class, 'destroy'])->name('destroy');
+            Route::delete('term/{year}/{semester}', [SubjectController::class, 'destroyTerm'])->name('destroyTerm');
             Route::post('open-new-term', [SubjectController::class, 'openNewTerm'])->name('openNewTerm');
             Route::post('bulk-update-term', [SubjectController::class, 'bulkUpdateTerm'])->name('bulkUpdateTerm');
         });

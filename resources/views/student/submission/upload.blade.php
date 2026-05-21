@@ -14,6 +14,72 @@
                 </div>
 
                 <div class="card-body">
+
+                    {{-- ── Deadline Warning ────────────────────────────────── --}}
+                    @if($project->exam_datetime && !in_array($project->status_project, ['passed','failed']))
+                    @php
+                        $examDt   = \Carbon\Carbon::parse($project->exam_datetime);
+                        $deadline = $examDt->copy()->subDay();
+                        $now      = now();
+                        $submitted = $project->submitted_at != null;
+
+                        if (!$submitted) {
+                            $diffSec  = $now->diffInSeconds($deadline, false); // positive = future
+                            $diffDays = (int) ceil(abs($diffSec) / 86400);
+                        }
+                    @endphp
+
+                    @if(!$submitted)
+                        @if($diffSec < 0)
+                            {{-- เลยกำหนดแล้ว --}}
+                            @php
+                                $lateDays  = max(1, (int) ceil(abs($diffSec) / 86400));
+                                $latePct   = min($lateDays * 20, 100);
+                            @endphp
+                            <div class="alert border-0 d-flex align-items-start gap-3 mb-3"
+                                 style="background:#fef2f2;border-left:5px solid #ef4444 !important;border-radius:10px;border:1px solid #fecaca;">
+                                <i class="bi bi-x-octagon-fill mt-1" style="font-size:1.4rem;flex-shrink:0;color:#dc2626;"></i>
+                                <div>
+                                    <div class="fw-bold" style="color:#991b1b;font-size:.95rem;">เลยกำหนดส่งแล้ว {{ $lateDays }} วัน!</div>
+                                    <div class="small" style="color:#7f1d1d;">
+                                        กำหนดส่ง: <strong>{{ thaiDateTime($deadline) }}</strong> น. (ก่อนวันสอบ 1 วัน)
+                                    </div>
+                                    <div class="small mt-1" style="color:#991b1b;">
+                                        <i class="bi bi-calculator me-1"></i>
+                                        หากส่งตอนนี้จะถูกหักคะแนน <strong>{{ $lateDays }} × 20% = {{ $latePct }}%</strong> จากคะแนนที่ได้รับ
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif($diffSec <= 86400)
+                            {{-- เหลือ ≤ 1 วัน (วันนี้คือวันสุดท้าย) --}}
+                            <div class="alert border-0 d-flex align-items-start gap-3 mb-3"
+                                 style="background:#fff7ed;border-left:5px solid #f97316 !important;border-radius:10px;border:1px solid #fed7aa;">
+                                <i class="bi bi-alarm-fill mt-1" style="font-size:1.4rem;flex-shrink:0;color:#ea580c;"></i>
+                                <div>
+                                    <div class="fw-bold" style="color:#9a3412;font-size:.95rem;">วันนี้คือวันสุดท้ายที่ควรส่งงาน!</div>
+                                    <div class="small" style="color:#7c2d12;">
+                                        กำหนดส่ง: <strong>{{ thaiDateTime($deadline) }}</strong> น. — ส่งเกินกำหนดจะถูกหักคะแนน 20% ต่อวัน
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            {{-- ยังมีเวลา --}}
+                            <div class="alert border-0 d-flex align-items-start gap-3 mb-3"
+                                 style="background:#eff6ff;border-left:5px solid #3b82f6 !important;border-radius:10px;border:1px solid #bfdbfe;">
+                                <i class="bi bi-calendar-event-fill mt-1" style="font-size:1.3rem;flex-shrink:0;color:#2563eb;"></i>
+                                <div>
+                                    <div class="fw-bold" style="color:#1e40af;">กำหนดส่งงาน: {{ thaiDate($deadline) }}</div>
+                                    <div class="small" style="color:#1e3a8a;">
+                                        ควรส่งงานก่อน <strong>{{ thaiDateTime($deadline) }}</strong> น. (ก่อนวันสอบ 1 วัน) — เหลืออีก <strong>{{ $diffDays }}</strong> วัน
+                                    </div>
+                                    <div class="small mt-1 text-muted">ส่งเกินกำหนดจะถูกหักคะแนน 20% ต่อวัน</div>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+                    @endif
+                    {{-- ────────────────────────────────────────────────────── --}}
+
                     @if(!$isGroupLeader)
                     <!-- แจ้งเตือนสมาชิกที่ไม่ใช่หัวหน้า -->
                     <div class="alert alert-warning">
@@ -35,7 +101,7 @@
                             </div>
                             <div class="col-md-6">
                                 <strong>ส่งเมื่อ:</strong><br>
-                                {{ $project->submitted_at->format('d/m/Y H:i') }} น.
+                                {{ thaiDateTime($project->submitted_at) }} น.
                             </div>
                             <div class="col-md-6 mt-2">
                                 <strong>ส่งโดย:</strong><br>

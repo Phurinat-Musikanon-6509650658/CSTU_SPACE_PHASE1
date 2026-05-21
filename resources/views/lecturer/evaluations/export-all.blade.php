@@ -262,6 +262,7 @@
         $students = $entry['students'];
         $scores   = $entry['scores'];
         $criteria = $entry['criteria'];
+        $comment  = $entry['comment'] ?? '';
         $maxScore = $role === 'advisor' ? $criteria->getAdvisorMax() : $criteria->getCommitteeMax();
     @endphp
 
@@ -274,7 +275,7 @@
                 <span class="role-pill">{{ $roleLabels[$role] ?? $role }}</span>
                 &nbsp;|&nbsp; คะแนนเต็ม {{ $maxScore }} คะแนน
                 &nbsp;|&nbsp; วิชา {{ $project->group->subject_code ?? '' }}
-                &nbsp;|&nbsp; พิมพ์เมื่อ: {{ now()->format('d/m/Y H:i น.') }}
+                &nbsp;|&nbsp; พิมพ์เมื่อ: {{ thaiDateTime(now()) }}
             </div>
         </div>
 
@@ -300,7 +301,7 @@
                 <span class="info-label">วันเวลาสอบ:</span>
                 <span>
                     @if($project->exam_datetime)
-                        {{ $project->exam_datetime->format('d/m/Y H:i น.') }}
+                        {{ thaiDateTime($project->exam_datetime) }}
                     @else
                         ยังไม่กำหนด
                     @endif
@@ -410,6 +411,18 @@
 
             </tbody>
         </table>
+
+        <div style="margin-top:14px;border:1px solid #ccc;border-radius:6px;padding:10px 14px;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:7px;color:#333;">
+                ความเห็นเพิ่มเติม / ข้อเสนอแนะจากอาจารย์
+            </div>
+            @if(!empty($comment))
+                <div style="font-size:12px;line-height:1.7;white-space:pre-wrap;color:#111;">{{ $comment }}</div>
+            @else
+                <div style="height:48px;border-bottom:1px dashed #bbb;"></div>
+                <div style="height:24px;border-bottom:1px dashed #bbb;margin-top:6px;"></div>
+            @endif
+        </div>
 
         <div class="signature-section">
             <div style="font-size:13px;font-weight:700;margin-bottom:14px;border-bottom:1px dashed #aaa;padding-bottom:6px;">

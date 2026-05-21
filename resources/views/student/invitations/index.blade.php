@@ -98,7 +98,7 @@
                     @if($invitation->responded_at)
                         <div class="text-muted small">
                             <i class="bi bi-info-circle me-1"></i>
-                            ตอบรับเมื่อ: {{ $invitation->responded_at->format('d/m/Y H:i') }}
+                            ตอบรับเมื่อ: {{ thaiDateTime($invitation->responded_at) }}
                         </div>
                     @endif
                     

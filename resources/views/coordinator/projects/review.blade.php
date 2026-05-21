@@ -93,12 +93,15 @@
                         <option value="">-- ทั้งหมด --</option>
                         @php
                             $statusLabels = [
-                                'pending'         => 'รอดำเนินการ',
+                                'not_proposed'    => 'ยังไม่เสนอ',
+                                'pending'         => 'รออนุมัติ',
+                                'approved'        => 'อนุมัติแล้ว',
+                                'rejected'        => 'ถูกปฏิเสธ',
                                 'in_progress'     => 'กำลังดำเนินการ',
-                                'submitted'       => 'ส่งแล้ว',
-                                'late_submission' => 'ส่งช้า',
-                                'approved'        => 'อนุมัติ',
-                                'rejected'        => 'ปฏิเสธ',
+                                'submitted'       => 'ส่งงานแล้ว',
+                                'late_submission'  => 'ส่งงานล่าช้า',
+                                'passed'          => 'ผ่าน',
+                                'failed'          => 'ไม่ผ่าน',
                             ];
                         @endphp
                         @foreach($statuses as $status)
@@ -157,12 +160,15 @@
                     @php
                         $isCoordinator = auth()->check() && (auth()->user()->role & 16384 || auth()->user()->role & 32768);
                         $statusColors = [
-                            'pending'         => 'secondary',
+                            'not_proposed'    => 'secondary',
+                            'pending'         => 'warning',
+                            'approved'        => 'info',
+                            'rejected'        => 'danger',
                             'in_progress'     => 'primary',
                             'submitted'       => 'info',
-                            'late_submission' => 'warning',
-                            'approved'        => 'success',
-                            'rejected'        => 'danger',
+                            'late_submission'  => 'warning',
+                            'passed'          => 'success',
+                            'failed'          => 'danger',
                         ];
                     @endphp
                     @forelse($projects as $project)
@@ -205,7 +211,7 @@
                             </td>
                             <td>
                                 @if($project->examSchedule)
-                                    <div class="fw-semibold small">{{ $project->examSchedule->ex_start_time->format('d/m/Y') }}</div>
+                                    <div class="fw-semibold small">{{ thaiDate($project->examSchedule->ex_start_time) }}</div>
                                     <div class="text-muted" style="font-size:.78rem;">
                                         {{ $project->examSchedule->ex_start_time->format('H:i') }}
                                         – {{ $project->examSchedule->ex_end_time->format('H:i') }}

@@ -58,6 +58,26 @@
         <i class="bi bi-chevron-left me-1"></i><span class="small">กลับรายการ</span>
     </a>
 
+    @php $lateInfo = $project->getLateSubmissionInfo(); @endphp
+    @if($lateInfo)
+    <div class="alert border-0 mb-4 d-flex align-items-start gap-3"
+         style="background:#fff3cd;border-left:5px solid #f59e0b !important;border-radius:10px;border:1px solid #fde68a;">
+        <i class="bi bi-exclamation-triangle-fill text-warning mt-1" style="font-size:1.3rem;flex-shrink:0;"></i>
+        <div>
+            <div class="fw-bold" style="color:#92400e;">ส่งงานล่าช้า {{ $lateInfo['days'] }} วัน</div>
+            <div class="small" style="color:#78350f;">
+                กำหนดส่ง: <strong>{{ thaiDateTime($lateInfo['deadline']) }}</strong> &nbsp;|&nbsp;
+                ส่งจริง: <strong>{{ thaiDateTime($project->submitted_at) }}</strong>
+            </div>
+            <div class="mt-1 small" style="color:#92400e;">
+                <i class="bi bi-calculator me-1"></i>
+                ควรหักคะแนนส่วนโครงงาน <strong>{{ $lateInfo['days'] }} × 20% = {{ $lateInfo['penalty_pct'] }}%</strong>
+                จากคะแนนที่ได้รับ (กรุณาปรับเอง)
+            </div>
+        </div>
+    </div>
+    @endif
+
     @php
         $roleLabels = ['advisor'=>'ที่ปรึกษา','committee1'=>'กรรมการ 1','committee2'=>'กรรมการ 2','committee3'=>'กรรมการ 3'];
         $roleColors = ['advisor'=>'#4e73df','committee1'=>'#1cc88a','committee2'=>'#36b9cc','committee3'=>'#858796'];

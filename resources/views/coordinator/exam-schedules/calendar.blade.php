@@ -136,7 +136,7 @@
                     <div class="exam-date-group mb-4" data-date="{{ $date }}">
                         <h5 class="border-bottom pb-2 mb-3">
                             <i class="bi bi-calendar-event me-2"></i>
-                            {{ \Carbon\Carbon::parse($date)->locale('th')->translatedFormat('วันl ที่ j F Y') }}
+                            {{ \Carbon\Carbon::parse($date)->locale('th')->translatedFormat('วันl ที่ j F') . ' ' . (\Carbon\Carbon::parse(\)->year + 543) }}
                             <span class="badge bg-primary ms-2">{{ $exams->count() }} รายการ</span>
                         </h5>
                         

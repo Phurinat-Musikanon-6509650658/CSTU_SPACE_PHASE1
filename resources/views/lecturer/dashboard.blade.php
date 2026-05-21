@@ -363,8 +363,8 @@
             </div>
         </a>
 
-        <!-- 3. รายงานโครงงาน -->
-        <a href="{{ route('lecturer.projects.index') }}" class="menu-card">
+        <!-- 3. รายงานโครงงาน (เล่มที่นักศึกษาส่ง) -->
+        <a href="{{ route('lecturer.submissions.index') }}" class="menu-card">
             <div class="menu-card-icon">
                 <i class="bi bi-file-earmark-pdf-fill"></i>
             </div>

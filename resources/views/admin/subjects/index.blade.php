@@ -164,6 +164,15 @@
                             data-bs-toggle="modal" data-bs-target="#termEditModal">
                         <i class="bi bi-pencil me-1"></i>แก้ไขช่วงเวลา
                     </button>
+                    <button type="button"
+                            class="btn btn-sm btn-danger btn-term-delete opacity-90"
+                            style="font-size:.75rem;padding:.2rem .6rem;border-radius:6px;"
+                            data-year="{{ $year }}"
+                            data-semester="{{ $semester }}"
+                            data-count="{{ $group['subjects']->count() }}"
+                            data-bs-toggle="modal" data-bs-target="#termDeleteModal">
+                        <i class="bi bi-trash me-1"></i>ลบเทอมนี้
+                    </button>
                 </div>
             </div>
 
@@ -174,6 +183,12 @@
                             $accessStatus = $subject->access_status;
                             $evalStatus   = $subject->evaluation_status;
                             $gradeStatus  = $subject->grade_edit_status;
+                            // รวม eval+grade เป็น pill เดียว: เปิดอยู่ถ้าอันใดอันหนึ่งเปิด
+                            $assessStatus = (in_array($evalStatus, ['เปิดอยู่']) || in_array($gradeStatus, ['เปิดอยู่']))
+                                ? 'เปิดอยู่'
+                                : ((in_array($evalStatus, ['ยังไม่เปิด']) || in_array($gradeStatus, ['ยังไม่เปิด']))
+                                    ? 'ยังไม่เปิด'
+                                    : 'ปิดแล้ว');
                             $pillClass = fn($s) => match($s) {
                                 'เปิดใช้งาน','เปิดอยู่' => 'pill-open',
                                 'ยังไม่เปิด'            => 'pill-soon',
@@ -190,13 +205,10 @@
                                     {{-- Status --}}
                                     <div class="d-flex gap-1 flex-wrap mb-2">
                                         <span class="period-pill {{ $pillClass($accessStatus) }}">
-                                            <i class="bi bi-person-lock"></i>{{ $accessStatus }}
+                                            <i class="bi bi-door-open"></i>เปิดรายวิชา: {{ $accessStatus }}
                                         </span>
-                                        <span class="period-pill {{ $pillClass($evalStatus) }}">
-                                            <i class="bi bi-star"></i>{{ $evalStatus }}
-                                        </span>
-                                        <span class="period-pill {{ $pillClass($gradeStatus) }}">
-                                            <i class="bi bi-pencil"></i>{{ $gradeStatus }}
+                                        <span class="period-pill {{ $pillClass($assessStatus) }}">
+                                            <i class="bi bi-star"></i>ประเมินคะแนน: {{ $assessStatus }}
                                         </span>
                                     </div>
 
@@ -204,15 +216,15 @@
                                     @if($subject->open_date || $subject->close_date)
                                     <div class="date-row">
                                         <strong>ขอบเขต:</strong>
-                                        {{ $subject->open_date?->format('d/m/Y') ?? '—' }}
-                                        → {{ $subject->close_date?->format('d/m/Y') ?? '—' }}
+                                        {{ ($subject->open_date ? thaiDate($subject->open_date) : '—') }}
+                                        → {{ ($subject->close_date ? thaiDate($subject->close_date) : '—') }}
                                     </div>
                                     @endif
                                     @if($subject->access_open_date || $subject->access_close_date)
                                     <div class="date-row">
                                         <strong>เข้าใช้:</strong>
-                                        {{ $subject->access_open_date?->format('d/m/Y') ?? '—' }}
-                                        → {{ $subject->access_close_date?->format('d/m/Y') ?? '—' }}
+                                        {{ ($subject->access_open_date ? thaiDate($subject->access_open_date) : '—') }}
+                                        → {{ ($subject->access_close_date ? thaiDate($subject->access_close_date) : '—') }}
                                     </div>
                                     @endif
 
@@ -239,23 +251,15 @@
                                                 data-grade-open="{{ $subject->grade_edit_open_date?->format('Y-m-d\TH:i') }}"
                                                 data-grade-close="{{ $subject->grade_edit_close_date?->format('Y-m-d\TH:i') }}"
                                                 data-bs-toggle="modal" data-bs-target="#quickEditModal">
-                                            <i class="bi bi-pencil-square me-1"></i>แก้ไข
+                                            <i class="bi bi-pencil-square me-1"></i>แก้ไขรายวิชา
                                         </button>
                                         <button type="button"
-                                                class="btn btn-sm {{ $subject->is_enabled ? 'btn-outline-warning' : 'btn-outline-success' }} toggle-subject"
+                                                class="btn btn-sm {{ $subject->is_enabled ? 'btn-success' : 'btn-danger' }} toggle-subject"
                                                 data-subject-id="{{ $subject->subject_id }}"
                                                 data-current-state="{{ $subject->is_enabled ? 1 : 0 }}">
-                                            <i class="bi bi-{{ $subject->is_enabled ? 'lock' : 'unlock' }} me-1"></i>
-                                            {{ $subject->is_enabled ? 'ปิด' : 'เปิด' }}
+                                            <i class="bi bi-{{ $subject->is_enabled ? 'unlock-fill' : 'lock-fill' }} me-1"></i>
+                                            {{ $subject->is_enabled ? 'เปิดรายวิชา' : 'ปิดรายวิชา' }}
                                         </button>
-                                        <form action="{{ route('admin.subjects.destroy', $subject) }}"
-                                              method="POST" class="d-inline"
-                                              onsubmit="return confirm('ลบ {{ $subject->subject_code }} ปี {{ $year }}/{{ $semester }}?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -282,6 +286,38 @@
         </div>
     @endforelse
 
+</div>
+
+{{-- Modal: ยืนยันลบเทอม --}}
+<div class="modal fade" id="termDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0"
+                 style="background:linear-gradient(135deg,#dc3545,#a71d2a);border-radius:12px 12px 0 0;">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="bi bi-exclamation-triangle me-2"></i>ยืนยันการลบเทอม
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-4 pb-2">
+                <p class="mb-1">คุณต้องการลบ <strong id="td-label"></strong> ใช่หรือไม่?</p>
+                <p class="text-muted small mb-3">จะลบรายวิชาทั้งหมด <strong id="td-count"></strong> รายวิชาในเทอมนี้ออกจากระบบถาวร</p>
+                <div class="alert alert-danger border-0 py-2" style="font-size:.85rem;">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    การดำเนินการนี้<strong>ไม่สามารถย้อนกลับได้</strong>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก ไม่ลบ</button>
+                <form id="termDeleteForm" method="POST">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>ยืนยัน ลบเทอมนี้
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- Modal: เปิดเทอมใหม่ --}}
@@ -510,6 +546,19 @@ document.querySelectorAll('.btn-term-edit').forEach(btn => {
         document.getElementById('te-eval-close').value    = d.evalClose  || '';
         document.getElementById('te-grade-open').value    = d.gradeOpen  || '';
         document.getElementById('te-grade-close').value   = d.gradeClose || '';
+    });
+});
+
+// Term Delete modal: populate fields
+document.querySelectorAll('.btn-term-delete').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const year     = this.dataset.year;
+        const semester = this.dataset.semester;
+        const count    = this.dataset.count;
+        document.getElementById('td-label').textContent  = `ปีการศึกษา ${year} เทอม ${semester}`;
+        document.getElementById('td-count').textContent  = count;
+        document.getElementById('termDeleteForm').action =
+            `/admin/subjects/term/${year}/${semester}`;
     });
 });
 

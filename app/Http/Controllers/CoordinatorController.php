@@ -62,6 +62,7 @@ class CoordinatorController extends Controller
             'members.student',
             'project.advisorLecturer.user',
             'project.committeeLecturers.user',
+            'project.parentProject.group',
             'latestProposal.lecturer',
         ])->findOrFail($id);
 
@@ -69,7 +70,17 @@ class CoordinatorController extends Controller
             ->orderBy('firstname_user', 'asc')
             ->get();
 
-        return view('coordinator.groups.show', compact('group', 'lecturers'));
+        // For CS403 groups: load CS303 passed/in_progress projects as parent candidates
+        $parentProjects = collect();
+        if ($group->subject_code === 'CS403') {
+            $parentProjects = Project::with(['group.members.student'])
+                ->whereHas('group', fn($q) => $q->where('subject_code', 'CS303'))
+                ->whereIn('status_project', ['passed', 'in_progress', 'submitted', 'late_submission'])
+                ->orderBy('project_code')
+                ->get();
+        }
+
+        return view('coordinator.groups.show', compact('group', 'lecturers', 'parentProjects'));
     }
 
     public function approveGroup(Request $request, $id)
@@ -82,9 +93,10 @@ class CoordinatorController extends Controller
         }
 
         $request->validate([
-            'project_name' => 'required|string|max:255',
-            'advisor_code' => 'required|string|exists:user,user_code',
-            'student_type' => 'required|in:r,s',
+            'project_name'      => 'required|string|max:255',
+            'advisor_code'      => 'required|string|exists:user,user_code',
+            'student_type'      => 'required|in:r,s',
+            'parent_project_id' => 'nullable|integer|exists:projects,project_id',
         ]);
 
         $group = Group::findOrFail($id);
@@ -108,11 +120,12 @@ class CoordinatorController extends Controller
             );
 
             $project = Project::create([
-                'group_id'       => $group->group_id,
-                'project_name'   => $request->project_name,
-                'project_code'   => $projectCode,
-                'student_type'   => $studentType,
-                'status_project' => 'in_progress',
+                'group_id'          => $group->group_id,
+                'parent_project_id' => $request->filled('parent_project_id') ? (int)$request->parent_project_id : null,
+                'project_name'      => $request->project_name,
+                'project_code'      => $projectCode,
+                'student_type'      => $studentType,
+                'status_project'    => 'in_progress',
             ]);
 
             $project->projectLecturers()->create([
@@ -140,14 +153,15 @@ class CoordinatorController extends Controller
         }
 
         $request->validate([
-            'project_name'    => 'nullable|string|max:255',
-            'advisor_code'    => 'nullable|string|exists:user,user_code',
-            'committee1_code' => 'nullable|string|exists:user,user_code',
-            'committee2_code' => 'nullable|string|exists:user,user_code',
-            'committee3_code' => 'nullable|string|exists:user,user_code',
-            'exam_datetime'   => 'nullable|date',
-            'project_type'    => 'nullable|string',
-            'status_project'  => 'nullable|string',
+            'project_name'      => 'nullable|string|max:255',
+            'advisor_code'      => 'nullable|string|exists:user,user_code',
+            'committee1_code'   => 'nullable|string|exists:user,user_code',
+            'committee2_code'   => 'nullable|string|exists:user,user_code',
+            'committee3_code'   => 'nullable|string|exists:user,user_code',
+            'exam_datetime'     => 'nullable|date',
+            'project_type'      => 'nullable|string',
+            'status_project'    => 'nullable|string',
+            'parent_project_id' => 'nullable|integer|exists:projects,project_id',
         ]);
 
         $lecturers = array_filter([
@@ -170,7 +184,7 @@ class CoordinatorController extends Controller
         DB::beginTransaction();
         try {
             $group->project->update($request->only([
-                'project_name', 'exam_datetime', 'project_type', 'status_project',
+                'project_name', 'exam_datetime', 'project_type', 'status_project', 'parent_project_id',
             ]));
 
             $group->project->syncLecturers(
@@ -229,7 +243,7 @@ class CoordinatorController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $statuses  = ['pending', 'in_progress', 'submitted', 'late_submission', 'approved'];
+        $statuses  = ['pending', 'approved', 'in_progress', 'submitted', 'late_submission', 'passed', 'failed', 'rejected'];
         $years     = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
         $semesters = [1, 2];
 
@@ -239,7 +253,7 @@ class CoordinatorController extends Controller
     public function updateProjectReview(Request $request, $projectId)
     {
         $request->validate([
-            'status_project' => 'required|in:pending,in_progress,submitted,late_submission,approved,rejected',
+            'status_project' => 'required|in:not_proposed,pending,approved,rejected,in_progress,late_submission,submitted,passed,failed',
             'notes'          => 'nullable|string|max:500',
         ]);
 
@@ -711,6 +725,219 @@ class CoordinatorController extends Controller
         $years = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
 
         return view('coordinator.evaluations.index', compact('projects', 'years'));
+    }
+
+    public function exportScores(Request $request)
+    {
+        $subjects = $this->buildExportData($request);
+
+        $hasData = collect($subjects)->contains(
+            fn($s) => count($s['rowsDetail']) > 0 || count($s['rowsSummary']) > 0
+        );
+        if (!$hasData) {
+            return back()->with('warning', 'ไม่พบข้อมูลคะแนนสำหรับเงื่อนไขที่เลือก');
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0); // remove default sheet
+
+        $blueHeader  = [
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2563EB']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'wrapText' => true],
+        ];
+        $greenHeader = array_replace_recursive($blueHeader, ['fill' => ['startColor' => ['rgb' => '166534']]]);
+
+        $sheetDefs = [
+            ['cs303', 'detail',  'CS303 - แยกตามอาจารย์', $blueHeader,  'EFF6FF', 'L'],
+            ['cs303', 'summary', 'CS303 - สรุปรวม',        $greenHeader, 'F0FDF4', 'K'],
+            ['cs403', 'detail',  'CS403 - แยกตามอาจารย์', $blueHeader,  'EFF6FF', 'L'],
+            ['cs403', 'summary', 'CS403 - สรุปรวม',        $greenHeader, 'F0FDF4', 'K'],
+        ];
+
+        foreach ($sheetDefs as [$subKey, $type, $title, $headerStyle, $zebraColor, $lastCol]) {
+            $s    = $subjects[$subKey];
+            $headers = $type === 'detail' ? $s['headersDetail'] : $s['headersSummary'];
+            $rows    = $type === 'detail' ? $s['rowsDetail']    : $s['rowsSummary'];
+
+            $sheet = $spreadsheet->createSheet();
+            $sheet->setTitle($title);
+            $sheet->fromArray($headers, null, 'A1');
+            $sheet->getStyle("A1:{$lastCol}1")->applyFromArray($headerStyle);
+
+            $rowNum = 2;
+            foreach ($rows as $row) {
+                $sheet->fromArray($row, null, "A{$rowNum}");
+                if ($rowNum % 2 === 0) {
+                    $sheet->getStyle("A{$rowNum}:{$lastCol}{$rowNum}")
+                        ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB($zebraColor);
+                }
+                $rowNum++;
+            }
+            foreach (range('A', $lastCol) as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $filterLabel = implode('_', array_filter([
+            $request->input('course_code'),
+            $request->input('year')     ? 'ปี'    . $request->input('year')     : null,
+            $request->input('semester') ? 'เทอม'  . $request->input('semester') : null,
+        ])) ?: 'ทั้งหมด';
+        $filename = 'ผลคะแนน_' . $filterLabel . '_' . now()->format('Ymd') . '.xlsx';
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    private function buildExportData(Request $request): array
+    {
+        $semester   = $request->input('semester');
+        $year       = $request->input('year');
+        $courseCode = $request->input('course_code');
+        $sort       = $request->input('sort', 'code'); // code | student | time
+
+        $evaluations = \App\Models\ProjectEvaluation::with([
+            'project.group',
+            'student',
+            'evaluator',
+        ])->whereHas('project.group', function ($q) use ($semester, $year, $courseCode) {
+            if ($semester)   $q->where('semester',     $semester);
+            if ($year)       $q->where('year',         $year);
+            if ($courseCode) $q->where('subject_code', $courseCode);
+        })->get();
+
+        $roleLabels = [
+            'advisor'    => 'อาจารย์ที่ปรึกษา',
+            'committee1' => 'กรรมการคนที่ 1',
+            'committee2' => 'กรรมการคนที่ 2',
+            'committee3' => 'กรรมการคนที่ 3',
+        ];
+        $roleOrder = ['advisor' => 0, 'committee1' => 1, 'committee2' => 2, 'committee3' => 3];
+
+        $studentName = fn($s) => trim(($s->firstname_std ?? '') . ' ' . ($s->lastname_std ?? ''));
+
+        $result = [];
+
+        foreach (['CS303', 'CS403'] as $subject) {
+            $subEvals = $evaluations->filter(
+                fn($e) => ($e->project->group->subject_code ?? '') === $subject
+            );
+            $crit = \App\Models\EvaluationCriteria::forSubject($subject);
+
+            $headersDetail = [
+                'รหัสนักศึกษา', 'ชื่อ-สกุล', 'รหัสโครงงาน', 'ชื่อโครงงาน',
+                $crit->part1_label  . ' (/' . $crit->part1_max  . ')',
+                $crit->part2_label  . ' (/' . $crit->part2_max  . ')',
+                $crit->part3a_label . ' (/' . $crit->part3a_max . ')',
+                $crit->part3b_label . ' (/' . $crit->part3b_max . ')',
+                $crit->part3c_label . ' (/' . $crit->part3c_max . ')',
+                'รวม', 'อาจารย์ผู้ประเมิน', 'บทบาท',
+            ];
+
+            $headersSummary = [
+                'รหัสนักศึกษา', 'ชื่อ-สกุล', 'รหัสโครงงาน', 'ชื่อโครงงาน',
+                $crit->part1_label  . ' เฉลี่ย',
+                $crit->part2_label  . ' เฉลี่ย',
+                $crit->part3a_label . ' เฉลี่ย',
+                $crit->part3b_label . ' เฉลี่ย',
+                $crit->part3c_label . ' เฉลี่ย',
+                'รวม (เฉลี่ย)', 'จำนวนผู้ประเมิน',
+            ];
+
+            // Detail: 1 row per eval record — sort based on $sort param
+            $sortedDetail = match ($sort) {
+                'student' => $subEvals->sortBy(fn($e) => sprintf('%s_%d_%s',
+                    $e->student_id ?? '',
+                    $roleOrder[$e->evaluator_role] ?? 9,
+                    $e->project->project_code ?? ''
+                )),
+                'time' => $subEvals->sortBy('submitted_at'),
+                default  => $subEvals->sortBy(fn($e) => sprintf('%s_%d_%s',
+                    $e->project->project_code ?? '',
+                    $roleOrder[$e->evaluator_role] ?? 9,
+                    $e->student_id ?? ''
+                )),
+            };
+
+            $rowsDetail = [];
+            foreach ($sortedDetail as $eval) {
+                $student = $eval->student;
+                if (!$student) continue;
+                $evaluatorName = $eval->evaluator
+                    ? trim(($eval->evaluator->firstname_user ?? '') . ' ' . ($eval->evaluator->lastname_user ?? ''))
+                    : $eval->evaluator_code;
+                $rowsDetail[] = [
+                    $student->username_std ?? $eval->student_id,
+                    $studentName($student),
+                    $eval->project->project_code ?? '',
+                    $eval->project->project_name ?? '',
+                    $eval->part1_score,
+                    $eval->part2_score,
+                    $eval->part3a_score,
+                    $eval->part3b_score,
+                    $eval->part3c_score,
+                    $eval->total_score,
+                    $evaluatorName,
+                    $roleLabels[$eval->evaluator_role] ?? $eval->evaluator_role,
+                ];
+            }
+
+            // Summary: 1 row per (project × student), avg scores across all evaluators for that student
+            $rowsSummary = [];
+            $grouped = $subEvals->groupBy(fn($e) => $e->project_id . '|' . $e->student_id);
+            $grouped = $grouped->sortBy(function ($evals) use ($sort) {
+                $e = $evals->first();
+                return $sort === 'student'
+                    ? ($e->student_id ?? '') . '_' . ($e->project->project_code ?? '')
+                    : ($e->project->project_code ?? '') . '_' . ($e->student_id ?? '');
+            });
+            foreach ($grouped as $evals) {
+                $first   = $evals->first();
+                $student = $first->student;
+                if (!$student) continue;
+                $count = $evals->count();
+                $rowsSummary[] = [
+                    $student->username_std ?? '',
+                    $studentName($student),
+                    $first->project->project_code ?? '',
+                    $first->project->project_name ?? '',
+                    round($evals->avg('part1_score'),  2),
+                    round($evals->avg('part2_score'),  2),
+                    round($evals->avg('part3a_score'), 2),
+                    round($evals->avg('part3b_score'), 2),
+                    round($evals->avg('part3c_score'), 2),
+                    round($evals->avg('total_score'),  2),
+                    $count,
+                ];
+            }
+
+            $result[strtolower($subject)] = compact('headersDetail', 'headersSummary', 'rowsDetail', 'rowsSummary');
+        }
+
+        return $result;
+    }
+
+    public function exportPreview(Request $request)
+    {
+        $subjects = $this->buildExportData($request);
+        $years    = DB::table('groups')->distinct()->orderBy('year', 'desc')->pluck('year');
+        return view('coordinator.evaluations.export-preview', compact('subjects', 'years'));
+    }
+
+    public function exportData(Request $request)
+    {
+        $data = $this->buildExportData($request);
+        $data['updated_at'] = now()->format('H:i:s');
+        return response()->json($data);
     }
 
     public function viewScores($projectId)

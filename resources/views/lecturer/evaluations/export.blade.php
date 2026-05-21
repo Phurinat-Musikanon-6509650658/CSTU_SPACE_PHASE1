@@ -205,7 +205,7 @@
         <div class="subtitle">
             <span class="role-pill">{{ $roleLabels[$role] ?? $role }}</span>
             &nbsp;|&nbsp; คะแนนเต็ม {{ $maxScore }} คะแนน
-            &nbsp;|&nbsp; พิมพ์เมื่อ: {{ now()->format('d/m/Y H:i น.') }}
+            &nbsp;|&nbsp; พิมพ์เมื่อ: {{ thaiDateTime(now()) }}
         </div>
     </div>
 
@@ -232,7 +232,7 @@
             <span class="info-label">วันเวลาสอบ:</span>
             <span>
                 @if($project->exam_datetime)
-                    {{ $project->exam_datetime->format('d/m/Y H:i น.') }}
+                    {{ thaiDateTime($project->exam_datetime) }}
                 @else
                     ยังไม่กำหนด
                 @endif
@@ -350,6 +350,19 @@
 
         </tbody>
     </table>
+
+    <!-- Comment Section -->
+    <div style="margin-top:16px;border:1px solid #ccc;border-radius:6px;padding:12px 16px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#333;">
+            ความเห็นเพิ่มเติม / ข้อเสนอแนะจากอาจารย์
+        </div>
+        @if(!empty($comment))
+            <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;color:#111;">{{ $comment }}</div>
+        @else
+            <div style="height:56px;border-bottom:1px dashed #bbb;"></div>
+            <div style="height:28px;border-bottom:1px dashed #bbb;margin-top:8px;"></div>
+        @endif
+    </div>
 
     <!-- Signature Section -->
     <div class="signature-section">

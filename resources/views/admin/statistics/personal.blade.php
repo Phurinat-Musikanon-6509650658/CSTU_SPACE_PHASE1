@@ -38,7 +38,7 @@
                             <p class="mb-1"><strong>เข้าสู่ระบบล่าสุด:</strong></p>
                             <p class="text-muted">
                                 @if($personalStats['last_login'])
-                                    {{ \Carbon\Carbon::parse($personalStats['last_login']->login_time)->format('d/m/Y H:i:s') }}
+                                    {{ thaiDateTimeSec(\Carbon\Carbon::parse($personalStats['last_login']->login_time)) }}
                                 @else
                                     -
                                 @endif

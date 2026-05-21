@@ -205,7 +205,7 @@
                         
                         <div class="mb-0">
                             <div class="info-label">สร้างเมื่อ</div>
-                            <div class="info-value">{{ \Carbon\Carbon::parse($group->created_at)->locale('th')->translatedFormat('j M Y H:i') }} น.</div>
+                            <div class="info-value">{{ thaiDateTime($group->created_at) }}</div>
                         </div>
                     </div>
                 </div>
@@ -309,7 +309,7 @@
                             <div class="col-md-6 mb-3">
                                 <div class="info-label">วันเวลาสอบ</div>
                                 <div class="info-value">
-                                    {{ $group->project->exam_datetime ? \Carbon\Carbon::parse($group->project->exam_datetime)->locale('th')->translatedFormat('j M Y H:i') . ' น.' : '-' }}
+                                    {{ $group->project->exam_datetime ? thaiDateTime($group->project->exam_datetime) : '-' }}
                                 </div>
                             </div>
                             
@@ -336,13 +336,15 @@
                                 <div>
                                     @php
                                         $statusMap = [
-                                            'not_proposed' => ['text' => 'ยังไม่เสนอ', 'class' => 'secondary'],
-                                            'pending' => ['text' => 'รอดำเนินการ', 'class' => 'warning'],
-                                            'approved' => ['text' => 'อนุมัติแล้ว', 'class' => 'success'],
-                                            'rejected' => ['text' => 'ปฏิเสธ', 'class' => 'danger'],
-                                            'in_progress' => ['text' => 'กำลังดำเนินการ', 'class' => 'info'],
-                                            'late_submission' => ['text' => 'ส่งช้า', 'class' => 'danger'],
-                                            'submitted' => ['text' => 'ส่งแล้ว', 'class' => 'success'],
+                                            'not_proposed'    => ['text' => 'ยังไม่เสนอ',        'class' => 'secondary'],
+                                            'pending'         => ['text' => 'รออนุมัติ',          'class' => 'warning'],
+                                            'approved'        => ['text' => 'อนุมัติแล้ว',        'class' => 'info'],
+                                            'rejected'        => ['text' => 'ถูกปฏิเสธ',          'class' => 'danger'],
+                                            'in_progress'     => ['text' => 'กำลังดำเนินการ',     'class' => 'primary'],
+                                            'submitted'       => ['text' => 'ส่งงานแล้ว',         'class' => 'success'],
+                                            'late_submission'  => ['text' => 'ส่งงานล่าช้า',      'class' => 'warning'],
+                                            'passed'          => ['text' => 'ผ่าน',               'class' => 'success'],
+                                            'failed'          => ['text' => 'ไม่ผ่าน',            'class' => 'danger'],
                                         ];
                                         $status = $statusMap[$group->project->status_project] ?? ['text' => $group->project->status_project, 'class' => 'secondary'];
                                     @endphp
@@ -350,6 +352,55 @@
                                 </div>
                             </div>
                             
+                            {{-- ── Deadline Warning ──────────────────────────── --}}
+                            @if($group->project->exam_datetime && !in_array($group->project->status_project, ['passed','failed']))
+                            @php
+                                $p2       = $group->project;
+                                $examDt2  = \Carbon\Carbon::parse($p2->exam_datetime);
+                                $deadline2 = $examDt2->copy()->subDay();
+                                $now2     = now();
+                                $submitted2 = $p2->submitted_at != null;
+                                if (!$submitted2) {
+                                    $diffSec2  = $now2->diffInSeconds($deadline2, false);
+                                    $diffDays2 = (int) ceil(abs($diffSec2) / 86400);
+                                }
+                            @endphp
+                            <div class="col-12">
+                                @if(!$submitted2)
+                                    @if($diffSec2 < 0)
+                                        @php $ld2 = max(1,(int)ceil(abs($diffSec2)/86400)); $lp2 = min($ld2*20,100); @endphp
+                                        <div class="alert border-0 d-flex align-items-start gap-3 mb-2"
+                                             style="background:#fef2f2;border-left:5px solid #ef4444 !important;border-radius:10px;border:1px solid #fecaca;">
+                                            <i class="bi bi-x-octagon-fill mt-1" style="font-size:1.3rem;flex-shrink:0;color:#dc2626;"></i>
+                                            <div>
+                                                <div class="fw-bold" style="color:#991b1b;">เลยกำหนดส่งแล้ว {{ $ld2 }} วัน!</div>
+                                                <div class="small" style="color:#7f1d1d;">กำหนดส่ง: <strong>{{ thaiDateTime($deadline2) }}</strong> น. — หากส่งตอนนี้จะถูกหักคะแนน <strong>{{ $ld2 }}×20% = {{ $lp2 }}%</strong></div>
+                                            </div>
+                                        </div>
+                                    @elseif($diffSec2 <= 86400)
+                                        <div class="alert border-0 d-flex align-items-start gap-3 mb-2"
+                                             style="background:#fff7ed;border-left:5px solid #f97316 !important;border-radius:10px;border:1px solid #fed7aa;">
+                                            <i class="bi bi-alarm-fill mt-1" style="font-size:1.3rem;flex-shrink:0;color:#ea580c;"></i>
+                                            <div>
+                                                <div class="fw-bold" style="color:#9a3412;">วันนี้คือวันสุดท้ายที่ควรส่งงาน!</div>
+                                                <div class="small" style="color:#7c2d12;">กำหนดส่ง: <strong>{{ thaiDateTime($deadline2) }}</strong> น. — ส่งเกินกำหนดถูกหักคะแนน 20% ต่อวัน</div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="alert border-0 d-flex align-items-start gap-3 mb-2"
+                                             style="background:#eff6ff;border-left:5px solid #3b82f6 !important;border-radius:10px;border:1px solid #bfdbfe;">
+                                            <i class="bi bi-calendar-event-fill mt-1" style="font-size:1.2rem;flex-shrink:0;color:#2563eb;"></i>
+                                            <div>
+                                                <div class="fw-bold" style="color:#1e40af;">ควรส่งงานก่อน {{ thaiDateTime($deadline2) }} น.</div>
+                                                <div class="small" style="color:#1e3a8a;">เหลืออีก <strong>{{ $diffDays2 }}</strong> วัน (ก่อนวันสอบ 1 วัน) — ส่งเกินกำหนดถูกหักคะแนน 20% ต่อวัน</div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                            @endif
+                            {{-- ───────────────────────────────────────────── --}}
+
                             <!-- Submission Information -->
                             @if($group->project->submission_file)
                             <div class="col-12 mt-3">
@@ -363,7 +414,7 @@
                                             <strong>ชื่อไฟล์:</strong> {{ $group->project->submission_original_name }}
                                         </div>
                                         <div class="col-md-6">
-                                            <strong>ส่งเมื่อ:</strong> {{ \Carbon\Carbon::parse($group->project->submitted_at)->locale('th')->translatedFormat('j M Y H:i') }} น.
+                                            <strong>ส่งเมื่อ:</strong> {{ thaiDateTime($group->project->submitted_at) }}
                                         </div>
                                         <div class="col-md-6 mt-2">
                                             <strong>ส่งโดย:</strong> {{ $group->project->submitted_by }}

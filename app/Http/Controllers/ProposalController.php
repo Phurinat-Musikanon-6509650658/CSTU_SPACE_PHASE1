@@ -105,17 +105,26 @@ class ProposalController extends Controller
     }
     
     // แสดงรายการข้อเสนอของ lecturer
-    public function lecturerIndex()
+    public function lecturerIndex(Request $request)
     {
         $username = Auth::guard('web')->user()->username_user;
-        
-        $proposals = ProjectProposal::with(['group.members.student', 'student'])
-            ->where('proposed_to', $username)
-            ->orderBy('status', 'asc') // pending ก่อน
-            ->orderBy('proposed_at', 'desc')
-            ->get();
-            
-        return view('lecturer.proposals.index', compact('proposals'));
+
+        $query = ProjectProposal::with(['group.members.student', 'student'])
+            ->where('proposed_to', $username);
+
+        if ($request->filled('year'))     $query->whereHas('group', fn($q) => $q->where('year', $request->year));
+        if ($request->filled('semester')) $query->whereHas('group', fn($q) => $q->where('semester', $request->semester));
+        if ($request->filled('subject'))  $query->whereHas('group', fn($q) => $q->where('subject_code', $request->subject));
+        if ($request->filled('status'))   $query->where('status', $request->status);
+
+        $proposals = $query->orderBy('status', 'asc')->orderBy('proposed_at', 'desc')->get();
+
+        $groupIds  = ProjectProposal::where('proposed_to', $username)->pluck('group_id');
+        $years     = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('year', 'desc')->pluck('year');
+        $semesters = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('semester')->pluck('semester');
+        $subjects  = DB::table('groups')->whereIn('group_id', $groupIds)->distinct()->orderBy('subject_code')->pluck('subject_code');
+
+        return view('lecturer.proposals.index', compact('proposals', 'years', 'semesters', 'subjects'));
     }
     
     // แสดงรายละเอียดข้อเสนอ
@@ -166,7 +175,7 @@ class ProposalController extends Controller
                 $newProjectCode = preg_replace('/_TBD-/', "_{$user->user_code}-", $oldProjectCode);
                 
                 $project->update([
-                    'status_project' => 'approved',
+                    'status_project' => 'in_progress',
                     'project_code'   => $newProjectCode,
                 ]);
 

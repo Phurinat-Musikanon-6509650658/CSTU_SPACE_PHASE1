@@ -112,6 +112,25 @@
         </a>
     </div>
 
+    @php $lateInfo = $project->getLateSubmissionInfo(); @endphp
+    @if($lateInfo)
+    <div class="alert border-0 mb-3 d-flex align-items-start gap-3"
+         style="background:#fff3cd;border-left:5px solid #f59e0b !important;border-radius:10px;border:1px solid #fde68a;">
+        <i class="bi bi-exclamation-triangle-fill text-warning mt-1" style="font-size:1.3rem;flex-shrink:0;"></i>
+        <div>
+            <div class="fw-bold" style="color:#92400e;">ส่งงานล่าช้า {{ $lateInfo['days'] }} วัน</div>
+            <div class="small" style="color:#78350f;">
+                กำหนดส่ง (ก่อนวันสอบ 1 วัน): <strong>{{ thaiDateTime($lateInfo['deadline']) }}</strong> &nbsp;|&nbsp;
+                ส่งจริง: <strong>{{ thaiDateTime($project->submitted_at) }}</strong>
+            </div>
+            <div class="mt-1 small" style="color:#92400e;">
+                <i class="bi bi-calculator me-1"></i>
+                ควรหักคะแนนส่วนโครงงาน <strong>{{ $lateInfo['days'] }} × 20% = {{ $lateInfo['penalty_pct'] }}%</strong> จากคะแนนที่ได้รับ
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="detail-card">
         <div class="detail-card-header">
             <h4>
@@ -134,19 +153,11 @@
                 <div class="detail-section">
                     <h6>สถานะโครงงาน</h6>
                     <p>
-                        @switch($project->status_project)
-                            @case('pending')
-                                <span class="badge bg-warning">รออนุมัติ</span>
-                                @break
-                            @case('approved')
-                                <span class="badge bg-success">อนุมัติ</span>
-                                @break
-                            @case('rejected')
-                                <span class="badge bg-danger">ปฏิเสธ</span>
-                                @break
-                            @default
-                                <span class="badge bg-secondary">{{ $project->status_project }}</span>
-                        @endswitch
+                        @php
+                            $sl = ['not_proposed'=>['secondary','ยังไม่เสนอ'],'pending'=>['warning','รออนุมัติ'],'approved'=>['info','อนุมัติแล้ว'],'rejected'=>['danger','ถูกปฏิเสธ'],'in_progress'=>['primary','กำลังดำเนินการ'],'submitted'=>['success','ส่งงานแล้ว'],'late_submission'=>['warning','ส่งงานล่าช้า'],'passed'=>['success','ผ่าน'],'failed'=>['danger','ไม่ผ่าน']];
+                            [$sc,$st] = $sl[$project->status_project] ?? ['secondary',$project->status_project];
+                        @endphp
+                        <span class="badge bg-{{ $sc }}">{{ $st }}</span>
                     </p>
                 </div>
             </div>
@@ -158,7 +169,7 @@
                 <p>
                     <strong>{{ $project->submission_original_name ?? 'submission.pdf' }}</strong>
                     <br>
-                    <small class="text-muted">ส่งเมื่อ {{ $project->submitted_at->format('d/m/Y H:i:s') }}</small>
+                    <small class="text-muted">ส่งเมื่อ {{ thaiDateTimeSec($project->submitted_at) }}</small>
                 </p>
             </div>
 

@@ -160,12 +160,14 @@
                                 }
                                 $psBadge = [
                                     'not_proposed'     => ['bg-secondary-subtle text-secondary border-secondary-subtle', 'circle',                'ยังไม่เสนอ'],
-                                    'pending'          => ['bg-warning-subtle  text-warning  border-warning-subtle',      'clock',                 'รอพิจารณา'],
-                                    'approved'         => ['bg-success-subtle  text-success  border-success-subtle',      'check-circle',          'อนุมัติ'],
-                                    'rejected'         => ['bg-danger-subtle   text-danger   border-danger-subtle',       'x-circle',              'ปฏิเสธ'],
-                                    'in_progress'      => ['bg-info-subtle     text-info     border-info-subtle',         'gear-fill',             'ดำเนินการ'],
-                                    'submitted'        => ['bg-primary-subtle  text-primary  border-primary-subtle',      'check-circle-fill',     'ส่งแล้ว'],
-                                    'late_submission'  => ['bg-danger-subtle   text-danger   border-danger-subtle',       'exclamation-triangle',  'ส่งล่าช้า'],
+                                    'pending'          => ['bg-warning-subtle   text-warning  border-warning-subtle',    'clock',                 'รออนุมัติ'],
+                                    'approved'         => ['bg-info-subtle      text-info     border-info-subtle',       'check-circle',          'อนุมัติแล้ว'],
+                                    'rejected'         => ['bg-danger-subtle    text-danger   border-danger-subtle',     'x-circle',              'ถูกปฏิเสธ'],
+                                    'in_progress'      => ['bg-primary-subtle   text-primary  border-primary-subtle',   'gear-fill',             'กำลังดำเนินการ'],
+                                    'submitted'        => ['bg-info-subtle      text-info     border-info-subtle',       'check-circle-fill',     'ส่งงานแล้ว'],
+                                    'late_submission'  => ['bg-warning-subtle   text-warning  border-warning-subtle',   'exclamation-triangle',  'ส่งงานล่าช้า'],
+                                    'passed'           => ['bg-success-subtle   text-success  border-success-subtle',   'trophy-fill',           'ผ่าน'],
+                                    'failed'           => ['bg-danger-subtle    text-danger   border-danger-subtle',    'x-octagon-fill',        'ไม่ผ่าน'],
                                 ][$ps] ?? null;
                             @endphp
                             @if($psBadge)

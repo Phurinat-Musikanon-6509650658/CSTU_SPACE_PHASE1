@@ -269,7 +269,7 @@
                                 <td style="font-size:.76rem;">
                                     @if($item['exam_datetime'])
                                         <span class="badge bg-success rounded-pill" style="font-size:.68rem;">
-                                            {{ \Carbon\Carbon::parse($item['exam_datetime'])->format('d M Y H:i') }}
+                                            {{ thaiDateTime(\Carbon\Carbon::parse($item['exam_datetime'])) }}
                                         </span>
                                     @elseif($item['thai_date_raw'])
                                         <span class="text-muted" title="{{ $item['thai_date_raw'] }}">

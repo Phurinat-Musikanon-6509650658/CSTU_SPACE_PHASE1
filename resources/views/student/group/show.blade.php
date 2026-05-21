@@ -293,7 +293,7 @@
                                         <div class="text-center">
                                             <i class="bi bi-file-earmark-text text-muted" style="font-size: 5rem;"></i>
                                             <p class="text-muted small mt-2">
-                                                เสนอเมื่อ {{ $proposal->proposed_at->format('d/m/Y H:i') }}
+                                                เสนอเมื่อ {{ thaiDateTime($proposal->proposed_at) }}
                                             </p>
                                         </div>
                                     </div>
